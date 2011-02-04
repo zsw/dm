@@ -32,7 +32,6 @@ LOG_FORMAT_MESSAGE=1
 
 # Do not initialize these or else values set within the environment are
 # overwritten.
-# LOG_TO_FILE=/var/log/dm.log        # Define this in .dm/dmrc
 #LOG_TO_STDERR=
 #LOG_TO_STDOUT=
 
@@ -45,19 +44,39 @@ function logger_level {
 
 function logger_log {
 
-    level=$1
+    local level=$1
     shift
 
-    log=
+    local log=
 
-    [[ -n $LOG_FORMAT_DATE ]] && log="$log $(date '+%Y-%m-%d %H:%M:%S')"
-    [[ -n $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
-    [[ -n $LOG_FORMAT_MESSAGE ]] && log="$log $*"
-    [[ -n $LOG_FORMAT_FILE ]] && log="$log, $0"
+    local prefix=${DM_LOG%:*}
+    local syslog=
+    local facility=
+    if [[ $prefix == 'syslog' ]]; then
+        syslog=1
+        facility=${DM_LOG#*:}
+    fi
+
+    if [[ $syslog ]]; then
+        [[ -n $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
+        [[ -n $LOG_FORMAT_MESSAGE ]] && log="$log $*"
+    else
+        [[ -n $LOG_FORMAT_DATE ]] && log="$log $(date '+%Y-%m-%d %H:%M:%S')"
+        [[ -n $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
+        [[ -n $LOG_FORMAT_MESSAGE ]] && log="$log $*"
+        [[ -n $LOG_FORMAT_FILE ]] && log="$log, $0"
+    fi
 
     log=$(echo "$log" | sed 's/^[ \t]*//')
 
-    [[ -n $LOG_TO_FILE ]] && echo "$log" >> $LOG_TO_FILE
+    if [[ $syslog ]]; then
+        # convert level to lower case
+        local facility_level=$(echo $level | tr [A-Z] [a-z])
+        #logger -i -t dm -p local7.info -- "$log"
+        logger -i -t dm -p $facility.$facility_level -- "$log"
+    else
+        [[ $DM_LOG ]] && echo "$log" >> $DM_LOG
+    fi
     [[ -n $LOG_TO_STDERR ]] && echo "$log" >&2
     #[[ -n $LOG_TO_STDOUT ]] && [[ -t 1 ]] && echo "$log" >&1    # -t 1 tests stdout
     [[ -n $LOG_TO_STDOUT ]] && echo "$log" >&1    # -t 1 tests stdout

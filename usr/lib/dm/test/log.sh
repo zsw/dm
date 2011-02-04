@@ -13,6 +13,8 @@ msg='This is a message'
 tmpdir=$(tmp_dir)
 mkdir -p $tmpdir
 tmp_file="${tmpdir}/test/to_file"
+SYSLOG_FACILITY='local7'
+SYSLOG_FILE='/var/log/local7.log'
 
 #
 # clear_logger_settings
@@ -30,7 +32,7 @@ function clear_logger_settings {
     LOG_FORMAT_LEVEL=
     LOG_FORMAT_MESSAGE=
 
-    LOG_TO_FILE=
+    DM_LOG=
     LOG_TO_STDERR=
     LOG_TO_STDOUT=
 
@@ -131,15 +133,17 @@ function tst_logger_log {
     # The code in tst uses logger_log to report test results.
     # Restore logger settings using source test.sh before calling tst.
 
-    # Test formats
+    saveDM_LOG=$DM_LOG
+    DM_LOG=
 
+    # Test formats
     level='DEBUG'
 
     clear_logger_settings
 
     LOG_FORMAT_DATE=1
     LOG_TO_STDOUT=1
-    override_date='2009-01-31 12:34:56'
+    override_date='2009-01-31 12:34:56'     # see function date()
 
     value=$(logger_log $level $msg)
     expect="$override_date"
@@ -205,10 +209,11 @@ function tst_logger_log {
 
     # Test log "to" options
 
+    # Log to file
     clear_logger_settings
 
     LOG_FORMAT_MESSAGE=1
-    LOG_TO_FILE=$tmp_file
+    DM_LOG=$tmp_file
 
     [[ -e $tmp_file ]] && rm $tmp_file
 
@@ -219,6 +224,22 @@ function tst_logger_log {
     tst "$value" "$msg" "log to file logs message"
 
 
+    # syslog
+    # syslog test only works if the syslog file is readable
+    if [[ -r $SYSLOG_FILE ]]; then
+        clear_logger_settings
+
+        LOG_FORMAT_MESSAGE=1
+        DM_LOG="syslog:$SYSLOG_FACILITY"
+
+        ll=$(logger_log $level $msg)
+        value=$(tail $SYSLOG_FILE | grep -o "$msg" | tail -1)
+
+        source $DM_ROOT/test/test.sh
+        tst "$value" "$msg" "log to syslog logs message"
+    fi
+
+    # stderr
     clear_logger_settings
 
     LOG_FORMAT_MESSAGE=1
@@ -230,6 +251,7 @@ function tst_logger_log {
     source $DM_ROOT/test/test.sh
     tst "$value" "$msg" "log to stderr logs message"
 
+    DM_LOG=$saveDM_LOG
     return
 }
 
@@ -244,6 +266,9 @@ function tst_logger_log {
 #   Run tests on logger_debug function.
 #
 function tst_logger_debug {
+
+    saveDM_LOG=$DM_LOG
+    DM_LOG=
 
     level=DEBUG
 
@@ -261,7 +286,7 @@ function tst_logger_debug {
         cp /dev/null $tmp_file
 
         LOG_FORMAT_MESSAGE=1
-        LOG_TO_FILE=$tmp_file
+        DM_LOG=$tmp_file
 
         LOG_LEVEL=${arr[0]}
 
@@ -277,6 +302,7 @@ function tst_logger_debug {
     debug,  $msg, equal to $level,    message
 EOT
 
+    DM_LOG=$saveDM_LOG
     return
 }
 
@@ -291,6 +317,9 @@ EOT
 #   Run tests on logger_info function.
 #
 function tst_logger_info {
+
+    saveDM_LOG=$DM_LOG
+    DM_LOG=
 
     level=INFO
 
@@ -308,7 +337,7 @@ function tst_logger_info {
         cp /dev/null $tmp_file
 
         LOG_FORMAT_MESSAGE=1
-        LOG_TO_FILE=$tmp_file
+        DM_LOG=$tmp_file
 
         LOG_LEVEL=${arr[0]}
 
@@ -325,6 +354,7 @@ function tst_logger_info {
     debug, $msg, less than $level,   message
 EOT
 
+    DM_LOG=$saveDM_LOG
     return
 }
 
@@ -339,6 +369,9 @@ EOT
 #   Run tests on logger_warn function.
 #
 function tst_logger_warn {
+
+    saveDM_LOG=$DM_LOG
+    DM_LOG=
 
     level=WARN
 
@@ -356,7 +389,7 @@ function tst_logger_warn {
         cp /dev/null $tmp_file
 
         LOG_FORMAT_MESSAGE=1
-        LOG_TO_FILE=$tmp_file
+        DM_LOG=$tmp_file
 
         LOG_LEVEL=${arr[0]}
 
@@ -373,6 +406,7 @@ function tst_logger_warn {
     info,  $msg, less than $level,   message
 EOT
 
+    DM_LOG=$saveDM_LOG
     return
 }
 
@@ -387,6 +421,9 @@ EOT
 #   Run tests on logger_error function.
 #
 function tst_logger_error {
+
+    saveDM_LOG=$DM_LOG
+    DM_LOG=
 
     level=ERROR
 
@@ -404,7 +441,7 @@ function tst_logger_error {
         cp /dev/null $tmp_file
 
         LOG_FORMAT_MESSAGE=1
-        LOG_TO_FILE=$tmp_file
+        DM_LOG=$tmp_file
 
         LOG_LEVEL=${arr[0]}
 
@@ -421,6 +458,7 @@ function tst_logger_error {
     warn,  $msg, less than $level,   message
 EOT
 
+    DM_LOG=$saveDM_LOG
     return
 }
 
@@ -435,6 +473,9 @@ EOT
 #   Run tests on logger_fatal function.
 #
 function tst_logger_fatal {
+
+    saveDM_LOG=$DM_LOG
+    DM_LOG=
 
     level=FATAL
 
@@ -452,7 +493,7 @@ function tst_logger_fatal {
         cp /dev/null $tmp_file
 
         LOG_FORMAT_MESSAGE=1
-        LOG_TO_FILE=$tmp_file
+        DM_LOG=$tmp_file
 
         LOG_LEVEL=${arr[0]}
 
@@ -469,6 +510,7 @@ function tst_logger_fatal {
     error, $msg, less than $level,   message
 EOT
 
+    DM_LOG=$saveDM_LOG
     return
 }
 
