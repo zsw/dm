@@ -1,0 +1,126 @@
+OSD Messaging
+=============
+
+The dev system can send out alerts to notify a person that specific
+changes have happened in the devmod system using On Screen Display (OSD)
+messages.
+
+
+Overview
+--------
+
+The OSD messaging system works independent of the devmod system. This
+document explains how it works, how to configure it and how to
+intergrate it with the devmod system.
+
+
+How It Works
+------------
+
+The OSD system uses a named pipe and a daemon script to display messages
+on screen. The daemon script monitors the named pipe for any input and
+processes it accordingly.
+
+To display a message using OSD a person need only print (echo in bash)
+the message to the name pipe.
+
+It is also possible to send signals to the daemon by printing them to
+the named pipe. Different signals are used to hide the display, show it,
+stop the current message, and kill the daemon.
+
+Currently the daemon displays a message indefinitely until it receives a
+__STOP__ signal. Ideally you should have a key binding so that you can
+send a signal with a keyboard shortcut.
+
+
+Scripts
+-------
+
+These scripts are used to display OSD messages.
+
+$ osd_msg.sh                ## Prints a message to OSD pipe. Useful for troubleshooting.
+$ osd_weechat_events.sh     ## Prints messages in weechat events file to OSD.
+$ osd_stop.sh               ## Prints a STOP signal to OSD pipe.
+$ osd_daemon.sh             ## OSD daemon.
+
+
+Setup
+-----
+
+Start OSD daemon
+
+To start the osd_deamon.sh script automatically on start of X, add this
+line to $HOME/.xinitrc.
+
+$ osd_daemon.sh -f
+
+
+Start OSD weechat interface
+
+To start the OSD weechat interface automatically on start of X, add
+these lines to $HOME/.xinitrc.
+
+$ touch /root/.weechat/osd
+$ osd_weechat_events.sh -f
+
+
+Hotkey OSD stop
+
+To create a hotkey to stop OSD message, add the following to the dwm
+config.h and recompile and install.
+
+    static const char *osd_stop[]   = { "/root/bin/osd_stop.sh", NULL};
+
+    { MODKEY,                       XK_o,      spawn,          {.v = osd_stop } },
+
+This code binds the stop to the Mod O key. To use a different key,
+change the XK_o value.
+
+
+Create an OSD weechat whitelist.
+
+An optional whitelist file can be created to control messages displayed
+with OSD. Create a whitelist file with a list of contact usernames. Only
+messages from those contacts will be displayed with OSD.
+
+## Create whitelist file
+$ touch $HOME/.weechat/whitelist
+
+## Add a contact. Alternatively edit the file.
+$ echo joyblatchford >> $HOME/.weechat/whitelist
+
+
+Some alternative commands:
+
+## Remove the whitelist file to turn off all filtering.
+## Messages from all contacts will be displayed with OSD.
+$ rm $HOME/.weechat/whitelist
+
+## Empty the whitelist file to filter all contacts.
+## No messages will be displayed with OSD.
+$ cp /dev/null $HOME/.weechat/whitelist
+
+
+Typical whitelist file.
+
+$ cat $HOME/.weechat/whitelist
+
+    dferguson
+    jimk
+    joyblatchford
+    mgoos
+    mseabrook
+    steve
+    reminder
+
+
+
+Signals
+-------
+
+For a list of signals and more information about the OSD daemon, run
+
+$ osd_daemon.sh -h
+
+
+# vim: ft=our_doc

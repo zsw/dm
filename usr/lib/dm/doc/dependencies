@@ -1,0 +1,482 @@
+A dependency tree is used to define the priority order of mods,
+groupings of mods (eg projects and phases), and dependency
+relationships. In order for a dependency tree to be interpreted by
+prioritization scripts, specifically dependency_schema.pl, it must use
+the correct syntax.
+
+This file documents the syntax rules of a dependency tree.
+
+While this document is fairly lengthy, the syntax is relatively
+intuitive and should not take a lot of effort to grasp. In some cases
+the syntax is very rigid, eg indents must be exactly four spaces. The
+philosophy used was " it's better the prioritization interpreter crash
+with a syntax error than try to guess what the user intended and
+interpret it incorrectly".
+
+Dependency Schema Syntax Rules
+==============================
+
+Example Schema
+--------------
+
+Here is a example fictional schema.
+
+    ##
+    ## Miscellaneous mods
+    ##
+
+    [ ] 00001 Check email.
+    [ ] 00003 Review daily planner.
+    [ ] 00004 Check if audio problems are solved.
+
+
+    ##
+    ## Project: Dev Flat File System
+    ##
+
+    ## Brainstorming
+    group 001
+    [ ] 10001 Create baseline.
+        [ ] 10002 Group brainstorming.
+    end
+
+    ## Development
+    group 002
+    [ ] 10011 Convert old mods to new format.
+    [ ] 10012 Create script to create new mods.
+    [ ] 10020 Format mods for display.
+    [ ] 10021 Create script that filters mods from list of files.
+        group 020
+        [ ] 10013 Determine dependency syntax.
+        [ ] 10014 Determine prioritization rules.
+        end
+            [ ] 10015 Create dependendency check
+                [ ] 10016 Priortize mods.
+    [ ] 10017 Document tools.
+    [ ] 10021 Create a git prototype.
+        [ ] 10022 Group test git prototype.
+    end
+
+    ## Release
+    group 003
+    [ ] 10018 Apply solution.
+        [ ] 10019 Beta Test
+    end
+
+
+    end 001
+        start 002
+
+    end 002
+        start 003
+
+
+Line Formatting
+---------------
+
+A dependency schema is made up of many lines, each of which must
+represent one of the following:
+
+    * the start of a group
+    * a dev mod
+    * a commment
+    * the end of a group
+    * a reference to either the start, or end of a group
+
+Aside from blank lines, which are ignored, each of these items must be
+formatted a particular way.  In addition to comment lines, comments may
+be appended to the right side of any line.  These are also ignored.
+
+start of a group
+----------------
+
+    format:  group <number> <description>
+
+The spacing is significant.  There must be one space separating the
+group from the number.  The description is optional.
+
+    example: group 123 code solution
+
+
+a dev mod
+---------
+
+format:  [<any character>] <number> <description>
+
+The square brackets should enclose a single character, but this is often
+a space.  There should be one space separating the square brackets and
+the mod number.  The description is optional.
+
+    examples:
+        [ ] 12345 Solve the problem.
+        [X] 12345 Solve the problem.
+        [J] 12345 Solve the problem.
+        [?] 12345 Solve the problem.
+
+
+a comment
+---------
+
+    format: ##<the comment>
+
+Comments can be placed to the right of any significant line, or may be
+placed on their own line.  Comments are ignored while parsing.
+
+    example: ## this is a comment
+
+Note: indenting rules do not apply to comments (see: Indenting Rules).
+
+
+the end of a group
+------------------
+
+    format: end
+
+The 'end' line marks the end of a group opened with a group start.  It
+may optionally include a comment, but must not include a description,
+lest it be confused with a reference to the end of a previously defined
+group (ie. "end 1234").
+
+
+reference to group boundary
+---------------------------
+
+    format: <"start" or "end"> <number>
+
+Group boundaries must reference a previously opened group (see: Groups).
+The number is mandatory and must follow after a single space.
+
+    examples:  start 123
+               end 123
+
+
+Indenting Rules
+---------------
+
+With the exception of comment lines, each line must be indented by a
+factor of four spaces.  In other words, valid indents include: 0, 4, 8,
+12, 16, etc..  Additionally, each right indent must be no more than four
+spaces from its parent line.
+
+Example of valid indenting:
+
+    1234....
+    12341234....
+    123412341234....
+    123412341234....
+    1234....
+
+Examples of invalid indenting:
+
+    123....            ## not indented enough
+
+    1234....
+    123412341234....   ## indented too much from parent
+
+    1234....
+    1234123....        ## not indented enough
+
+    12345....          ## entire block is
+    123451234....      ## indented one space
+    1234512341234....  ## too many
+
+IMPLEMENTATION DETAIL: It is possible to redefine the desired format
+level by overriding the $Dependency::Schema::INDENT variable.  This
+variable will default to 4.
+
+
+Groups
+------
+
+Groups may be used to corral a collection of mods.
+
+    example:
+
+    group 123
+        [ ] 11111
+        [ ] 22222
+        [ ] 33333
+    end
+
+Each group must begin with a valid group start (See: Line Formatting)
+and end with a group end.  Groups may be empty.
+
+Additional rules:
+
+    * Group ends must share the same indent level as the group start.
+      In other words, this is valid:
+
+          group 123
+              ...
+          end
+
+      while these are not:
+
+          group 123
+              ...
+              end
+
+          group 123
+              ...
+      end
+
+
+    * Groups may be embedded, but must not overlap.
+
+      This is valid:
+
+          group 123 <---------+
+              ...             |
+              group 456 <---+ |
+                  ...       | |
+              end <---------+ |
+          end <---------------+
+
+      This is not:
+
+          group 123 <------+
+              ...          |
+              group 456 <--|-+
+                  ...      | |
+          end <------------+ |
+              end <----------+
+
+
+    * Group boundaries may be referenced directly while
+      defining dependencies.  Only defined groups may
+      be referenced.
+
+      This is valid:
+
+          group 123
+              ...
+          end
+
+          start 123
+              ...
+
+          end 123
+              ...
+
+      This is not:
+
+          group 123
+              ...
+          end
+
+          start 456
+              ...
+
+          (456 is undefined)
+
+      However, boundaries may be referenced before groups are
+      defined logically within the schema.
+
+      This is valid:
+
+          start 123
+              ...
+
+          group 123
+              ...
+          end
+
+
+    * The initial indent within a group is ignored.  As a
+      result, the following are all equivalent:
+
+          group 123
+              [ ] 11111
+                  [ ] 22222
+          end
+
+          group 123
+          [ ] 11111
+              [ ] 22222
+          end
+
+          group 123
+      [ ] 11111
+          [ ] 22222
+          end
+
+      However, indenting rules still apply.  The indent level must be a
+      factor of four, and embedded elements may be tabbed over by no
+      more than four spaces.  So, for example, these are invalid:
+
+          group 123
+                  [ ] 11111
+                      [ ] 22222
+          end
+
+          group 123
+            [ ] 11111
+                [ ] 22222
+          end
+
+          group 123
+        [ ] 11111
+            [ ] 22222
+          end
+
+      (See: Indenting Rules)
+
+
+Dependencies
+------------
+
+The dependency schema serves to define dependencies between mods and
+groups.
+
+A dependency is defined when an element is shifted to the left, relative
+to the items that follow after it.
+
+For example, given the following:
+
+    [ ] 11111
+    [ ] 22222
+
+there is no dependency defined.  The mods are unrelated.
+
+If the first mod is indented,
+
+        [ ] 11111
+    [ ] 22222
+
+there remains no dependency, as relatively speaking, the offset is to
+the right, and not the left.
+
+However, if the the first item is shifted to the left, or the items
+after it are indented to the right,
+
+[ ] 11111
+    [ ] 22222
+
+(or)
+
+    [ ] 11111
+        [ ] 22222
+
+a dependency has been defined.  It states that mod 11111 must be
+completed before mod 22222 can be.
+
+Another example:
+
+    [ ] 11111
+        [ ] 22222
+            [ ] 33333
+            [ ] 44444
+
+This states 33333 and 44444 cannot be completed until 22222 is
+completed, and 22222 cannot be completed until 11111 is completed.
+
+It is possible to define dependencies between mods and groups.
+
+Example:
+
+    [ ] 11111
+        start 123
+
+This states that group 123 cannot be started until mod 11111 is
+completed.
+
+Another example:
+
+    end 123
+        start 456
+
+Group 456 cannot be started until group 123 is completed.
+
+Groups are implicitly dependent on the items contained therein.
+
+For example, given this group:
+
+    group 123
+        [ ] 11111
+    end
+
+The following dependencies hold true:
+
+    * group 123 cannot be completed until group 123 is started (done)
+    * 11111 cannot be done until group 123 is started (done)
+    * group 123 cannot be completed until 11111 is done.
+
+This is easier to see when converted to dependency view:
+
+    start 123
+        end 123
+        mod 11111
+            end 123
+    end 123
+
+It's important to note that schemas will always be converted to this
+format before dependency rules are applied (See: Dependency Rules).
+
+
+Dependency Rules
+----------------
+
+Dependencies must not be self-referential.  That is, an element may not
+be dependent on itself, even when the dependency is far removed from
+itself.
+
+This is valid:
+
+    [ ] 11111
+        [ ] 22222
+            [ ] 33333
+
+This is not:
+
+    [ ] 11111
+        [ ] 22222
+            [ ] 11111
+
+This is valid:
+
+    [ ] 11111
+        [ ] 22222
+    [ ] 22222
+        [ ] 33333
+    [ ] 33333
+        [ ] 44444
+
+This is not:
+
+    [ ] 11111
+        [ ] 22222
+    [ ] 22222
+        [ ] 33333
+    [ ] 33333
+        [ ] 11111
+
+This is valid:
+
+    group 123
+        [ ] 11111
+        group 456
+            [ ] 22222
+        end
+            [ ] 33333
+    end
+
+    end 456
+        [ ] 44444
+
+This is not:
+
+    group 123
+        [ ] 11111
+        group 456
+            [ ] 22222
+        end
+            [ ] 33333
+    end
+
+    end 456
+        [ ] 22222
+
+    (group 456 cannot be done until 22222 is done)
+
+
+# vim: ft=our_doc

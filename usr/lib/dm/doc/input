@@ -1,0 +1,158 @@
+Input
+=====
+
+*NOTE: The input system is not fully developed. This is subject to
+change.
+
+The goal of the input system is to permit quick recording of ideas and
+things that need doing. It corresponds somewhat to the "collect" phase
+of the Getting-Things-Done workflow process.
+
+Ideas are recorded by sending an email to a specific address. As in the
+old system, an initial letter in the subject of the email determines
+what action will be taken.
+
+    Code[1] Type            Action
+    n       now             schedule now
+    d       daily           postpone until tomorrow
+    w       weekly          postpone until next sunday
+    c       calendar        create google calendar entry
+    g       grocery         database grocery record
+    k       knowledge base  store in kb[2]
+
+[1] Codes are case insensitive.
+[2] as of 2009-01-30 15:51:41 the k type has not been implemented.
+
+Some preparation is required for the input system to work. The details
+are given, then a checklist at the end.
+
+
+Preparation
+-----------
+
+1. Create an email account for input to be delivered to.
+
+I created the gmail account: inputjimk@gmail.com for collecting input.
+Any email sent to this email address is processed as an input.
+Technically you don't need a new email address as long as you can
+configure your MDA (eg fdm) to pull out emails destined for input.
+
+
+2. Set up fdm filtering.
+
+I've added these lines to the fdm conf file
+
+    ~/.fdm.conf
+
+    match "^To:.*jimkarsten\\+input@gmail.com.*" in headers
+        and "^Subject:\\s*c\\s\+" in headers
+        actions { "l-input" "mail2calendar" "mark_as_read"}
+
+    match "^To:.*jimkarsten\\+input@gmail.com.*" in headers
+        and "^Subject:\\s*g\\s\+" in headers
+        actions { "l-input" "mail2grocery" "mark_as_read"}
+
+    match "^To:.*jimkarsten\\+input@gmail.com.*" in headers actions { "l-input" "input_filter" "mark_as_read"}
+
+    action "input_filter" exec "mkdir -p $HOME/dm/var/email && cp %[mail_file] $HOME/dm/var/email/"
+    action "l-input" maildir "${input}"
+    action "mail2grocery" exec "$HOME/dm/bin/mail2grocery.sh %[mail_file]"
+    action "mark_as_read" exec "$HOME/dm/bin/mark_as_read.sh %[mail_file]"
+
+The first action may need to be customized. It archives the mail in a
+maildir directory.  The section action sorts the mail based on the first
+letter in the subject. See $HOME/dm/sort_input.sh for more details.  The
+third action marks the email as read so it doesn't show up in your email
+viewer as unread.
+
+
+3. Create a personal sort trees.
+
+Each person in the dev system will have there own personal sort trees.
+This permits people to sort input without interfering or conflicting
+with other people's input.
+
+A typical tree structure is as follows:
+
+    $HOME/dm/trees/main
+    $HOME/dm/trees/jimk/now
+    $HOME/dm/trees/jimk/reminders
+    $HOME/dm/trees/jimk/unsorted
+    $HOME/dm/trees/steve/now
+    $HOME/dm/trees/steve/reminders
+    $HOME/dm/trees/steve/unsorted
+
+See the trees doc for more information on setting up and using trees.
+
+When input emails are first sorted they are placed in the now tree or
+the unsorted tree depending on the first letter of their subject. The
+trees can be created empty. Scripts will add mods to them automatically.
+
+    mkdir -p $HOME/dm/trees/$USERNAME
+    echo "# Now mods" > $HOME/dm/trees/$USERNAME/now
+    echo "# Unsorted mods" > $HOME/dm/trees/$USERNAME/unsorted
+
+
+4. Create an alias.
+
+It is convenient to create an alias to the input script.
+
+    alias input="$HOME/dm/bin/input.sh"
+
+The alias only saves typing a dot and two letters but it allows you to
+use a consistent "input" command regardless of how the input procedure
+might change in the future.
+
+5. Cron email fetch.
+
+Periodically email should be fetched and processed. A typical crontab
+entry to do this might look like this:
+
+## Cron fetch and process emails every 15 minutes
+01,16,31,46 * * * * /root/dm/bin/run.sh fetch.sh && /root/dm/bin/run.sh process_emails.sh
+
+
+Preparation Checklist
+---------------------
+
+[ ] Create input email account.
+[ ] Set up email filtering in $HOME/.fdm.conf.
+[ ] Create maildir directory to archive input emails.
+[ ] Create personal now tree.
+[ ] Create personal unsorted tree.
+[ ] Create input alias.
+[ ] Cron email fetch.
+
+
+Typical Usage
+-------------
+
+During the day whenever you think of something that needs to be done,
+create an input by running input at the shell.
+
+    $ input
+
+Type in the subject and optionally add a description, save and you're
+done. An email will be sent to the input email account. When your email
+is fetched a few minutes later, fdm will sort it, create a mod,
+prioritize the mod in the appropriate tree, and message you if
+necessary.
+
+Specifically, the result of each input is as follows:
+
+1. An email is sent to the indicated input email account.
+2. An email fetch is scheduled in 2 minutes.
+3. The email is fetched and stored in the maildir directory as indicated
+in the fdm.conf
+4. A mod is created from the email. See mail2mod.sh for how the mod
+attributes are determined.
+5. If the input is daily, the mod is put on hold until tomorrow. If it
+is weekly, until next sunday.
+6. Daily and weekly input mods are appended to the end of the unsorted
+dependency tree.
+7. If the input is "now", the mod is appended to the end of the now
+dependency tree.
+8. Mods will be added to the todo list the next time the now and/or
+unsorted tree is prioritized.
+
+# vim: ft=our_doc

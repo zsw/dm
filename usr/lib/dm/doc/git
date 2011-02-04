@@ -1,0 +1,175 @@
+Git.
+
+Common Commands
+===============
+
+Here are some common git commands. Links to videos, tutorials, and
+reference manuals is at the bottom.
+
+
+## Clone the repo
+
+$ git clone /path/to/repo $HOME/dm
+
+
+## The following commands assume present working directory is
+## $HOME/dm
+
+## In other words run this first:
+
+$ cd $HOME/dm
+$ git status        ## Check status
+$ git add .         ## Add changes to git index.
+$ git commit        ## Commit changes.
+
+## Set up a branch to another user.
+## Replace occurrences of 'username' with the actual username
+$ git remote add username /path/to/username/dm
+
+
+## Pull from another
+$ git pull username master
+
+
+## Dealing with local changes.
+
+## Example
+$ git pull username master
+    remote: Counting objects: 123, done.
+
+    error: Entry 'mods/12345/who' not uptodate. Cannot merge.
+
+## Solution
+## Update your local area first, then do the pull again
+$ git add .
+$ git commit
+$ git pull 'username' master
+
+
+
+## Dealing with conflicts
+
+## Example
+$ git pull 'username' master
+    remote: Counting objects: 123, done.
+    ...
+    CONFLICT (content): Merge conflict in mods/12345/notes
+    Automatic merge failed; fix conflicts and then commit the result.
+
+## Solution
+## Fix the file the conflict relates to, then commit changes.
+$ vi $HOME/dm/mods/12345/notes
+
+## Look for conflict markers
+
+    <<<<<<< HEAD:mods/12345/notes
+    your text
+    =======
+    text someone else recently added/modified
+    >>>>>>> 13ebe45a73f78310d54d8028127aa7fa8a1a4855:mods/12345/notes
+
+## Edit the file what you think it should be.
+## This could be using your text, using the others
+## text, or combining the two. Save.
+
+## Commit changes.
+$ git add .
+$ git commit
+
+
+Public Repo Loop
+================
+
+One way to deploy the dm system in a multiuser environment is with git private/public loop.
+
+The general strategy is:
+    1) Push all changes made in your local private copy of the repo to a public clone.
+    2) Pull changes from other users using their public clone.
+
+The result is a users repo is only updated when they are ready to update. No surprises.
+
+Loop Format
+
+
+            PersonA                               PersonB
+
+            private repo      <== pull ==       public repo
+
+                ||                                  /\
+               push                                 ||
+                ||                                 push
+                \/                                  ||
+
+            public repo       == pull ==>       private repo
+
+Commands:
+---------
+
+## Add a public remote.
+
+$ mkdir -p /var/git/public/dm
+$ git clone --bare $DM_ROOT /var/git/public/dm
+$ cd $DM_ROOT
+$ git remote add public /var/git/public/dm
+
+
+## Add remote for another user
+## Eg User's billybob has a remote accessible at /home/billybob/dm
+
+$ cd $DM_ROOT
+$ git remote add billybob /home/billybob/dm
+$ git branch billybob
+$ git config branch.billybob.remote billybob
+$ git config branch.billybob.merge refs/heads/master
+
+
+Git Resources
+=============
+
+Videos:
+-------
+
+Introduction from Linus Torvalds
+http://www.youtube.com/watch?v=4XpnKHJAok8
+
+Screencast tutorial
+http://excess.org/article/2008/07/ogre-git-tutorial/
+
+
+Tutorials:
+----------
+
+Git tutorial part 1
+http://www.kernel.org/pub/software/scm/git/docs/gittutorial.html
+
+Git tutorial part 2
+http://www.kernel.org/pub/software/scm/git/docs/gittutorial-2.html
+
+
+References:
+-----------
+
+Git man pages
+http://www.kernel.org/pub/software/scm/git/docs/
+
+Git user manual
+http://www.kernel.org/pub/software/scm/git/docs/user-manual.html
+
+Git wiki
+http://git.or.cz/gitwiki/GitDocumentation
+
+Cheat sheets
+http://www.sourcemage.org/Git_Guide
+
+Differences from Subversion
+http://git.or.cz/gitwiki/GitSvnComparsion
+
+Explanation of SHA1
+http://students.ceid.upatras.gr/~sxanth/ungit.html
+
+
+Examples of git workflow.
+http://www.brynary.com/2008/8/3/our-git-deployment-workflow
+
+
+# vim: ft=our_doc

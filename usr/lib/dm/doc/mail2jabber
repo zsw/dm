@@ -1,0 +1,60 @@
+Mail2Jabber
+===========
+
+The mail2jabber.sh script is used to convert an email to a jabber
+message.
+
+
+Setup
+-----
+
+1. Create an email account for jabber messages.
+
+I created a jabberjimk@gmail.com account to handle jabber messages. Any
+email message sent to that account will produce a message in my jabber
+client (weechat) rather than in my email client. The email account is no
+different than any other email account. The sorting explained next does
+all the work.
+
+
+
+2. Configure fdm to sort jabber messages.
+
+Here are the configuration lines in $HOME/.fdm.conf that handle
+converting email messages to jabber.
+
+    match "^To: jabberjimk@gmail.com" in headers actions { "l-input" "mail2jabber" "mark_as_read"}
+    action "l-input" maildir "${mail}/pl/input"
+    action "mail2jabber" exec "$HOME/dm/bin/mail2jabber.sh %[mail_file]"
+    action "mark_as_read" exec "$HOME/dm/bin/mark_as_read.sh %[mail_file]"
+
+
+3. Start weechat.
+
+The mail2jabber.sh dumps the email message in the weechat fifo pipe,
+$HOME/.weechat/weechat_fifo_*. Weechat has to be running for this to
+work.
+
+
+Debug
+-----
+
+To troubleshoot the whole process, send an email to the account you created
+for jabber messages and see if it creates a message in weechat. Remember
+the message won't appear until your system fetches email.
+
+It is possible to debug the mail2jabber.sh script by running it from the
+cli.
+
+## Start weechat if not already running
+$ weechat-curses
+
+## Find an existing maildir email file
+## and pass it as a parameter to mail2jabber.sh
+
+$ mail2jabber.sh ~/.mail/pl/cur/1220476681.000265.mbox:2,S.
+
+## Then check weechat for a message
+
+
+# vim: ft=our_doc

@@ -1,0 +1,204 @@
+Documentation
+=============
+
+
+Overview
+--------
+
+This document is an attempt at adding structure to our documentation by
+defining a few formatting guidelines.
+
+
+Text Width
+----------
+
+Blocks of text, like this one, should have a text width of 72
+characters.  This would allow our documentation to be quoted in emails.
+
+
+Cli Commands
+------------
+
+Commands run from the cli should start for the left margin and be
+prepended with a "$ " to simulate the cli prompt.  The line should not
+be wrapped.
+
+Example:
+
+$ git log --diff-filter=D  --summary  | grep -B 6 $FILE
+
+
+Cli Comments
+------------
+
+Comments be added to act as instructions or to help clarify a command.
+Prefix comments with two '#' symbols. This will distinguish them from
+intended comments in file content which use one '#' symbol. Comments can
+be added inline directly after the command or on a separate line above
+the command.
+
+Example 1:
+
+$ git log --diff-filter=D  --summary  | grep -B 6 $FILE     ## Replace $FILE with the file you're looking for.
+
+Example 2:
+
+## Replace $FILE with the file you're looking for.
+$ git log --diff-filter=D  --summary  | grep -B 6 $FILE
+
+
+Cli Output
+----------
+
+Occasionally the output of a command is included in a document to
+illustrate expected results or to obtain data for a subsequent command.
+Format output of a command by indenting 4 spaces and turning wrap off.
+
+Example:
+
+## Output should look like this
+
+    commit 3e704bd3b6983d26819c5dd53220d5adaf28871e     ## <==== we need this commmit id
+    Author: Jim Karsten <jimk@porchlight.ca>
+    Date:   Mon Oct 27 17:15:29 2008 -0400
+
+    Convert input script to bash.
+
+    delete mode 100755 path/to/$FILE
+
+
+Editing Files
+-------------
+
+The easiest way to document changes to text files, eg shell scripts or
+/etc conf files, is to include the output of a 'diff -u' on the before
+and after versions of the file. To better help us create a copy of the
+original file before modifications, try aliasing 'vi' to this bash
+script titled 'bu':
+
+    #!/bin/bash
+
+    ## Check to see if the dirname exists
+    if [[ ! -d $(dirname "$@") ]]; then
+        echo "$(dirname) does not exist!"; echo
+        exit 1
+    fi
+
+    ## Check to see if the backup directory exists
+    if [[ ! -d $(dirname "$@")/.bu ]]; then
+        mkdir $(dirname "$@")/.bu
+        echo "==> Creating backup directory."; echo
+        sleep 5
+    fi
+
+    ## Backup file
+    cp "$@" $(dirname "$@")/.bu/$(basename "$@")-$(date +%Y%m%d%H%M%S)
+
+    ## Edit the file
+    vim "$@"
+
+'bu' stands for 'backup'.  This script will create a '.bu' directory if
+one does not exist, copy the original file to this location and append
+the date to the filename of the newly created backup file.
+
+Then run diff -u on the .bu version and the edited version. The output
+can be included in the document.
+
+Example:
+
+--- howto-documentation    2008-12-15 20:35:52.000000000 -0500
++++ howto-documentation.bak    2008-12-15 20:47:05.000000000 -0500
+@@ -98,7 +98,6 @@
+ the date to the filename of the newly created backup file.
+
+ Example
+-one is needed **FIXME
+
+ TODO
+ ====
+@@ -109,6 +108,8 @@
+
+ - colours comments, indents and lines beginning with '$, +, -'
+   differently
++  * This is complete
++
+ - do not wrap any line starting with a '$', four spaces and '+' or a '-'
+
+ TODO
+
+
+Vim Formatting
+--------------
+
+Several of vim's features are used to make editing document files
+simpler.
+
+
+1. Syntax Highlighting.
+
+The our_doc.vim file defines a syntax highlighting scheme for our
+documents. Copy the file to the $HOME/.vim/syntax directory.
+
+$ mkdir -p $HOME/.vim/syntax
+$ cp our_doc.vim $HOME/.vim/syntax/
+
+
+2. Modeline
+
+In order to automatically set the textwidth and filetype for the
+document, include the following modeline at the end of the document.
+
+    # vim: ft=our_doc
+
+As well, add this option to $HOME/.vimrc.
+
+    set modeline                            " Read vim settings from the modeline
+
+3. FileType formatting
+
+We'd like to standardize the textwidth for documents. We could add a
+tw=72 to the modeline, but hardcoding that way doesn't facilitate
+changes in the future. A better way is to add an autocmd to .vimrc so
+any file with the prescribed filetype will take on specific formatting
+characteristics.
+
+$ vi $HOME/.vimrc
+
+    ## Add this line
+    autocmd FileType our_doc set tw=72
+
+This way we can change the textwidth or add other format settings on the
+fly and all existing documents with that filetype automatically adopt
+those settings when opened in vim.
+
+
+
+## TODO
+
+Selective Wrapping
+
+It would be convenient to be able to enforce wrapping where desired
+automatically. For example, any command line ( starting with a '$'), any
+indented text, or any output from a diff -u should not be wrapped. All
+other text should be wrapped.
+
+So far I haven't found a clean way to do this. Syntax highlighting is
+for colours only and doesn't impose formatting rules. Also the textwidth
+setting is document wide and doesn't work on a line by line basis.  The
+only way to override the document textwidth setting for sections of a
+document is using the gq family of commands, eg in visual mode select
+the line or lines you want to format, then type gq. The user does this
+manually.
+
+Some possibilities include mapping a function to a convenient key
+combination that scans the document and enforces formatting, and using
+the fmt command as in :%!fmt. It may be possible to tie the filetype to
+an autocmd and format the document automatically on save. Each of these
+is done after the fact though, not as you type, so I don't know if they
+are all that much of an improvement over manually formatting.
+
+For now I'd rather not implement anything until we've used it a bit to
+see if it is even required.  2008-12-16 JK
+
+
+# vim: ft=our_doc

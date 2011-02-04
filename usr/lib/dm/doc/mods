@@ -1,0 +1,130 @@
+Mods
+====
+
+
+Overview
+--------
+
+Mods are stored in the $HOME/dm/mods directory.
+
+The directory name is the id of the mod.
+
+Eg. Mod 12345 is represented by the directory
+$HOME/dm/mods/12345
+
+
+Attributes
+----------
+
+Files in the mod directory represent the mod attributes.  Eg. The file
+$HOME/dm/mods/12345/description contains the description of
+the mod.
+
+    description - A one-line descripton of the mod.
+    spec        - The mod specification
+    who         - Initials of the person the mod is currently assigned to.
+    notes       - Any notes related to the mod including brainstorming, discussions, references, resources.
+    hold        - Contains a timestamp indicating the time the mod is on hold to.
+    remind      - Contains a list of email address which alert reminders are sent to.
+
+Modifications to the mod attributes can be made by editing the attribute
+files directly or by using various tools, eg edit_mod.sh (em),
+update_mod.sh (um).  Other than the description and who file, attribute
+files are optional. They can be deleted or created as needed.
+
+
+Attachments
+-----------
+
+Attachments associated with a mod are stored in the $DM_FILES/files
+directory and symlinked in the mods directory.
+
+See $HOME/dm/doc/attachments for more details.
+
+
+Mod IDs
+-------
+
+The design of assigning mod ids attempts to solve these requirements.
+
+    * No two mods should use the same mod id.
+
+    * A person should be able to create a mod with a guaranteed unique id
+      even if they have no knowledge of ids recently used by other people.
+
+Blocks of ids are allocated in the $HOME/dm/ids table. If a
+person does not have a block of ids assigned to them, they cannot create
+new mods. Every new mod created will be assigned an id in the range
+assigned to the person creating the mod. A counter file records the last
+mod created and increments it each time a new mod is created.
+
+The next_mod_id.sh script handles determining the next mod id to use for
+a new mod, and incrementing the mod counter.
+
+Once a block of ids are used up, the next_mod_id.sh script will produce
+an error and abort.  Assign the user a new block of ids. next_mod_id.sh
+prints a warning message if when there are less than 10 ids left to a
+person.
+
+Complete blocks can be indicated in the $HOME/dm/ids file by
+putting an x beside the person id. This way we can see who used the
+block.
+
+Counters are stored in $HOME/dm/.counters subdirecties.  The
+last used mod id is stored in a counters file. The name of the file is
+the id of the person.
+
+Eg. Person B has id 5. Run this command to see the last mod id used by
+Person B:
+
+$ cat $HOME/dm/.counters/5
+
+
+Assigning a block of ids to a person
+------------------------------------
+
+# Edit the ids file and assign a block of ids to the person
+$ vi $HOME/dm/ids
+
+    # Example: Assume blocks have been assigned to persons 1 and 2.
+
+    start_mod_id,end_mod_id,person_id
+    00001,09999,1
+    10000,29999,2
+    30000,99999,0
+
+    # Assign a block to person 3 as follows:
+
+    start_mod_id,end_mod_id,person_id
+    00001,09999,1
+    10000,29999,2
+    30000,49999,3                       # New block of ids for person 3.
+    50000,99999,0                       # The unassigned block is adjusted.
+
+# Reset the id counter. For example to reset the counter for the
+# block of ids created for person 3, do this:
+
+echo 30000 > $HOME/dm/.counters/3
+
+If the person has completed a block, then flag it with an x by the
+person id.
+
+    # Example: Person 1 completes their block of ids. Assign a new block.
+
+    # Before:
+    start_mod_id,end_mod_id,person_id
+    00001,09999,1
+    10000,29999,2
+    30000,49999,3
+    50000,99999,0
+
+    # After:
+    start_mod_id,end_mod_id,person_id
+    00001,09999,x1                      # Flagged as complete.
+    10000,29999,2
+    30000,49999,3
+    50000,59999,1                       # New block of ids for person 1.
+    60000,99999,0                       # The unassigned block is adjusted.
+
+
+# vim: ft=our_doc

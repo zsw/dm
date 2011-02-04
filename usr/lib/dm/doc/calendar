@@ -1,0 +1,275 @@
+Calendar
+========
+
+The dev mod system has an interface to Google calendar.
+
+
+Overview
+--------
+
+The interface to the Google calendar permits creating and updating
+Google calendar entries. It's also possible to display all calendar
+entries. The scripts act as an interface to Google calendar but there is
+nothing magical going on. You can access the entries and
+edit/modify/display them from Google's normal web page interface at
+www.gmail.com.
+
+
+Creating a calendar entry
+-------------------------
+
+There are two methods of creating a calendar entry.
+1) The input system.
+2) Editing calendar events with calendar_edit.sh.
+
+
+1) Use the input system for creating a calendar entry.
+
+$ input
+
+    Sbjct: c August 7, 2009 2pm to 3pm Dentist appointment
+    Descr: Dr. Dennis Bruce Nuhn
+    Palmerston Phone: (519) 343-2720
+
+The subject must follow a specific format.
+
+    Sbjct: c August 7, 2009 2pm to 3pm Dentist appointment
+           | \____________/ \________/ \_________________/
+    Code --+      |             |               |
+    Date ---------+             |               |
+    Time -----------------------+               |
+    What ---------------------------------------+
+
+    Code: Start with a lowercase 'c' followed by at least one space.
+
+    Date: Indicate the date of the calendar event. The following
+          formats are acceptable:
+          January 31, 2009
+          Jan 31, 2009
+          Jan 31                # The year is assumed to be this year
+          2009-01-31
+
+    Time: Indicate the start time and optionally the end time. Most
+          intuitive formats are acceptable.
+          7pm
+          19:00
+          7pm to 9pm
+          7 pm to 9:30 pm
+          7-9pm                 # this is assumed 7pm to 9pm
+          7 to 9pm
+          9-11am                # this is assumed 9am to 11 am
+          11 am - 3 pm
+          19:00 to 21:00
+          19:00 - 21:00
+
+    What: Any text after the time is entered as the calendar "What"
+
+The Descr is optional. What ever text is entered for the description is
+stored in the calendar description field. Descriptions should *not*
+contain blank lines.
+
+It will take several minutes for the input system to update the calendar.
+
+2) Editing calendar events with calendar_edit.sh.
+
+Editing calendar events is covered in detail in the "Updating a calendar
+entry" section. To add a new entry, run calendar_edit.sh and add a new
+calendar event *without an id header*. At minimum the event has to have a
+what and when header.
+
+    what: New calendar event.
+    when: 2009-08-10 19:30:00
+    until: 2009-08-10 21:30:00
+    description: This is a new calendar event.
+
+Save the calendar events file and the new event will be added. Any
+number of events can be added in one edit. It's also possible to modify
+existing events, delete existing events and add new events in one run of
+calendar_edit.sh. More details are available in the following sections.
+
+
+Displaying your calendar
+------------------------
+
+The calendar.sh script is use for displaying calendar entries.
+
+The script has two modes, short and long (default). The short version is
+useful for getting a quick glance of the events for the day of month.
+The long version is for viewing the specific details of the event.
+
+$ calendar.sh -m short
+
+    2009-08-10 19:30:00 KW-Lug
+    2009-08-14 10:50:00 Dentist Appointment
+
+$ calendar.sh -m long
+$ calendar.sh
+
+    id: pj7vqq5akflo5btmpgbtv13nkc
+    what: KW-Lug
+    when: 2009-08-10 19:30:00
+    until: 2009-08-10 21:30:00
+    where:
+    description:  Heuther Hotel (Boardroom) 59 King St N, Waterloo (519)
+    886-3350 http://www.kwlug.org/
+    remind: 60 minutes by email
+
+    id: h1vqotvj45rmkaf86rr7cru8cc
+    what: Dentist Appointment
+    when: 2009-08-14 10:50:00
+    until: 2009-08-14 11:59:00
+    where:
+    description:  Name: Dr. Dennis Bruce Nuhn Address: 30 Minto Rd, PO
+    Box 580 City/Town: Palmerston ON Postal code: N0G 2P0 Phone: (519)
+    343-2720
+    remind: 60 minutes by email
+
+
+The script has options to filter the calendar entries displayed and
+control the sort order.
+
+## Display all calendar entries for the month of July, 2009.
+$ calendar.sh -f 2009-07-01 2009-07-31
+
+## Get help to see other options
+$ calendar.sh -h
+
+
+Updating a calendar entry
+-------------------------
+
+To update an calendar entry, run calender_edit.sh. (Or "ce" if the alias
+is created. See Aliases below.)
+
+$ calendar_edit.sh
+
+The script will open a vim session and allow you to edit all calendar
+entries from todays date onward. Make changes with vim, save your
+changes, and the calendar entries will be uploaded to Google calendar.
+
+The general format of the edited file should be left as is. You can edit
+the values but do not change the headers. Also do *not* change the id
+values. They represent the ids of the calendar entries as stored in the
+Google system.
+
+The calendar_edit.sh has several options that allow you to filter the
+calendar entries you edit.
+
+## Edit all calendar entries for the month of July, 2009.
+$ calendar_edit.sh -f 2009-07-01 2009-07-31
+
+## Get help
+$ calendar_edit.sh -h
+
+Any calendar entries not in the edit session remain untouched.
+
+WARNING: A blank line is used to separate calendar entries in an edit
+session. Do not put blank lines in the description section of a calendar
+entry as text after a blank line will be dropped.
+
+
+Deleting a calendar entry
+-------------------------
+
+To delete a calendar entry, simply change the "what:" field to DELETE.
+
+For example, consider this calendar entry.
+
+    id: pj7vqq5akflo5btmpgbtv13nkc
+    what: Meeting with Uncle Sam.
+    when: 2009-08-10 19:30:00
+    until: 2009-08-10 21:30:00
+    where: 123 Main St E Kitchener ON
+    description: Talk about the latest release.
+    remind: 60 minutes by email
+
+The same calendar entry has been modified below and is now flagged to be deleted.
+
+    id: pj7vqq5akflo5btmpgbtv13nkc
+    what: DELETE
+    when: 2009-08-10 19:30:00
+    until: 2009-08-10 21:30:00
+    where: 123 Main St E Kitchener ON
+    description: Talk about the latest release.
+    remind: 60 minutes by email
+
+NOTES:
+
+* See "Updating a calendar entry" for instructions on how to change a
+  calendar entry.
+* The keyword DELETE must be one word, uppercase
+* The id of the calendar entry must remain unchanged in order for the
+  system to be able identify the specific calendar entry to delete.
+
+
+Notification
+------------
+
+Google calendar has a notification feature. Notifications can be added
+to calendar events using the "remind" header.
+
+This calendar event is configured to send an email notification 1 hour
+(60 minutes) before the event.
+
+    id: pj7vqq5akflo5btmpgbtv13nkc
+    what: Meeting with Uncle Sam.
+    when: 2009-08-10 19:30:00
+    until: 2009-08-10 21:30:00
+    description: Talk about the latest release.
+    remind: 60 minutes by email
+
+The syntax for the remind value is:
+
+    <nn> minutes by <method>
+
+where
+    <nn> is the number of minutes
+    <method> is the notification method, one of: alert email sms.
+
+The notification methods are:
+
+    alert - pop-up alert on gmail page.
+    email - an email is sent to gmail address
+    sms   - text message is sent to your mobile phone
+
+Multiple notifications are supported. This calendar event is configured
+to send an email notification 1 hour (60 minutes) before the event and
+send an SMS text message 10 minutes before the event.
+
+    id: pj7vqq5akflo5btmpgbtv13nkc
+    what: Meeting with Uncle Sam.
+    when: 2009-08-10 19:30:00
+    until: 2009-08-10 21:30:00
+    description: Talk about the latest release.
+    remind: 60 minutes by email
+    remind: 10 minutes by sms
+
+To modify a notification, simply edit the calendar event. See "Updating
+a calendar entry" for more info.
+
+To remove a notification, simple edit the calendar event and delete the
+remind line associated with the event.
+
+Unfortunately the Google python API does not permit access to the Google
+Calendar default notifiction setting. Calendar events added using the
+dev mod system interface will not have a default notification setting.
+When calendar events are created with the input system, the event will
+be created with no notifications.
+
+Is you wish to be reminded by SMS you have to register your phone with
+Google. Click  "Set up your mobile phone to receive notifications" and
+follow instructions. This is a one-time setup.
+
+
+Aliases
+-------
+
+The following aliases may be useful. Add in $HOME/.bash_aliases.
+
+$ cat ~/.bash_aliases
+
+    alias ca='$HOME/dm/bin/calendar.sh -m short'
+    alias ce='$HOME/dm/bin/calendar_edit.sh'
+
+
+# vim: ft=our_doc

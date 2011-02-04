@@ -1,0 +1,190 @@
+Reminders
+=========
+
+Overview
+--------
+
+Reminders can be used for alerting and for recurring tasks.
+
+
+Alerting Example - You have an appointment at 11am on Tuesday with the
+accountant. Create a reminder, set it to remind by pager, and put it on
+hold until 10:30 Tuesday. Then on Tuesday you will receive a pager
+message reminding you about the appointment at 10:30.
+
+Recurring Task Example - Every month, on or about the 15th, you pay your
+credit card balance.  Create a reminder, include instructions in the
+notes, and set the mod as done. Create a cron job to reactivate the mod
+on the 15th of each month.
+
+
+First, this document will explain how to create reminders for general
+usage. Then it will document the details. Everything is done with basic
+linux tools, flat files, crontab, and simple shell scripts.
+
+
+Creating Reminders
+------------------
+
+Creating a onetime alerting reminder.
+
+These are the steps you might take to create a onetime alerting
+reminder:
+
+## Run input and enter a subject and description for the reminder.
+
+$ input
+
+## In a few minutes the input email will be retrieved by the system. The
+## next time your mods are prioritized, it will appear in your todo
+## list. You can manually trigger prioritization if you want to set up
+## the reminder immediately.
+
+$ pri
+
+## When the mod is set, ie has asterisk beside it in todo list, create
+## an alert with the 'um' command.
+
+$ um in reminders by pager at next tuesday 10:30
+
+
+Creating a recurring task reminder.
+
+## Run input and enter a subject and description for the reminder.
+
+$ input
+
+## In a few minutes the input email will be retrieved by the system. The
+## next time your mods are prioritized, it will appear in your todo
+## list. You can manually trigger prioritization if you want to set up
+## the reminder immediately.
+
+$ pri
+
+## When the mod is set, ie has asterisk beside it in todo list, move the
+## mod to the reminders tree.
+
+$ um in reminders
+
+## Then create a crontab for the mod.
+
+$ crontab -e
+
+## Assuming the mod id is 00027, to undone the mod on the 15th of every
+## month at 7am, the crontab entry is as follows:
+
+    00 07 15 * * /root/dm/bin/run.sh undone_mod.sh 00027   ## Pay credit card bills.
+
+## Then done the mod. (Make sure it is still flagged as the set mod in todo list)
+
+$ dun
+
+
+Details
+-------
+
+Most of the scripts used have help information giving more details on
+how they are used.
+
+$ input.sh -h
+$ prioritize.sh -h
+$ um.sh -h
+$ update_mod.sh -h
+
+You can also view the code to see the steps they do.
+
+
+The reminders tree.
+
+Reminders are generally prioritized in a personal reminders tree.
+Technically the system doesn't care which tree you put reminders in.
+They have to be put in one tree to be prioritized. Keeping them all in
+the reminders tree makes it convenient to manage them as they are all in
+one place. Using one tree makes it easy to prioritize reminders as well.
+See the 'trees' doc for examples.
+
+Creating a reminder tree. Warning: the second command will overwrite a
+reminder tree if it already exists.
+
+$ mkdir -p $DEV_FILESTORE_ROOT/trees/$USERNAME
+$ echo "#Reminders" > $DEV_FILESTORE_ROOT/trees/$USERNAME/reminders
+
+You can manually edit the reminder tree to add reminders, rearrange
+their order, create dependencies and to create new reminders. Note, it
+is easier to use the 'input' system to create new reminders then to use
+"um in reminder" to move the mod to the reminder tree.
+
+
+The crontab entry.
+
+This is an example crontab entry.
+
+    00 07 15 * * /root/dm/bin/run.sh undone_mod.sh 00027       ## Pay credit card bills.
+
+    |-        -| |-               -| |-         -| |- -|      |-                      -|
+      cron spec    set env command     command    mod id       comment, mod description
+
+Reminders can be set to reoccur at various periods. You are only limited
+by what the cron permits. Every minute, hour, day, week, month, or year
+is possible. Every Monday, the first Tuesday of each month, and every
+two hours are also possible.
+
+If you want to cron something more complex than the cron can handle, you
+can use a shell script. Have the shell script exit with a success status
+if the current time matches and exist with error status if the current
+time does not match. Then cron as follows:
+
+    00 07 * * * /path/to/shell/script.sh && /root/dm/bin/run.sh undone_mod.sh 12345
+
+You can make the algorithm in the shell script as complex and convoluted
+as you like.
+
+The cron environment is ususally more restricted than normal, so run all
+commands as arguments to run.sh so the environment is prepared properly.
+
+The undone_mod.sh command will move the mod from the
+$HOME/dm/archive directory to the $HOME/dm/mods
+directory making it active and available for prioritization.
+
+The comment is optional but useful for distinguishing crontab entries.
+
+
+Frequent Reminders
+------------------
+
+If you want to set up a reminder that notifies you multiple times a day
+you may wish to set up a crontab using remind_mod.sh directly instead of
+using undone_mod.sh. When a mod is undone, it is prioritized. You won't
+get another alert for the mod until it is completed and taken off your
+todo list, after all the system thinks you are aware of it but are
+working on mods of higher priority. In general this works fine but with
+a mod where you need frequent alerting, you could miss alerts if the mod
+gets delayed on the todo list.
+
+For example, suppose you have a mod to check in on the kids once every
+hour from 9am to 5pm. You want a page every hour regardless. You set up a
+mod to remind you by pager, and create a crontab entry to run
+undone_mod.sh on the mod each hour. All looks good. At 9am you get an
+alert and the mod is put on your todo list. Suppose another mod has
+higher priority. You begin work on it. Suppose it takes you all day. The
+mod to check in on the kids gets stuck lower on your todo list. Since it
+never comes up, you never done it. As a result the system no longer
+reminds you about the kids because it thinks you are working on it, well, at
+least you'll be working on it as soon as it's top priority.
+
+The solution is to use the remind_mod.sh script directly in the crontab
+entry. Essentially we ignore the mod status, whether it's done or not,
+and just trigger an alert.
+
+The crontab looks like this:
+
+    00 * * * * /root/dm/bin/run.sh remind_mod.sh 12345   # Check something
+
+
+References
+----------
+
+See also  alerting, input, trees
+
+
+# vim: ft=our_doc

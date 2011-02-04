@@ -1,0 +1,114 @@
+Postponing Mods
+===============
+
+Mods can be postponed.
+
+Use the pp alias to postpone the set mod.
+
+$ pp next thursday 10:00
+
+To postpone a mod not currently set, you can temporarily set the mod,
+postpone it, then restore the set mod.
+
+$ sm 12345 pp next thursday 10:00 sm
+
+Or, you can use postpone.sh
+
+
+$ postpone.sh -m 12345 next thursday 10:00
+
+
+The postpone scripts use the "date" command to convert the postpone
+time. In particular the --date option is used from a human readable date
+string to a timestamp. The format string used is "+%Y-%m-%d %H:%M:%S".
+
+Here are some acceptable postpone times. Some are intuitive. Some not so
+much.
+
+
+$ pp 2008-12-09 17:00:00        ## Indicate the particular date and time using military time.
+$ pp 2008-12-09                 ## Indicates a particular date, 00:00:00 is assumed for time.
+
+$ pp tomorrow                   ## Returns tomorrows date, the current time is assumed for time.
+$ pp tomorrow 9am               ## Returns tomorrows date, with 09:00:00 for time.
+
+$ pp next thursday              ## Returns the date of the following Thursday.
+                                ## If a time is not indicated, 00:00:00 is assumed
+                                ## WARNING: if today is Thursday, returns today!!
+                                ## Use next week if you want the following Thursday
+
+$ pp next week                  ## Returns the date one week from today
+                                ## If a time is not indicated, the current time is assumed
+
+$ pp next month                 ## One month from today. Similar to next week
+$ pp next year                  ## One year from today.
+
+$ pp next sunday 17:00          ## Returns the date of the follow Sunday, with timestamp 17:00:00
+$ pp next sunday 5pm            ## Same thing.
+$ pp next sunday 17             ## Same thing.
+
+$ pp next week thursday         ## Returns the first thursday
+
+Some other settings that are pretty intuitive:
+
+$ pp 1 minute
+$ pp 30 minutes
+
+$ pp 1 hour
+$ pp 3 hours
+
+$ pp 1 day
+$ pp 5 days
+
+$ pp 1 week
+$ pp 4 weeks
+
+$ pp 1 month
+$ pp 6 months
+
+$ pp 1 year
+$ pp 2 years
+
+$ pp 1 year 2 months 3 days
+
+If you want to test syntax, use the date command
+
+$ date "+%Y-%m-%d %H:%M:%S" --date="next thursday 17:00"
+
+See the date man pages, DATE STRING section for more details.
+
+
+Since the returned date is not always obvious, some commands return
+00:00:00 and others return the current time, you can always indicate a
+time just to be sure. In many cases when postponing a mod, the time
+isn't all that important, you just want the mod prioritize first thing
+that day. In that case add a 0 for the time. It will translate to
+00:00:00.
+
+$ pp tomorrow 0
+$ pp next thursday 0
+$ pp next week 0
+
+
+Details
+-------
+
+Each mod is a subdirectory with attribute files. An optional attribute
+file is the "hold" file. If it exists and contains a timestamp in the
+last line, the mod will be put on hold until that time.
+
+The hold file may contain commented lines. If a mod is repeatedly put on
+hold and taken off hold, the previous hold times are commented out but
+left in the hold file for reference.
+
+The hold file is a text file and can be edited with a text editor if
+desired.
+
+You can manually create a hold file as follows:
+
+$ echo "2008-12-09 17:30:00" > $HOME/dm/mods/12345/hold
+
+This command will put mod 12345 on hold until the prescribed time.
+
+
+# vim: ft=our_doc

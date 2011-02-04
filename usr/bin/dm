@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Run dm commands
+
+/usr/lib/dm/bin/$@

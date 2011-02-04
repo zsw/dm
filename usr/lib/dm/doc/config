@@ -1,0 +1,147 @@
+Configuration
+=============
+
+1. Set up dm environment in bashrc.
+
+## Add these lines to $HOME/.bashrc
+## Place lines so they are run in non-interactive environments (eg cron).
+## Replace "$HOME/dm" with the directory path to your dev environment.
+
+$ cat $HOME/.bashrc
+
+    [ -d $HOME/dm/bin ] && PATH=$HOME/dm/bin:"${PATH}"
+
+
+$ source ~/.bashrc          ## Update your environment
+
+
+2. Confiture your dmrc file.
+
+## The dm system rc file is $HOME/.dm/dmrc
+## The rc file defines customises the local environment for the
+## particular user. It uses bash syntax.
+## Two variables, USERNAME and DM_ROOT, must be defined in the dmrc
+## Optional DM_PERSON_* variables can defined as well. See the example
+## below. The values of DM_PERSON_* variables can be updated at any
+## time. They will be copied to the shared people file so other user get
+## updated.
+
+$ cat $HOME/.dm/dmrc
+
+    # .
+    # $HOME/.dm/dmrc
+    # .
+    # Add variable definitions of the format: name=value
+    # File is sourced by bash script. Use bash like syntax:
+    #   * No whitespace around equal sign.
+    #   * If value contains whitespace, wrap in quotes.
+    # .
+
+    # Required variables
+    USERNAME=jimk
+    DM_ROOT=$HOME/dm
+
+    # Optional
+    DM_PERSON_INITIALS=JK
+    DM_PERSON_NAME='Jim Karsten'
+    DM_PERSON_EMAIL='jimkarsten@gmail.com'
+    DM_PERSON_JABBER='jimkarsten+jabber@gmail.com'
+    DM_PERSON_PAGER='5195042188@pcs.rogers.com'
+    DM_PERSON_INPUT='jimkarsten+input@gmail.com'
+    DM_PERSON_SERVER=dtjimk
+
+
+3. Configure project trees
+
+$ touch $HOME/dm/trees/USERNAME/{now,personal,reminders,unsorted}
+$ echo "now reminders main personal unsorted" > $HOME/.dm/trees
+
+For more information please read $HOME/dm/doc/mods
+
+
+4. Create useful aliases.
+
+## Add to $HOME/.bash_aliases or $HOME/.bashrc
+## Some you may wish to customize to your personal wishes, in particular
+## tree_*.
+## Replace $HOME/dm if the dm files are located in a different
+## directory.
+
+$ cat $HOME/.bash_aliases
+
+    alias ce='$HOME/dm/bin/compose_email.sh'
+    alias dun='$HOME/dm/bin/done_mod.sh && $HOME/dm/bin/pri.sh'
+    alias em='$HOME/dm/bin/edit_mod.sh'
+    alias et='$HOME/dm/bin/edit_tree.sh'
+    alias mods='$HOME/dm/bin/list_mods.sh'
+    alias mm='$HOME/dm/bin/mairix_mod.sh'
+    alias pp='$HOME/dm/bin/pp.sh'
+    alias pri='$HOME/dm/bin/pri.sh'
+    alias reuse='$HOME/dm/bin/reuse.sh'
+    alias sm='$HOME/dm/bin/set_mod.sh'
+    alias todo="$HOME/dm/bin/todo.sh -c -u $USERNAME -l 15"
+    alias um='$HOME/dm/bin/um.sh'
+    alias undun='$HOME/dm/bin/undone_mod.sh'
+
+    alias tree_main="$HOME/dm/bin/set_trees.sh     now reminders main && $HOME/dm/bin/pri.sh"
+    alias tree_personal="$HOME/dm/bin/set_trees.sh now reminders personal && $HOME/dm/bin/pri.sh"
+    alias tree_sort="$HOME/dm/bin/set_trees.sh     now unsorted reminders && $HOME/dm/bin/pri.sh"
+    alias tree_tools="$HOME/dm/bin/set_trees.sh    now reminders tools && $HOME/dm/bin/pri.sh"
+
+
+3. Add entry to $HOME/dm/people
+
+$ vi $HOME/dm/people
+
+For more information please see $HOME/dm/doc/mods
+
+
+4. Add entry to $HOME/dm/ids
+
+$ vi $HOME/dm/ids
+$ echo 50000 > $HOME/dm/.counters/5
+## where 50000 is their first devmod ID specific in $HOME/dm/ids and '5'
+## is their user ID specificed in $HOME/dm/people
+
+For more information please read 'Assigning a block of ids to a person'
+in $HOME/dm/doc/mods
+
+5. Create system cron jobs
+
+$ crontab -e
+
+    * * * * * /root/dm/bin/take_off_hold.sh
+    0,30 * * * * /root/dm/bin/lock_alert.sh -a '10 minutes'
+    01 06 * * *  /root/dm/bin/load_list.sh
+
+
+6. Bash completion.
+
+Some of the dm scripts have a bash completion feature. Create a symlink
+$ ln -s $HOME/dm/etc/bash_completion.d/{mods,pull,um}.sh /etc/bash_completion.d
+
+
+7. Configure fdm and sendmail
+
+$ vi $HOME/.fdm.conf
+$ vi $HOME/.esmptrc
+
+For more information please read '2. Set up fdm filtering.'
+in $HOME/dm/doc/input
+
+
+8. Create initial aliases.
+
+$ vi $HOME/dm/initial_aliases
+
+When creating mod specs it is convenient to use aliases for peoples
+initials. A person can be indicated by three letter initials or a single
+letter alias. The alias could be lower case whereas initials are always
+uppercase.
+
+# Examples
+$ cat $HOME/dm/initial_aliases
+    a=AB
+    ab=AB
+    A=AB
+

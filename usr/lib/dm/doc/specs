@@ -1,0 +1,79 @@
+Specs
+=====
+
+The mod system uses a very simple syntax for mod specifications (specs)
+permitting projects and mods to be developed in a convenient manner.
+
+Overview
+--------
+
+The goal of the spec syntax is to permit project and mods to be
+developed in a relatively quick and simple fashion while at the same
+time including as much information as necessary and providing a visual
+representation of the organization of the project.
+
+Syntax
+------
+
+Mods are indicated with the following syntax.
+
+<offset>[<initials>] <description>
+<offset><notes>
+
+Here is an example:
+
+    [AB] Document the dev mod system.
+    Create documentation for the dev mod system including notes on
+    configuration, work flow and tools.
+
+The initials indicate who the task will be assigned to. The other
+components are pretty self explanatory, the description
+becomes the description of the mod, and the notes are saved in the mods
+notes file.
+
+Dependencies amongst mods are indicated by offsets (indentation).
+
+    [AB] This is the first mod.
+    Some notes for the first mod.
+        [CD] This is the second mod.
+        Some notes for the second mod.
+
+The dependency relationship above indicates the first mod, assigned to
+AB, must be done before the second mod, assigned to CD, can be started.
+
+The initials of people indicate who the task will be assigned to.
+Initials can be those specified in the people file, $HOME/dm/people, or
+aliases specified in $HOME/dm/initial_aliases.
+
+Examples of initial usage.
+
+$ cat $HOME/dm/initial_aliases
+a=AB
+ab=AB
+A=AB
+
+# In the following spec all mods will be assigned to AB.
+
+[AB] Pick up dry cleaning.
+[a] Buy groceries.
+[ab] Pay bills.
+[A] Put out garbage.
+
+Implementation
+--------------
+
+The create_mods.sh script interprets spec syntax and can create mods
+from them.
+
+# Edit mod specs
+$ vi ~/tmp/spec
+
+# Create mods from specs
+$ cat ~/tmp/spec | $HOME/bin/create_mods.sh
+
+# Copy the output from create_mods.sh and paste into a tree.
+$ vi $HOME/dm/tree/main
+
+The edit_tree.sh script permits mod specs to be added directly into a
+tree. The script uses create_mods.sh to parse any spec-like additions
+made to the tree and as a result creates mods from them.

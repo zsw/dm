@@ -1,0 +1,142 @@
+Locks
+=====
+
+The devmod system uses cronned scripts and background processes (eg
+email processing) that may cause data corruption if run at inopportune
+times. The system implements a locking procedure as a safeguard.
+
+
+Issues Requiring Locks
+----------------------
+
+The following circumstances require locks.
+
+1. Pulling from a remote branch.
+
+When pulling from a remote branch, the branch of the git repo is
+temporarily changed from the master to the remote branch. No changes to
+the repo should take place at this time or else they will update the
+remote branch instead of the master and the two will get out of synch.
+When a pull is executed, a lock is placed to prevent background
+processes from making changes.
+
+2. Creating input mods
+
+Mods are created from the input system by a background process triggered
+by email fetches. If several emails are processes concurrently they may
+not be processed properly, eg two mods get assigned the same id. The
+locking system ensures only one is processed at a time.
+
+
+Overview
+--------
+
+The locking system is very simple. It creates a file /tmp/dev/LOCK. If
+the file exists the system is locked. If the file doesn't exist, it's
+not locked.
+
+
+Locking
+-------
+
+Whenever a script that requires a lock is run, it first checks if a lock
+exists. If it finds one, it aborts, possibly with a message. If it finds
+no lock, it creates one, does its thing, then removes the lock.
+
+Only select processes are affected by locks. Most general usage,
+including editing mods and updating the todo list, can be done
+regardless of the lock. It is assumed the user is not doing those
+general procedures while doing a pull, for example.
+
+
+Alerting
+--------
+
+While the dm system is locked, some processes are temporarily
+unavailable, for example, no mods will come off hold. If it's locked for
+a long period of time, this could cause foo, eg missed mods and
+reminders. An alerting system can be implemented to warn you about a
+lock file.
+
+The lock_alert.sh script is used send alerts about the lock file.
+
+## Help
+$ lock_alert.sh -h
+
+One or more email addresses can be passed as arguments to lock_alert.sh.
+For example, you could pass your pager email address and your jabber
+email address. An alert will be sent to each. If no email address is
+provided, the address assigned to the variable DM_PERSON_EMAIL is used.
+
+# Send alert to pager and jabber email
+$ lock_alert.sh mypager@rogers.com myjabber@gmail.com
+
+The lock_alert.sh age, -a, option is used to prevent false positive
+alerts. The scripts that create lock files may take a few minutes to
+complete and alerts should not be triggered while they are still
+processing. By using the age option, alerts will only be sent if the
+lock file was not created recently, indicating a problem. The use of the
+age option is strongly recommended. To prevent false positives, the age
+option should be at least 5 minutes.
+
+The age option can be any format the "date" command understands.
+These include '1 day', '2 hours', and '15 minutes'. You can test if an
+age option is valid using this command:
+
+$ date --date="now + <age>"
+
+If the syntax is valid it will return a date. If the syntax is invalid
+it will return an error.
+
+## Valid age option
+$ date --date="now + 15 minutes"
+Fri Nov  6 11:05:42 EST 2009
+
+## Invalid alert frequency
+$ date --date="now + 15 wtf"
+date: invalid date `now + 15 wtf'
+
+
+Examples
+
+# Send alert if existing lock file was created at least 15 minutes ago.
+lock_alert.sh -a '15 minutes'
+
+# Send alert if existing lock file was created at least 1 hour ago.
+lock_alert.sh -a '1 hour'
+
+
+The script can be cronned so it periodically checks for lock problems.
+To determine how frequently to run the script, ask yourself, "How soon
+do I want to be notified if there is a problem?" Keep in mind, if there
+is a problem, the cron will continue to send alerts until the issue is
+resolved.
+
+## Check for alert issues every 30 minutes
+$ crontab -l | grep lock_alert.sh
+    0,30 * * * * /root/dm/bin/run.sh lock_alert.sh -a '10 minutes'
+
+
+Troubleshooting
+---------------
+
+When the lock file is created, information is added including the name
+of the script placing the lock and the time the lock was placed.
+This information should be useful for troubleshooting foo.
+
+## Example lock file
+$ cat /tmp/dev/LOCK
+    script: /root/dm/bin/pull.sh
+    created_on: 2009-11-03 11:11:12
+
+From the contents of the example lock file, we can see the script that
+locked the file was pull.sh. It was locked Nov 3 at 11:11am.
+
+If the script that placed the lock was interrupted and did not complete
+normally, the lock file may not have been removed. The lock file can be
+removed manually.
+
+$ rm /tmp/dev/LOCK
+
+
+# vim: ft=our_doc

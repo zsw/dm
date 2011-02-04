@@ -1,0 +1,376 @@
+Attachments
+===========
+
+
+Overview
+--------
+
+Attachments are stored in the $HOME/dm/files directory. Attachments can
+be associated with a mod by creating a symlink to the attachment file in
+the mod directory.
+
+Attachments can be created and associated with a mod from the cli, or
+while editing the mod. When editing a mod, attachments are displayed as
+separate sections. Text attachment files are editable.
+
+
+Description
+-----------
+
+Attachment files are stored in the $HOME/dm/files directory. Files can
+be stored in subdirectories for categorizing and sorting.
+
+$ ls -l $HOME/dm/files
+
+    total 4
+    drwx------ 2 root root 4096 2009-03-13 18:28 bin
+    drwx------ 2 root root 4096 2009-03-13 18:28 doc
+    -rw-r--r-- 1 root root 1352 2009-02-24 11:01 20081219-mc.ofx
+    -rw-r--r-- 1 root root 9293 2009-03-09 12:09 addressbook.vcard
+    -rw-r--r-- 1 root root 7586 2009-02-24 11:01 adjustments.gnumeric
+    -rw-r--r-- 1 root root 1352 2009-02-24 11:01 t4_2009e.pdf
+
+Attachments are associated with a mod by creating symbolic links in the
+mod "files" subdirectories. For example, if mod 12345 has the file t4_2009e.pdf
+attached, the file is symbolically linked in the mods directory.
+
+$ ls -l $HOME/dm/mods/12345
+
+    total 12
+    drwx------ 1 root root  3 2009-03-11 17:11 files
+    -rw------- 1 root root 53 2009-03-11 17:11 description
+    -rw------- 1 root root 53 2009-03-11 17:11 notes
+    -rw------- 1 root root  3 2009-03-11 17:11 who
+    -rw------- 1 root root  3 2009-03-11 17:11 who
+
+$ ls -l $HOME/dm/mods/12345/files
+
+    total 36
+    drwx------ 1 root root  3 2009-03-11 17:11 doc
+    lrwxrwxrwx 1 root root 36 2009-03-13 18:28 t4_2009e.pdf -> /root/dm/files/t4_2009e.pdf
+
+
+Attachments in subdirectories are handled similarly. If mod 12345 is
+associated with the attachment file $HOME/dm/files/doc/openwrt.txt,
+create a symbolic link to it in the mods doc subdirectory.
+
+$ ls -l $HOME/dm/mods/12345/files/doc
+
+    total 12
+    -rw------- 1 root root  3 2009-03-11 17:11 openwrt.txt -> /root/dm/files/doc/openwrt.txt
+
+
+Attachments are distinguished from mod attributes by placing them in
+the "files" subdirectory.
+
+
+From the Cli: attach.sh
+-----------------------
+
+Attachments can be created and associated with mods using the attach.sh.
+
+Usage: attach.sh -h
+
+Example:
+
+## Attach payroll/t4200.pdf to the current mod
+$  attach.sh ~/dm/files/payroll/t4200.pdf
+
+
+From the Cli: Manual
+--------------------
+
+Since attachments are nothing but a symbolic link, there is nothing
+preventing you from creating attachments from the cli using standard
+linux commands.
+
+## Create attachment file.
+$ vi $HOME/dm/files/misc.txt
+
+## Associate it with a mod.
+$ mkdir -p $HOME/dm/mods/12345/files
+$ ln -snf $HOME/dm/files/misc.txt $HOME/dm/mods/12345/files/
+
+Attachments in subdirectories is pretty much the same. The subdirectories
+may need to be created.
+
+## Create attachment file.
+$ mkdir -p $HOME/dm/files/doc
+$ vi $HOME/dm/files/doc/openwrt_shorewall_howto.txt
+
+## Associate it with a mod.
+$ mkdir -p $HOME/dm/mods/12345/files/doc
+$ ln -snf $HOME/dm/files/doc/openwrt_shorewall_howto.txt $HOME/dm/mods/12345/files/doc
+
+
+While Editing a Mod
+-------------------
+
+Attachments can be created and modified while editing a mod.
+
+When editing a mod, an attachment is included as a section in the mod.
+The attachment subdirectory is included in the section name.
+
+$ em 12345
+
+    ------------------------------ description ---
+    This is a test mod.
+
+    ------------------------------ who ---
+
+    JK
+
+    ------------------------------ files/misc.txt ---
+
+     This is the contents of misc.txt.
+     This is the second line of misc.txt.
+
+    ------------------------------ files/doc/openwrt_shorewall_howto.txt ---
+
+    To set up shorewall on openwrt, copy....
+
+To create a new attachment, just add a new section to the mod and name
+the section with the name of the attachment file. For example, the
+attachment abc.txt has been added below.
+
+$ em 12345
+
+    ------------------------------ description ---
+    This is a test mod.
+
+    ------------------------------ who ---
+
+    JK
+
+    ------------------------------ files/abc.txt ---          <=== new section
+
+     This is the contents of abc.txt.
+     Another line of text of misc.txt.
+
+    ------------------------------ files/misc.txt ---
+
+     This is the contents of misc.txt.
+     This is the second line of misc.txt.
+
+    ------------------------------ files/doc/openwrt_shorewall_howto.txt ---
+
+    To set up shorewall on openwrt, copy....
+
+
+When the mod is saved, the file abc.txt will be created in
+$HOME/dm/files and a symbolic link to it created in the mod 12345
+"files" subdirectory.
+
+To modify the contents of an attachment, just edit it like any mod
+section and then save.
+
+$ cat $HOME/dm/files/misc.txt
+
+     This is the contents of misc.txt.
+     This is the second line of misc.txt.
+
+$ em 12345
+
+    ------------------------------ description ---
+    This is a test mod.
+
+    ...
+
+    ------------------------------ files/misc.txt ---
+
+     This is the contents of misc.txt.
+     This is the second line of misc.txt.
+     Modify misc.txt by adding another line.                <=== add new line
+
+
+After saving, the original attachment file is modified.
+
+$ cat $HOME/dm/files/misc.txt
+
+     This is the contents of misc.txt.
+     This is the second line of misc.txt.
+     Modify misc.txt by adding another line.
+
+
+Non-Text Attachments
+--------------------
+
+Non-text files can be attached to mods but are handled a little
+differently. Since they can't be displayed and edited, when editing a
+mod they are represented by a section divider with no content.
+
+## Make an non-text file available as an attachment
+$ cp payroll.pdf $HOME/dm/files
+
+## Associate the attachment with mod 12345
+$ ln -snf $HOME/dm/files/payroll.pdf $HOME/dm/mods/12345/files/
+
+$ em 12345
+
+    ------------------------------ description ---
+    This is a test mod.
+
+    ...
+
+    ------------------------------ files/payroll.pdf ---
+
+
+    ------------------------------ files/misc.txt ---
+
+     This is the contents of misc.txt.
+     This is the second line of misc.txt.
+
+A  non-text file can be attached to a mod simply by adding a blank
+section when editing the mod. Simply name the section appropriately.
+The file can be copied to the attachments directory afterwards.
+
+$ em 12345
+
+    ------------------------------ description ---
+    This is a test mod.
+
+    ...
+
+## Add a new section for a non-text attachment
+
+    ------------------------------ description ---
+    This is a test mod.
+
+    ...
+
+    ------------------------------ files/calc.gnumeric ---
+
+Save the mod and a link will be created even if the file doesn't exist.
+A warning will display to remind you to create the file.
+
+    Saving file /tmp/dev/12345.txt to mod 12345.
+    `/root/dm/mods/12345/files/calc.gnumeric' -> `/root/dm/files/calc.gnumeric'
+    WARNING: Linking to non existent file /root/dm/files/calc.gnumeric
+
+Copy the file to the attachment directory.
+
+$ cp calc.gnumeric $HOME/dm/files/
+
+
+Removing Attachments
+--------------------
+
+To remove an attachment from the cli, simply remove the symbolic link
+to it in the mod directory.
+
+To remove an attachment while editing a mod, simply delete the section.
+
+In both cases the file in the $HOME/dm/files is not removed. If it is no
+longer needed, it can be removed manually.
+
+
+
+Multiple Attachments
+--------------------
+
+A mod can have multiple attachments. There is no limit.
+
+
+Sharing Attachments
+-------------------
+
+Several mods can have the same file attached. All files in the
+$HOME/dm/files directory and subdirectories are available to be attached
+to any and all mods.
+
+While editing a mod, to attach a file that is already attached to
+another mod, simply add a section properly named *with no content*. This
+will work even with text files. Warning: if content is added to a text file
+section, the existing file in the $HOME/dm/files area will be
+overwritten.
+
+
+Tools
+-----
+
+Find broken links:
+
+To report symbolic links in mod directories where the associated
+attachment file no longer exists, try this:
+
+$ for i in $(find $HOME/dm/ -type l); do [ -e $i ] || echo $i is broken; done
+
+
+Find mods associated with attachment
+
+Use this command to report all the mods that have a given file attached.
+
+$ find -L $HOME/dm/ -samefile /path/to/file
+
+For example this command will list all mods that have the file
+doc/misc.txt attached.
+
+$ find -L $HOME/dm/ -samefile /root/dm/files/doc/misc.txt
+
+
+Move attached files.
+
+The mv_and_relink.sh script can be used to move an attachment file and
+update all the symbolic links to point to the new location.
+
+$ mv_and_relink.sh $HOME/dm/files/misc.txt $HOME/dm/files/doc/misc.txt
+
+Run 'mv_and_relink.sh -h' for details.
+
+
+Notes
+-----
+
+As mentioned earlier, attachments are distinguished from mod attributes
+by storing them in a "files" subdirectory of the mod. If a section is
+created when editing a mod and the name of the section does not include
+a directory name, it is assumed to be a mod attribute, like description,
+who, notes, etc. If the section has a directory name but doesn't begin
+with "files/", it will be assumed to be an attachment and renamed to the
+"files/" directory.
+
+Examples:
+
+    Section name     Assumed type  Saved as
+
+    description      attribute     ~/dm/mod/12345/description
+    whatisthis       attribute     ~/dm/mod/12345/whatisthis
+    files/misc.txt   attachment    ~/dm/mod/12345/files/misc.txt -> ~/dm/files/misc.txt
+    what/misc.txt    attachment    ~/dm/mod/12345/files/what/misc.txt -> ~/dm/files/what/misc.txt
+
+Document files and shell scripts can be attached to mods like any other
+attachments. It is suggested they be put in doc and bin subdirectories.
+
+Leading and trailing blank lines are added to sections when editing a
+mod for clarity and removed before saving sections.
+
+When editing a mod, how you order the sections is irrelevant. However,
+when you first open a mod for editing, the sections are always sorted as
+displayed below for consistency. Of note, the "notes" section is always
+the last section.
+
+    description
+    who
+    hold
+    remind
+    spec
+
+    attachments (in alphabetic order)
+
+    notes
+
+You can rearrange the sections however you like. They will be saved
+properly. The next time you edit the mod, the order of the sections will
+be restored to the order displayed above.
+
+Caveats
+-------
+
+The names of symbolic links cannot include environment variables. As a
+result $HOME/dm is always expanded in the symbolic link to /root/dm.
+Since the symbolic links are stored in the git repository and shared as
+such, problems will occur if the /root/dm directory doesn't exist and is
+not somehow linked to the local $HOME/dm directory.
+
+
+# vim: ft=our_doc

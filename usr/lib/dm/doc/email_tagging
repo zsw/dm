@@ -1,0 +1,160 @@
+Email Tagging
+=============
+
+Email can be tagged so they are associated with a mod. The system is
+designed so as long as one email is tagged, the complete thread the email
+belongs to is associated with a mod. A mairix-like search can be
+initiated from the cli, creating a search folder in mutt containing all
+email associated with a particular mod. Very nice.
+
+
+Tag Format
+==========
+
+An email is tagged by adding a custom header field. The format of the
+header field is displayed below. In this example, the mod id is 12345.
+The tag is case sensitive.
+
+    X-DM-Mod-Id: 12345
+
+An email can have multiple tags if it is associated with several mods.
+Add one tab per line.
+
+    X-DM-Mod-Id: 12345
+    X-DM-Mod-Id: 34567
+    X-DM-Mod-Id: 45678
+
+
+Tagging With Mutt
+=================
+
+To associate an email with a mod, simply add an X-DM-Mod-Id field
+to the email header. This can be done manually or using a script.
+
+Mutt permits editing headers when sending email and it allows you to add
+a header to an existing email. It very basic, it relies on you using
+your editor, so we created a vim function to simplify that.
+
+
+Configuration:
+
+## Update vim function
+$ cp HTMLtag.vim ~/.vim/functions/
+
+## Update .vimrc with key binding
+
+$ vi ~/.vimrc
+
+    ## Add this line, you may wish to use a different key binding
+    map ,x <ESC>:call XDMModIdInsert()<CR>|         " Insert X-DM-Mod-Id header
+
+
+
+Usage:
+
+Editing headers with mutt.
+
+1. When sending
+
+When sending an email, if you want to associate it with a mod, press E
+when at the send-menu, ie just prior to pressing y=Send. Mutt opens the
+email with vim again and displays the headers. Move the cursor to the
+end of the header items, and press the keybinding, eg ,x , and vim will
+prompt with "X-DM-Mod-Id: " at the command line. Enter the id of the mod
+you want the email associated with. Enter nothing to default to the
+current mod.
+
+The press 'E' may be annoying. Mutt has a edit_headers option that when
+set will display headers by default whenever you compose your email in
+vim. This may be preferred since it doesn't take an extra step and the
+visible headers may remind you so you don't forget to add the mod id
+header.
+
+To make headers always editable:
+
+$ vi ~/.mutt/muttrc
+
+    set edit_headers = yes
+
+2. Existing email.
+
+To add a header to an existing email, or one you receive in your inbox,
+simply press e in either index or pager mode and edit the mod in vim.
+
+
+
+Sorting tagged emails.
+
+If you want to sort all emails with the X-DM-Mod-Id header into specific
+mail folder, this should work:
+
+$ cat ~/.fdm.conf
+
+    match "^X-DM-Mod-Id:.*" in headers actions "dm"
+    action "dm" maildir "${inbox}"
+
+
+Tagging With a Script
+=====================
+
+Mutt has a -H option that allows you to compose an email from a draft
+file. This option has a nice surprise: it allows you to use mutt to
+compose an email from the cli using mutt's interface (abook, vim
+editor),  send it, and drop back to the cli. If you create a temporary
+template file with the mod header field included, then run mutt with the
+-H option, you can compose an email and the tag is pre-added.
+
+The script compose_email.sh was created to do the dirty work for us, and
+an 'ce' alias to that script makes a handy shortcut. Now when you want
+to compose an email related to the current mod, I just type 'ce'.
+
+Configuration:
+
+## Create alias
+
+$ cat ~/.bash_aliases
+
+    alias ce='$HOME/dm/bin/compose_email.sh'
+
+
+Usage:
+
+## Compose an email tagged with the current mod id
+$ ce
+
+## Compose an email tagged with a mod id other than current
+$ ce 12345
+
+
+Email Search
+============
+
+Mairix is used to search email. Mairix does not index on custom headers
+so I created a wrapper script. There was talk on the mairix mailing list
+about implementing it but the main developer got busy and never got
+around to it. We created a wrapper script, mairix_mod.sh, that works
+well. It uses grep to find mail files with the X-DM-Mod-Id tags, then
+extracts the Message-ID tag from the email file, then uses mairix to
+search for mail with that message id.
+
+Given an mod id, mairix_mod.sh puts all emails related to the mod and
+their threads in the mutt search folder. Without an id, it defaults to
+the current mod.
+
+## Create alias for mairix_mod.sh
+
+$ cat $HOME/.bash_aliases
+
+    alias mm='$HOME/dm/bin/mairix_mod.sh'
+
+## Searching for emails associated with a mod.
+
+$ mm                    # Search for current mod id
+$ mm 12345              # Search for a specific mod id
+
+    # Go to mutt search folder and emails and threads should be there.
+
+
+
+
+# vim: ft=our_doc

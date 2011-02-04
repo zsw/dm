@@ -1,0 +1,85 @@
+Installation
+============
+
+Possible scenario; three users on two hosts.
+
+    host1                   host2
+    -----                   -----
+    /home/user1/dm
+    /home/user1/.dm_user2
+                            /home/user1/.dm_user3
+    ----------------------------------------------
+    /home/user2/dm
+    /home/user2/.dm_user1
+                            /home/user2/.dm_user3
+    ----------------------------------------------
+                            /home/user3/dm
+    /home/user3/.dm_user1
+    /home/user3/.dm_user2
+    ----------------------------------------------
+
+
+1. Setup user account(s)
+
+If user does not have an account, one can be created with the following
+command, where '2001' is the user ID.
+
+$ useradd -u 2001 -m -s /bin/bash USERNAME && passwd USERNAME
+
+
+2. Create directories and files
+
+Assuming current user is root.
+
+$ su USERNAME
+$ mkdir -p $HOME/dm/trees/USERNAME
+$ mkdir $HOME/.dm
+$ touch $HOME/.dm/mod
+$ touch $HOME/dm/todo
+
+
+3. Clone the git repo.
+
+The dev system is traditionally installed in $HOME/dm.  To begin, clone the
+master repo.  See jimk for the path.
+
+$ git clone /path/to/git/repo $HOME/dm  ## For the /path/to/git/repo see jimk.
+$ git clone USERNAME@dtjimk:/home/USERNAME/.dm_jimk $HOME/dm    ## example
+
+
+4. Create a public repo (aka remote).
+
+$ git_public_remote.sh -g /home/user1/dm /var/git/public/dm_user1
+
+Assuming the public repos for all users are stored in
+/var/git/public/dm_USERNAME.  So user2 and user3 are able to pull from
+user1, symlinks are required.
+
+$ ln -s /var/git/public/dm_user2 /home/user1/.dm_user2   ## example
+$ ln -s /var/git/public/dm_user3 /home/user1/.dm_user3   ## example
+$ ln -s /var/git/public/dm_user1 /home/user2/.dm_user1   ## example
+## ... and so on
+
+5. Add repos for remote users.
+
+In the scenario outlined at the top, user2 is on a different host
+(host2).  SSH access is required in order for user1 and user3 to reach
+the public repo of user2.
+
+If the user does not have an ssh key, then create one.
+$ ssh-keygen -b 2048 -t rsa -C "COMMENT"
+
+For more information on configuring SSH access, please consult google.
+
+In order for you to pull from other users, create remote branches
+pointing to them in your local git repository. NOTE: A public remote
+should be made available on remote servers first.
+
+## If the server can be accessed with a local path, eg an sshfs mount is
+## set up, then use this syntax.
+$ git_add_remote.sh -g /home/user1/dm SERVERNAME /path/to/public/repo/.dm_user2
+
+## Otherwise:
+$ git_add_remote.sh -g /home/user1/dm SERVERNAME SERVERNAME:~/.dm_user2
+
+

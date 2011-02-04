@@ -1,0 +1,150 @@
+Tools
+=====
+
+This is a list of tools in the $HOME/dm/bin directory. The
+descriptions are limited to what they are for and why you might use
+them. See the scripts themselves for the usage syntax. Very few of these
+commands will be used on the command line on a day to day basis. Most
+are used in combination in shell scripts or simplified by using an
+alias.
+
+
+
+alert.sh - Used to send a message to someone indicating they
+should pull from you.  (weechat version)
+
+    Requires this setting in ~/.weechat/weechat.rc: irc_fifo_pipe = on
+
+assemble_mod.sh - Used to assemble the components of a mod into a single
+file. See edit_mod.sh.
+
+assign_mod.sh - Assign a mod to a user.
+
+bi_week.sh - Used to determine if today is a multiple of bi-weeks apart
+from another date. Used in crontab entries.
+
+block_substitute.py - Search and replace blocks of text in a file.
+
+compose_email.sh - Used to compose an email with a X-DM-Mod-Id header
+field in order to associated the email with a mod.
+
+create_mods.sh - Used to create mods from a spec tree.
+
+dependency_schema.pl - Used to validate a dependency tree and create a
+list of mods in the dependency tree. The script has an option to print a
+list of mods in priority order suitable for the todo list.
+
+dissemble_mod.sh - Used to dissemble a file created by assemble_mod.sh
+into separate components of a mods and save to files under the mods
+directory. See edit_mod.sh.
+
+done_mod.sh - Used to set the mod as done, ie move from mods directory
+to the archive directory.
+
+dow.sh - Determines if today is a specific day of week. Used in crontab
+entries.
+
+edit_mod.sh - Edit a mod. The mods components are assembled into a file
+using assemble_mod.sh, and the file is opened with vim. When vim is
+exited, the file is dissembed using dissemble.sh and the mod components
+are saved.
+
+edit_tree.sh - Edit a tree. Mod specs added to the tree during the edit
+are parsed and new mods are created from them. The specs are then
+replaced in the tree with one line mod checklist.
+
+filter_mod.pl - Filter mods from a list of files.
+
+format_mod.pl - Print formatted mod components.
+
+git_add_remote.sh - Adds a remote to git repository and configures it
+for pulls.
+
+git_commit_message.sh - Creates a message for the mod suitable for a git
+commit.
+
+git_dir.sh - Deteremines a path to a git repository.
+
+git_public_remote.sh - Creates a public remote git repository.
+
+git_remote.sh - Determines a remote server for a git repository.
+
+grep_dm.sh - Script to simplify grepping on multiple dm subdirectories.
+
+invalid_hold_file.sh - Filter files with invalid contents from a list of
+hold files.
+
+integrity.sh - Runs integrity checks and dm system cleanup.
+
+list_mods.sh - Summary list of all mods in system, with filter features.
+
+mail2mod.sh - Converts a maildir email to a mod.
+
+mairix_mod.sh - Executes a mairix email search matching email with an
+X-DM-Mod-Id header field and the specified mod id.
+
+mods2files.pl - Convert database style mods to flat file format.
+
+mv_group_to_tree.sh - Moves a group to a different tree.
+
+mv_mod_to_tree.sh - Moves a mod to a different tree.
+
+next_mod_id.sh - Determine the next mod id for a person.
+
+past_hold_file.sh - Filter files whose timestamp has past from a list of
+hold files.
+
+people_attr.sh - Print specific attributes of people.
+
+person_update.sh - Update the people file from local environment
+variables.
+
+postpone.sh - Postpones a mod, ie puts on hold until the date/time
+provided.
+
+pp.sh - Postpone the current mod. A wrapper for um.sh.
+
+pri.sh - Prioritizes mods, sets the top mod as current, and prints the
+todo list.
+        ** Deprecated. This script is scheduled to be dropped from the
+        system. Use a function instead.
+
+prioritize.sh - Run through various steps in order to prioritize mods
+and update the local work area.
+
+remind_by.sh - Sets the methods (email, jabber, pager) for which alerts
+will be sent for a mod.
+
+remind_mod.sh - Sends a message to all remind email addresses for a mod.
+
+search_mod.sh - Searches for pattern in mods.
+
+set_mod.sh - Sets the current mod, ie. the contents of $HOME/.dm/mod
+
+set_trees.sh - Sets the active dependency trees, ie. the contents of
+$HOME/.dm/trees
+
+sort_input.sh - Sorts a mod created from an input based on its type.
+
+take_off_hold.sh - Checks all mods on hold and takes those whose hold
+time has past off hold.
+
+todo.sh - Prints the todo list.
+
+tree.sh - Prints the full path file(s) associated with a tree(s) name.
+
+um.sh - A user friendly wrapper for update_mod.sh
+
+undone_mod.sh - Used to set the mod as not done, ie move from archive
+directory to the mods directory.
+
+unindent.sh - Remove leading spaces from lines of a file.
+
+update_mod.sh - Sets various aspects of the the mod including,
+postponing a mod, setting how alerts will be notified and moving a mod
+to a specific dependency tree.
+
+who_to_alert.sh - Deteremine who to alert as a result of reprioritization.
+
+
+# vim: ft=our_doc

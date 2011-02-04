@@ -1,0 +1,236 @@
+Trees
+=====
+
+A dependency tree is used to define the priority order of mods,
+grouping of mods (eg projects and phases), and dependency
+relationships. It's possible to create multiple dependency trees and
+work with them independently or together.
+
+Dependency tree files are stored in the $HOME/dm/trees
+directory or in sub-directories of that directory.
+
+Dependency trees are stored in a flat file and can be edited with a
+text editor although the edit_tree.sh script should be used if mods are
+to be added to the tree. See the "Editing Trees" section below. See
+$HOME/dm/doc/dependencies for syntax documentation.
+
+The dependency tree is used by the prioritization process to create a
+todo list. The todo list is composed of all mods that can be worked on
+now in priority order.
+
+The todo list is stored in the $HOME/dm/todo file.
+
+To create a todo list, run this command:
+
+$ prioritize.sh <tree> <tree>
+
+The prioritize.sh command takes one or more tree names as arguments. The
+order of the trees is important as it dictates the priority of the mods
+in the trees. Examples follow below.
+
+
+Personal Trees
+--------------
+
+Each person in the devmod system will have their own personal trees.
+This permits people to work on mods without interfering or conflicting
+with other people's input.
+
+An example tree structure is as follows:
+
+    $HOME/dm/trees/main
+    $HOME/dm/trees/jimk/now
+    $HOME/dm/trees/jimk/reminders
+    $HOME/dm/trees/jimk/unsorted
+    $HOME/dm/trees/steve/now
+    $HOME/dm/trees/steve/reminders
+    $HOME/dm/trees/steve/unsorted
+
+The main tree is used for shared projects, the development projects. The
+personal trees are used for input sorting and reminders. See the input
+and reminders docs for more information.
+
+You can have as many personal trees as desired. The trees allow you to
+prioritize mods in different ways. The examples below will make this
+clearer. Each person should have these trees at minimum.
+
+    now
+    reminders
+    unsorted
+
+When scripts require trees as arguments, you can indicate personal trees
+by their file name only.  The path is not necessary. The scripts will
+determine who you are and find the tree in your personal trees
+directory.
+
+$ prioritize reminders
+
+If run by jimk, it will prioritize the
+$HOME/dm/trees/jimk/reminders tree file. If run by steve, the
+$HOME/dm/trees/steve/reminders tree file is prioritized.
+
+Archive Trees
+-------------
+
+Over time tree files may grow in size containing many completed projects
+and mods. This may hurt the performance of the script that prioritizes
+mods. The contents of the trees can be moved to a set of archive trees.
+Archive tree are ignored by the prioritize script.
+
+The archive tree file names are similar to the live tree file names.
+They are stored under the archive subdirectory.
+
+    ## Archive tree files
+    $HOME/dm/trees/archive/main
+    $HOME/dm/trees/archive/jimk/now
+    $HOME/dm/trees/archive/jimk/reminders
+    $HOME/dm/trees/archive/jimk/unsorted
+
+
+Archive tree files can be created as needed. It is not necessary to have
+an archive tree file for every live tree file.
+
+To create an archive tree file, or move projects and mods to an archive
+tree, simply use your editor. Care should be taken that any one mod is
+in exactly one tree file.
+
+## Cut projects or mods from live tree
+$ vi $HOME/dm/trees/main
+
+## Paste into archive tree
+$ vi $HOME/dm/trees/archive/main
+
+
+Default Trees
+-------------
+
+It is possible to indicate a default tree order by putting a list of
+trees in the default file
+
+$ echo "unsorted main" > $HOME/.dm/trees
+
+The dev system assumes a default tree priority stored in the
+$HOME/.dm/trees if one isn't given.  For example if the echo command is
+run above followed by running prioritize.sh without arguments, mods in
+the unsorted and main tree files will be prioritized.
+
+
+Example Usage
+-------------
+
+I have the following trees:
+
+    $HOME/dm/trees/main
+    $HOME/dm/trees/jimk/now
+    $HOME/dm/trees/jimk/personal
+    $HOME/dm/trees/jimk/reminders
+    $HOME/dm/trees/jimk/tools
+    $HOME/dm/trees/jimk/unsorted
+
+
+Each weekday, the first thing I do is sort input. I run these commands
+to create my todo list.
+
+$ echo "now unsorted" > $HOME/.dm/trees
+$ pri.sh
+
+The pri.sh is just a shortcut to running prioritize.sh. My todo list
+will have only items that needed sorting. I sort the mods one by one
+until the todo list is empty.
+
+Next I work on main project development.
+
+$ echo "now reminders main" > $HOME/.dm/trees
+$ pri.sh
+
+I prioritize the now and reminders trees as well and put them before
+main. This way if while working on development mods, I get any now input
+or reminder alerts prioritized, they are seen to first. Running pri.sh
+creates a new todo list with mods only from those trees.
+
+Each weekday I like to spend a few hours working on tools. I usually do
+this in the evening when my brain functioning starts to fade. Tools
+involve improving my work environment, for example, tweaking and fine
+tuning dwm, urxvt, vimrc, etc. or creating shell scripts to simplify
+daily chores.
+
+$ echo "now reminders tools" > $HOME/.dm/trees
+$ pri.sh
+
+Again now input and reminders are prioritized just in case something
+important comes up. A new todo list is created, now predominantly with
+mods from the tools tree.
+
+On the weekend, I work on personal stuff. This might include anything
+from tweaking mplayer, and upgrading arch packages, to sharpening my
+skates and returning a library book. Saturday morning, I'll run this:
+
+$ echo "now reminders personal" > $HOME/.dm/trees
+$ pri.sh
+
+
+Within each tree, I can sort the mods in the order I want to do them.
+Switching from tree to tree is a simple process that can be done
+manually or cronned if you like.
+
+I created the following aliases to simplify switching trees.
+
+    alias tree_main="/root/dm/bin/set_trees.sh     now reminders main tools unsorted && /root/dm/bin/pri.sh"
+    alias tree_personal="/root/dm/bin/set_trees.sh now reminders personal tools main && /root/dm/bin/pri.sh"
+    alias tree_sort="/root/dm/bin/set_trees.sh     now unsorted reminders main tools && /root/dm/bin/pri.sh"
+    alias tree_tools="/root/dm/bin/set_trees.sh    now reminders tools main unsorted && /root/dm/bin/pri.sh"
+
+
+Editing Trees
+=============
+
+Dependency trees are stored in flat files and can be edited using an
+editor. However, the edit_tree.sh script provides the user with more
+functionality and is recommended.
+
+Using an editor, you can:
+* Reprioritize mods
+* Create dependencies amongst existing mods.
+* Create projects and grouping.
+* Add comments.
+
+With edit_tree.sh you can do everything an editor can, plus these:
+* Add one or more mods.
+* Add a project with mods.
+
+The edit_tree.sh script is a wrapper around the editor and does some
+post-processing. With edit_tree.sh, mod specs can be inserted directly
+into the tree and when the tree is saved, mods will be created from the
+specs. The specs can indicate mod descriptions and notes, who the mod is
+assigned to, dependencies amongst mods and project groupings. See
+$HOME/dm/doc/specs for more details about spec syntax.
+
+
+Archive Trees
+=============
+
+As projects and mods are continually added to tree files the performance
+of prioritization routines can be hurt. Long done mods no longer need to
+be available for prioritization and can be moved to an archive tree.
+
+Archive trees are stored in the $HOME/dm/trees/archive directory.
+Replicate the names of tree files and subdirectories in the archive
+directory as needed. Archive trees are no different than other trees in
+format and function. However, if you don't include them in the
+list of trees provided to set_trees.sh they do not get prioritized,
+which is the whole point. Fewer mods to prioritize, faster
+prioritization.
+
+# Archive the main tree
+$ mkdir $HOME/dm/trees/archive
+$ touch $HOME/dm/trees/archive/main
+
+# Move group (project) 123 to the main tree archive
+$ mv_group_to_tree.sh 123 $HOME/dm/trees/archive/main
+
+# Move mod 12345 to the main tree archive
+$ mv_mod_to_tree.sh 12345 $HOME/dm/trees/archive/main
+
+
+
+# vim: ft=our_doc

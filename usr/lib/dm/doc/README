@@ -1,0 +1,13 @@
+README
+======
+
+Consult these manuals for instructions on getting started using the flat file
+dev system.
+
+install - Installation instructions
+config  - Configuration instructions
+tools - Description of tools in bin
+workflow - Examples of day to day tasks.
+
+
+# vim: ft=our_doc

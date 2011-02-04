@@ -1,0 +1,266 @@
+Alerting
+========
+
+The devmod system can send out alerts to notify you that specific
+changes have happened in the devmod system.
+
+Overview
+--------
+
+The dev mod system has two alerting features, reminder alerts and pull
+alerts.
+
+Reminder alerts notify a user that the status of a mod has changed.
+The alerting system is very simple. Each mod can have a "remind" file in
+its directory. The remind file is just a text file containing email
+addresses. When events happen related to the mod, for example, it is
+taken off hold, an alert message is sent to each of the email addresses.
+
+Pull alerts notify a user that changes were made by another user related
+to a mod assigned to you. The alert indicates that a pull from the
+remote servers is necessary so a user's local system is up to date.
+
+
+Reminder Alerts
+===============
+
+Alerting Methods
+----------------
+
+The alerting methods are:
+
+    email
+    jabber
+    pager
+
+The alerting system uses email addresses only. Pagers communicate
+through email. With the mail2jabber.sh script, and a configuration in
+the mail sorter, jabber messages can be sent through email as well.
+
+
+The Remind File
+---------------
+
+The remind file is a text file with one email addresses per line.
+
+$ cat $HOME/dm/mods/12345/remind
+
+    jimk@porchlight.ca
+    5195042188@pcs.rogers.com
+    jabberjimk@gmail.com
+
+To change the remind file, you can edit the file directly or use the
+um.sh interface.
+
+
+When Alerts Go Out
+------------------
+
+Alerts are sent out when:
+
+    1) Mods are taken off hold
+       The take_off_hold.sh script handles this.
+
+    2) Mods are undone.
+       The undone_mod.sh script handles this.
+
+
+Alerting Script
+---------------
+
+The $HOME/dm/bin/remind_mod.sh is responsible for sending out
+alerts. The logic of the script is very simple. It sends an email to
+each address in the mods remind file.
+
+The email is formatted as follows:
+
+    Subject: Reminder
+    Body: <mod description>
+
+
+Debugging
+---------
+
+You can initiate a remind for a mod at any time using remind_mod.sh
+script.
+
+$ $HOME/dm/bin/remind_mod.sh 12345
+
+Set up the remind file for the mod as you would like, then run the above
+command replacing 12345 with the id of the mod, and it should send our
+the reminders immediately. Remember that the reminders are dependent on
+your email system and won't arrive until you fetch your email.
+
+
+See also mail2jabber, reminders.
+
+
+Pull Alerts
+===========
+
+Pull alerts notify you of changes made by other users that affect you.
+
+
+Overview
+--------
+
+If another user creates a mod and assigns it to you, you will be unaware
+of the mod until you pull from them. A pull alert will bring to your
+attention the need to pull. Other changes warranting an alert include
+another user assigning a mod to you that was previously assigned to
+someone else, and another user deleting a mod assigned to you.
+
+The pull alerts require frequent regular communication between user's
+computers. This may not be possible if users are not online. A pull
+alerting system may not be feasible in all situations.
+
+
+Strategy
+--------
+
+Whenever a user makes a change that affects another users todo list, an
+alert request is logged. Periodically the local system will poll remote
+servers to see if any alert requests have been logged since the last
+time a pull was made from that server. An alert count, a tally of alert
+requests from all servers is stored in a local file. A user can notifiy
+themselves by monitoring that count file.
+
+Note: the manner in which a user notifies themselves of pull alerts is
+left up to the user since it will be highly dependent on what tools
+their operating system allows
+.
+
+Setup
+-----
+
+The next steps assume data will be shared via httpd.
+
+If
+
+
+# Copy alert files to a httpd accessible directory and update alert count.
+1,31 8-21 * * * cp $HOME/dm/var/alerts/* /srv/http/live/www.dtjimk.internal/alerts/jimk/ && /root/dm/bin/alert_count.sh > /root/.dm/alert_count
+
+Alert files may be automatically available in an httpd accessible
+directory, eg, using symblinks, in which case this crontab should
+suffice.
+
+# Cron calculation of alert count
+2,32 8-21 * * * /root/dm/bin/alert_count.sh > /root/.dm/alert_count
+
+
+The $HOME/.dm/alert_count file will then contain the number of pull
+alerts the scripts calculate. That value can be made available to the
+user so they can decide if they wish to pull or not.
+
+
+Alert Files
+-----------
+
+The prioritize routine calls the set_alerts.sh script. It appends alert
+requests to files in the $HOME/dm/var/alerts directory. The files have
+the same name as the username of the user the alerts are for. The
+files are a list of timestamps and mod id pairs.
+
+# List the alert requests for user jimk
+$ cat $HOME/dm/var/alerts/jimk | head -5
+    1271889061 12345
+    1271889059 12344
+    1271889025 12343
+    1271889011 12322
+    1271889004 12311
+
+The timestamps are in the "seconds since the epoch" format. They
+represent the time the pull request was logged. The mod id represent the
+mod that was modified prompting the alert. The mod id's have no
+significance. They are logged for transparency and can be useful when
+debugging.
+
+
+Pull Files
+----------
+
+Whenever a user pulls from a remote server, the time of the pull is
+logged. Logs are made to files in the $HOME/dm/var/pulls directory. The
+files have the same name as the username of the user associated with the
+remote. (This should be the same name as the git remote branch name of the
+git repo on the remote server.) The contents of pull files are always a
+single value, the timestamp of the last pull from that server.
+
+# List the alert requests for user jimk
+$ cat $HOME/dm/var/pulls/steve
+    1271889061
+
+The timestamp is in the "seconds since the epoch" format. The pull
+timestamp is used to compare with timestamps in the alert files. Only
+alerts with timestamps after the pull timestamp require notice since the
+pull would have updated anything from prior.
+
+
+Httpd File Structure
+--------------------
+
+The alert_count.sh issues a wget on a url of the following structure:
+
+    http://$server/alerts/$from_username/$to_username
+
+Variables are assigned as follows
+
+    $server         - the server of the remote user, as indicated in the people file
+    $from_username  - the username of user that created the alert
+    $to_username    - the username of user the alert is intended for
+
+Configure the directory structure in your local httpd subdirectories
+accordingly.
+
+Example:
+
+Assume the following configuration for a server example.com.
+
+    ServerName example.com
+    DocumentRoot /srv/http/example.com
+
+Assume there are two users on the server with username phillip and mary,
+and a third user jackson on a different server, myserver.com.
+
+The dm people file will indicate the server accordingly.
+
+$ cat $HOME/dm/people
+    id,initials,username,name,email,jabber,pager,input,server
+    1,PH,phillip,Phillip Hamilton,phamilton@gmail.com,,,,example.com
+    2,MS,mary,Mary Smith,msmith@gmail.com,,,,example.com
+    3,JJ,jackson,Jackson Jackson,jackson@gmail.com,,,,myserver.com
+
+The following files are made available by phillip. They indicate the
+alerts prompted by phillip intended for mary and jackson.
+
+$ find /srv/http/example.com/alerts/phillip
+    /srv/http/example.com/alerts/phillip/mary
+    /srv/http/example.com/alerts/phillip/jackson
+
+The following cron could be used to create those files. See Setup.
+1,31 8-21 * * 1-5  cp /home/phillip/dm/var/alerts/* /srv/http/example/alerts/phillip/
+
+The following files are made available by mary. They indicate the
+alerts prompted by mary intended for phillip and jackson.
+
+$ find /srv/http/example.com/alerts/mary
+    /srv/http/example.com/alerts/mary/phillip
+    /srv/http/example.com/alerts/mary/jackson
+
+The following cron could be used to create those files. See Setup.
+1,31 8-21 * * 1-5  cp /home/mary/dm/var/alerts/* /srv/http/example/alerts/mary/
+
+Phillip can access the list of alerts intended for him on mary's system as
+follows:
+    wget http://example.com/alerts/mary/phillip
+
+Mary can access the list of alerts intended for her on phillip's system as
+follows:
+    wget http://example.com/alerts/phillip/mary
+
+The alert_count.sh script will handle contructing the urls and running
+the wget so there should be no need to run those wget commands except
+possibly when troubleshooting.
+
+# vim: ft=our_doc

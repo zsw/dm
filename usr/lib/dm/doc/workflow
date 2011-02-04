@@ -1,0 +1,238 @@
+Workflow
+========
+
+Overview
+--------
+
+This document attempts to explain typical usage of the flat file dev mod
+system. The document assumes you have the configuration set up, see
+'config' doc, including the aliases.
+
+
+Commands
+--------
+
+With aliases and shell scripts all commands needed have been reduced to
+simple, hopefully intuitive, words.
+
+$ em        ## edit mod
+$ sm        ## set mod (mark which one you are working on)
+$ um        ## update mod
+$ dun       ## done mod
+$ undun     ## un-done (reactivate) mod
+$ pp        ## postpone mod
+$ todo      ## print todo list
+
+
+
+Working on mods
+---------------
+
+$ tree_main         ## Select the dependency tree to work on
+$ em                ## Start on the mod at the top of your list
+$ dun               ## Complete the mod...
+$ pp tomorrow 7am   ## ... or postpone the mod
+$ em                ## Work on the next mod
+
+## ... and so on
+## If the todo list is empty, select a different dependency tree
+
+$ tree_tools
+$ em
+$ dun
+$ em
+$ dun
+$ em
+
+## ... etc.
+
+
+
+
+Working on a particular mod
+---------------------------
+
+Occasionally you may want to work on a mod out of sequence, for example
+to add a line to the notes, or to postpone a mod to a different time.
+
+## Save any work on the current mod you are working on, then
+
+$ sm 12345              ## Set the mod you want to work on
+$ em                    ## Make changes to the mod
+$ pp next thursday 7am  ## postpone the mod
+$ sm                    ## Restore the set mod to the one at top of todo list
+
+
+Changing the Priority of a Mod
+-----------------------------
+
+If you wish to change the priority of a mod, for example to raise or
+lower it in the todo list, simply edit the dependency tree the mod is in
+and raise it or lower it within the list of mods.
+
+
+Pulling from others
+-------------------
+
+## When you get an alert to pull...
+
+There is no immediately obvious way to know which server the alert is
+from. Pull from all remotes.
+
+$ pull.sh <server>          ## Pull from remote server
+
+## Check if your top todo item has changed
+## if so, save your work, then move on to next mod.
+
+$ pri.sh
+$ todo
+
+or use an alias/function that pulls from all servers and redisplays your
+todo.
+
+$ pull
+
+
+
+Creating mods
+-------------
+
+There are several ways to create a mod.
+* Editing a tree
+* From a spec file
+* Using input
+* Manually
+
+
+The most convenient way to create a mod is to edit the tree you want the mod
+entered in. In this way the mod can be prioritized, several mods can be
+created at once, and projects can be created to group the mods.
+
+# Edit the main tree to add a new mod
+$ edit_tree.sh main
+
+The script will open the tree file in an editor session. Mods can be
+added directly to the tree.
+
+## Example:
+
+# Tree before edit.
+[ ] 11111 An existing mod.
+[ ] 22222 Another existing mod.
+
+# Additions made directly in the tree.
+[ ] 11111 An existing mod.
+[AB] Create a script to fix the import bug.
+The import bug causes foo. Create a script to fix it.
+[ ] 22222 Another existing mod.
+    [CD] Create script to filter email.
+    Create a script to filter email mail from new service.
+
+# Tree after edit.
+[ ] 11111 An existing mod.
+[ ] 33333 Create a script to fix the import bug.
+[ ] 22222 Another existing mod.
+    [ ] 44444 Create script to filter email.
+
+# Mods 33333 will be created and assigned to AB, 44444 will be created
+# and assigned to CD.
+
+When you save the tree file, the script creates mods from any mod specs
+you insert into the tree. Multiple mods, dependent mods, whole projects,
+and reprioriting existing mods, all can be done using edit_tree.sh, all
+in one session if desired. See $HOME/dm/doc/specs for the syntax of mod
+specs. See $HOME/dm/doc/trees for more information on trees.
+
+
+Mods can be created from a spec file. The functionality is similar to
+that of editing a tree but involves a few more steps. This approach
+might be preferred when creating a project from scratch. The spec file
+can be edited and passed around, revised and refined until you are ready
+to create a project from it.
+
+## Edit a temp text file with the spec.
+$ vi ~/tmp/spec
+
+## Create the mods.
+$ cat ~/tmp/spec | create_mods.sh
+
+## Copy the output of create_mods.sh and paste it in a dependency tree
+$ vi $HOME/dm/trees/main
+
+See $HOME/dm/doc/specs for the syntax of mod specs. See
+$HOME/dm/doc/trees for more information on trees.
+
+
+The quick and dirty way to create a mod is to use the input system.
+
+## Run input and enter the mod subject and description
+$ input
+
+## Save the mod, and it will show up on your todo list in a few minutes.
+
+The input system is recommended when you want to quickly record a task
+without thought of planning or prioritization. It's useful when you
+require a reminder or spot a bug.
+
+The input system permits mods to be created from a remote location. The
+mod details can be emailed to the input system from a remote computer or
+a mobile device and a mod will be created in a few minutes as a result.
+
+Mods created from the input system can be prioritized at a later time.
+See $HOME/dm/doc/input for more information.
+
+
+A mod can be created manually. Normally you wouldn't want to, but the
+instructions are here so you can see how simple the system is.
+
+## Get the next mod id.
+$ next_mod_id.sh
+
+## Create the mod (assumes next_mod_id.sh returned 12346)
+$ mkdir $HOME/dm/mods/12346
+$ vi $HOME/dm/mods/12346/specs
+$ vi $HOME/dm/mods/12346/notes
+$ vi $HOME/dm/mods/12346/who
+
+## Add the mod to the dependency tree
+$ vi $HOME/dm/trees/main
+
+## Add a line like this in the appropriate place within the dependency tree.
+    [ ] 12346 Description of the mod.
+
+
+Completing mods
+---------------
+
+## Complete the current mod
+$ dun
+
+## Complete a mod not current
+$ sm 12345
+$ dun
+$ sm
+
+## Complete a mod manually
+$ mv $HOME/dm/mods/12345 $HOME/dm/archive
+
+
+
+Creating Reminders
+------------------
+
+See reminders.
+
+
+Inputting Ideas
+---------------
+
+See input.
+
+
+Putting mod on hold
+-------------------
+
+See postponing.
+
+
+# vim: ft=our_doc
