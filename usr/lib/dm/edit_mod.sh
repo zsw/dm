@@ -16,7 +16,7 @@ EXAMPLE:
 
 NOTES:
     If a mod id is not provided the current one is used, ie. the one
-    indicated in $HOME/.dm/mod
+    indicated in $DM_USERS/current_mod
 
     If a mod is slated for sorting, ie it is found in the 'now' or
     'unsorted' tree, it is opened read-only.
@@ -69,7 +69,7 @@ shift $(($OPTIND - 1))
 mod_id=     # Get the id of the mod.
 
 (( $# > 1 )) && { usage ; exit 1 ;}
-(( $# ==  1 )) && mod_id=$1 || mod_id=$(< $HOME/.dm/mod)
+(( $# ==  1 )) && mod_id=$1 || mod_id=$(< $DM_USERS/current_mod)
 [[ -z $mod_id ]] && { echo 'ERROR: Unable to determine current mod id.' >&2 ; exit 1 ;}
 which vim &>/dev/null || { echo "vim not installed" ; exit 1 ;}
 

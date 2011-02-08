@@ -55,7 +55,13 @@ ALL=0
 ONLY=1
 NONE=2
 
-list_file="$DM_ROOT/list.txt"
+list_file="/tmp/list.txt"
+if [[ ! -e $list_file ]]; then
+    stale=1
+else
+    stale=$(find /tmp/list.txt -mtime +0)       # Stale if file is 24 hours old.
+fi
+[[ $stale ]] && find $DM_MODS $DM_ARCHIVE | $DM_BIN/filter_mod.pl | $DM_BIN/format_mod.sh | sort > "$list_file"
 work_file1=$(tmp_file)
 work_file2=$(tmp_file)
 

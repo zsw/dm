@@ -135,11 +135,9 @@ Setup
 
 The next steps assume data will be shared via httpd.
 
-If
-
 
 # Copy alert files to a httpd accessible directory and update alert count.
-1,31 8-21 * * * cp $HOME/dm/var/alerts/* /srv/http/live/www.dtjimk.internal/alerts/jimk/ && /root/dm/bin/alert_count.sh > /root/.dm/alert_count
+1,31 8-21 * * * cp $HOME/dm/users/jimk/alerts/* /srv/http/live/www.dtjimk.internal/alerts/jimk/ && /root/dm/bin/alert_count.sh > /root/.dm/alert_count
 
 Alert files may be automatically available in an httpd accessible
 directory, eg, using symblinks, in which case this crontab should
@@ -158,12 +156,12 @@ Alert Files
 -----------
 
 The prioritize routine calls the set_alerts.sh script. It appends alert
-requests to files in the $HOME/dm/var/alerts directory. The files have
-the same name as the username of the user the alerts are for. The
-files are a list of timestamps and mod id pairs.
+requests to files in the $HOME/dm/users/$USERNAME/alerts directory. The files
+have the same name as the username of the user the alerts are for. The files
+are a list of timestamps and mod id pairs.
 
-# List the alert requests for user jimk
-$ cat $HOME/dm/var/alerts/jimk | head -5
+# List the alert requests for user steve
+$ cat $HOME/dm/users/$USERNAME/alerts/steve | head -5
     1271889061 12345
     1271889059 12344
     1271889025 12343
@@ -180,15 +178,15 @@ debugging.
 Pull Files
 ----------
 
-Whenever a user pulls from a remote server, the time of the pull is
-logged. Logs are made to files in the $HOME/dm/var/pulls directory. The
+Whenever a user pulls from a remote server, the time of the pull is logged.
+Logs are made to files in the $HOME/dm/users/$USERNAME/pulls directory. The
 files have the same name as the username of the user associated with the
-remote. (This should be the same name as the git remote branch name of the
-git repo on the remote server.) The contents of pull files are always a
-single value, the timestamp of the last pull from that server.
+remote. (This should be the same name as the git remote branch name of the git
+repo on the remote server.) The contents of pull files are always a single
+value, the timestamp of the last pull from that server.
 
 # List the alert requests for user jimk
-$ cat $HOME/dm/var/pulls/steve
+$ cat $HOME/dm/users/$USERNAME/pulls/steve
     1271889061
 
 The timestamp is in the "seconds since the epoch" format. The pull
@@ -239,7 +237,7 @@ $ find /srv/http/example.com/alerts/phillip
     /srv/http/example.com/alerts/phillip/jackson
 
 The following cron could be used to create those files. See Setup.
-1,31 8-21 * * 1-5  cp /home/phillip/dm/var/alerts/* /srv/http/example/alerts/phillip/
+1,31 8-21 * * 1-5  cp /home/phillip/dm/users/phillip/alerts/* /srv/http/example/alerts/phillip/
 
 The following files are made available by mary. They indicate the
 alerts prompted by mary intended for phillip and jackson.
@@ -249,7 +247,7 @@ $ find /srv/http/example.com/alerts/mary
     /srv/http/example.com/alerts/mary/jackson
 
 The following cron could be used to create those files. See Setup.
-1,31 8-21 * * 1-5  cp /home/mary/dm/var/alerts/* /srv/http/example/alerts/mary/
+1,31 8-21 * * 1-5  cp /home/mary/dm/users/phillip/alerts/* /srv/http/example/alerts/mary/
 
 Phillip can access the list of alerts intended for him on mary's system as
 follows:

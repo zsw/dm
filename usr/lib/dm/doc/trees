@@ -107,10 +107,10 @@ Default Trees
 It is possible to indicate a default tree order by putting a list of
 trees in the default file
 
-$ echo "unsorted main" > $HOME/.dm/trees
+$ echo "unsorted main" > $DM_USERS/current_trees
 
 The dev system assumes a default tree priority stored in the
-$HOME/.dm/trees if one isn't given.  For example if the echo command is
+$DM_USERS/current_trees if one isn't given.  For example if the echo command is
 run above followed by running prioritize.sh without arguments, mods in
 the unsorted and main tree files will be prioritized.
 
@@ -131,7 +131,7 @@ I have the following trees:
 Each weekday, the first thing I do is sort input. I run these commands
 to create my todo list.
 
-$ echo "now unsorted" > $HOME/.dm/trees
+$ echo "now unsorted" > $DM_USERS/current_trees
 $ pri.sh
 
 The pri.sh is just a shortcut to running prioritize.sh. My todo list
@@ -140,7 +140,7 @@ until the todo list is empty.
 
 Next I work on main project development.
 
-$ echo "now reminders main" > $HOME/.dm/trees
+$ echo "now reminders main" > $DM_USERS/current_trees
 $ pri.sh
 
 I prioritize the now and reminders trees as well and put them before
@@ -154,7 +154,7 @@ involve improving my work environment, for example, tweaking and fine
 tuning dwm, urxvt, vimrc, etc. or creating shell scripts to simplify
 daily chores.
 
-$ echo "now reminders tools" > $HOME/.dm/trees
+$ echo "now reminders tools" > $DM_USERS/current_trees
 $ pri.sh
 
 Again now input and reminders are prioritized just in case something
@@ -165,7 +165,7 @@ On the weekend, I work on personal stuff. This might include anything
 from tweaking mplayer, and upgrading arch packages, to sharpening my
 skates and returning a library book. Saturday morning, I'll run this:
 
-$ echo "now reminders personal" > $HOME/.dm/trees
+$ echo "now reminders personal" > $DM_USERS/current_trees
 $ pri.sh
 
 

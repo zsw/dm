@@ -25,16 +25,16 @@ function tst_create_alert {
     WHO_INITIALS='DE'
     WHO_USERNAME='ddee'
 
-    # die quickly if DM_VAR is not defined properly.
-    # DM_VAR should not be a subdirectory of DM_ROOT or tests could
+    # die quickly if DM_USERS is not defined properly.
+    # DM_USERS should not be a subdirectory of DM_ROOT or tests could
     # clobber live data.
-    local replaced=${DM_VAR/$DM_ROOT/}
+    local replaced=${DM_USERS/$DM_ROOT/}
     local safe='no'
-    if [[ "$replaced" == "$DM_VAR" ]]; then
+    if [[ "$replaced" == "$DM_USERS" ]]; then
         safe='yes'
     fi
 
-    tst "$safe" "yes" "DM_VAR is safe"
+    tst "$safe" "yes" "DM_USERS is safe"
     if [[ $safe == 'no' ]]; then
         return
     fi
@@ -50,7 +50,7 @@ function tst_create_alert {
         return
     fi
 
-    ALERT_FILE="$DM_VAR/alerts/$WHO_USERNAME"
+    ALERT_FILE="$DM_USERS/alerts/$WHO_USERNAME"
     rm $ALERT_FILE 2>/dev/null
 
     cat <<EOT >> $DM_PEOPLE

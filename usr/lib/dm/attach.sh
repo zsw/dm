@@ -30,7 +30,7 @@ EXAMPLE:
 NOTES:
 
     If the -m mod option is not provided the file is attached to the
-    current mod, ie. the one indicated in $HOME/.dm/mod
+    current mod, ie. the one indicated in $DM_USERS/current_mod
 
     Attachment file names must begin with the $DM_ROOT/files directory
     tree. If not, the attachment of that file will fail with an error
@@ -41,7 +41,7 @@ EOF
 }
 
 
-mod=$(cat $HOME/.dm/mod);
+mod=$(< $DM_USERS/current_mod);
 verbose=
 
 while getopts "hm:v" options; do

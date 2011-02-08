@@ -9,7 +9,7 @@ usage() {
 
 usage: $0 [options]
 
-This script processes all email files in the $DM_ROOT/var/email directory,
+This script processes all email files in the $DM_USERS/input directory,
 triggering conversion to mods for each.
 
 OPTIONS:
@@ -48,18 +48,17 @@ shift $(($OPTIND - 1))
 # Set nullglob to prevent messages if directory is empty
 shopt -s nullglob
 
-fail_dir="$DM_ROOT/var/email_fail"
+fail_dir="$DM_USERS/input/fail"
 
 # In case this directory has not yet been created, create it now so the script
 # doesn't crash.
-mkdir -p $DM_ROOT/var/email
+mkdir -p "$DM_USERS/input"
 
-for email in $(find $DM_ROOT/var/email/ -type f); do
+for email in $(find $DM_USERS/input/ -maxdepth 1 -type f); do
     # NOTE: Every email processed in this loop must be removed from
-    # $DM_ROOT/var/email. If it is not removed the cron will continually
-    # process it possibly creating duplicate mods. If there are errors, move
-    # the email to $DM_ROOT/var/email_fail. If there are no errors, delete the
-    # email.
+    # $DM_USERS/input. If it is not removed the cron will continually process
+    # it possibly creating duplicate mods. If there are errors, move the email
+    # to $DM_USERS/input/fail. If there are no errors, delete the email.
 
     errors=
     logger_debug "Processing email: $email"

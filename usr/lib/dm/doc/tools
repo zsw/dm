@@ -119,10 +119,10 @@ remind_mod.sh - Sends a message to all remind email addresses for a mod.
 
 search_mod.sh - Searches for pattern in mods.
 
-set_mod.sh - Sets the current mod, ie. the contents of $HOME/.dm/mod
+set_mod.sh - Sets the current mod, ie. the contents of $DM_USERS/current_mod
 
 set_trees.sh - Sets the active dependency trees, ie. the contents of
-$HOME/.dm/trees
+$DM_USERS/current_trees
 
 sort_input.sh - Sorts a mod created from an input based on its type.
 

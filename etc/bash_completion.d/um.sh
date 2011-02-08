@@ -22,7 +22,7 @@ _dm_um()
     fi
 
     if [[ ${prev} == 'to' ]] ; then
-        usernames=$(awk -F, 'NR>1 {print $2 "\n" $3}' $DM_ROOT/people)
+        usernames=$(awk -F, 'NR>1 {print $2 "\n" $3}' $DM_ROOT/users/people)
         COMPREPLY=( $(compgen -W "${usernames}" -- ${cur}) )
         return 0
     fi

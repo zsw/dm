@@ -188,7 +188,7 @@ run_checks() {
         tree_file=$($DM_BIN/tree.sh $tree)
         msg=$(cat $tree_file | $DM_BIN/dependency_schema.pl $DM_ROOT 2>&1)
         [[ -n $msg ]] && echo "tree|$tree|$msg" >> $message_file
-    done < $HOME/.dm/trees
+    done < $DM_USERS/current_trees
 
 
     logger_debug "Looking for mods found in more than one tree."

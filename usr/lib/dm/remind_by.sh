@@ -64,13 +64,13 @@ EXAMPLES:
 NOTES:
 
     If the -m options is not provided, the mod postponed is the current one,
-    ie. one indicated in $HOME/.dm/mod
+    ie. one indicated in $DM_USERS/current_mod
 
     For each remind_by method only one of the absolute option or the + relative
     or the - relative are permitted.
 
     The email, jabber, and pager addresses are determined from the
-    $DM_ROOT/people file. The lib/dm.sh script sets
+    $DM_ROOT/users/people file. The lib/dm.sh script sets
     environmental variables that identify the local user.
 
     Alternatives for remind_by options can be created from the cli.
@@ -92,7 +92,7 @@ function clean_remind {
     res=$(cp $tmpfile $file)
 }
 
-mod=$(cat $HOME/.dm/mod);
+mod=$(< $DM_USERS/current_mod);
 
 email=
 email_add=

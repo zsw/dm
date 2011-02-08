@@ -22,13 +22,12 @@ export DM_ARCHIVE=$DM_ROOT/archive
 export DM_BIN=$DM_ROOT/bin
 export DM_DOC=$DM_ROOT/doc
 export DM_FILES=$DM_ROOT/files
-export DM_IDS=$DM_ROOT/ids
+export DM_IDS=$DM_ROOT/users/ids
 export DM_MODS=$DM_ROOT/mods
-export DM_PEOPLE=$DM_ROOT/people
-export DM_TODO=$DM_ROOT/todo
+export DM_PEOPLE=$DM_ROOT/users/people
 export DM_TREES=$DM_ROOT/trees
 export DM_TREES_ARCHIVE=$DM_ROOT/trees/archive
-export DM_VAR=$DM_ROOT/var
+export DM_USERS=$DM_ROOT/users/$USERNAME
 
 # The dev system cannot run properly with $USERNAME=root.
 # Die if that is the case.

@@ -26,7 +26,7 @@ EXAMPLES:
     /root/dm/trees/main
 
     # Use the local trees file if no argument is provided
-    $ cat $HOME/.dm/trees
+    $ cat $DM_USERS/trees
     unsorted
 
     $ tree.sh
@@ -34,7 +34,7 @@ EXAMPLES:
 
 NOTES:
 
-    Without an argument the list of tree names is read from $HOME/.dm/trees
+    Without an argument the list of tree names is read from $DM_USERS/current_trees
 
     The order of the tree files printed reflects the order of the tree names.
 
@@ -81,9 +81,7 @@ function search {
 
 trees="$@"
 
-if [[ -z "$trees" ]]; then
-    trees=$(cat $HOME/.dm/trees | tr "\n" " ")
-fi
+[[ ! $trees ]] && trees=$(< $DM_USERS/current_trees)
 
 exit_status=0
 

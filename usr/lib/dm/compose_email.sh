@@ -23,7 +23,7 @@ EXAMPLE:
 NOTES:
 
     If a mod id is not provided the current one is used, ie. the one
-    indicated in $HOME/.dm/mod
+    indicated in $DM_USERS/current_mod
 
 EOF
 }
@@ -63,7 +63,7 @@ fi
 if [ $# -eq 1 ]; then
     mod_id=$1;
 else
-    mod_id=$(cat $HOME/.dm/mod);
+    mod_id=$(< $DM_USERS/current_mod);
 fi
 
 if [ -z $mod_id ]; then

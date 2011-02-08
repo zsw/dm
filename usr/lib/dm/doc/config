@@ -54,7 +54,7 @@ $ cat $HOME/.dm/dmrc
 3. Configure project trees
 
 $ touch $HOME/dm/trees/USERNAME/{now,personal,reminders,unsorted}
-$ echo "now reminders main personal unsorted" > $HOME/.dm/trees
+$ echo "now reminders main personal unsorted" > $DM_USERS/current_trees
 
 For more information please read $HOME/dm/doc/mods
 
@@ -132,7 +132,7 @@ in $HOME/dm/doc/input
 
 8. Create initial aliases.
 
-$ vi $HOME/dm/initial_aliases
+$ vi $DM_ROOT/users/initial_aliases
 
 When creating mod specs it is convenient to use aliases for peoples
 initials. A person can be indicated by three letter initials or a single
@@ -140,7 +140,7 @@ letter alias. The alias could be lower case whereas initials are always
 uppercase.
 
 # Examples
-$ cat $HOME/dm/initial_aliases
+$ cat $DM_ROOT/users/initial_aliases
     a=AB
     ab=AB
     A=AB

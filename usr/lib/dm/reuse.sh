@@ -37,7 +37,7 @@ done
 shift $(($OPTIND - 1))
 
 # Default to current mod if not provided
-[[ "$#" -eq "0" ]] && set -- $(cat $HOME/.dm/mod)
+[[ "$#" -eq "0" ]] && set -- $(< $DM_USERS/current_mod)
 
 reply=
 while :

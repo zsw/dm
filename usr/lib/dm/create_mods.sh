@@ -265,7 +265,7 @@ function scrub_who {
         return
     fi
 
-    aliases="$DM_ROOT/initial_aliases"
+    aliases="$DM_ROOT/users/initial_aliases"
     from_alias=$(grep  "^${who}=" $aliases | head -1 | awk -F'=' '{print $2}')
     [[ -n "$from_alias" ]] && who=$from_alias
 

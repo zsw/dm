@@ -129,7 +129,7 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
         continue
     fi
 
-    pull_file="$DM_ROOT/var/pulls/$username"
+    pull_file="$DM_USERS/pulls/$username"
     logger_debug "$username pull file: $pull_file"
     last_pull_secs=$(cat $pull_file)
     if [[ -z $last_pull_secs ]]; then

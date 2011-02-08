@@ -59,14 +59,14 @@ shift $(($OPTIND - 1))
 
 initials=$(cat $DM_PEOPLE | awk -v username=$username 'BEGIN { FS = ",[ \t]*" } { if ( $2 == username || $3 == username ) print $2 }')
 
-sm=$(cat $HOME/.dm/mod)
+sm=$(< $DM_USERS/current_mod)
 
 logger_debug "username: $username"
 logger_debug "limit: $limit"
 logger_debug "initials: $initials"
 logger_debug "current mod: $sm"
 
-cat $DM_TODO | awk -v initials=$initials '$2 ~ initials {print $0}' | \
+awk -v initials=$initials '$2 ~ initials {print $0}' $DM_USERS/todo | \
     head -$limit | \
     awk '{printf "%9s %3s %s ",$3,$2,$1;for (i=4;i<NF+1;i++) {printf "%s ",$i};print ""}' | \
     awk -v mod=$sm -v rev=$(tput rev) -v off=$(tput sgr0) -v colour=$colour '

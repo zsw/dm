@@ -37,7 +37,7 @@ EXAMPLES:
 NOTES:
 
     If the -m options is not provided, the mod updated is the current one,
-    ie. one indicated in \$HOME/.dm/mod
+    ie. one indicated in \$DM_USERS/current_mod
 
     If an argument is provided other than an option it is assumed to
     indicate the person to assign the mod to. The argument is interpreted
@@ -51,7 +51,7 @@ NOTES:
 
 
     For the -o option, the original owner is determined by looking up
-    the mod id in the \$DM_ROOT/ids table. If the -o option is used with
+    the mod id in the \$DM_ROOT/users/ids table. If the -o option is used with
     an argument indicating a person to assign to, the -o option takes
     precedence and the mod is assigned to the original owner.
 
@@ -97,7 +97,7 @@ function original_owner {
                 print $3;
                 exit;
             }
-        }' $DM_ROOT/ids | \
+        }' $DM_IDS | \
         tr -d 'x'
         )
 
@@ -114,7 +114,7 @@ function original_owner {
 
 
 dryrun=
-mod_id=$(cat $HOME/.dm/mod);
+mod_id=$(< $DM_USERS/current_mod);
 owner=
 user=
 verbose=

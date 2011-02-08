@@ -49,4 +49,4 @@ for tree in $*; do
 done
 trees=$(echo $trees | sed 's/^[ \t]*//;s/[ \t]*$//')        # Trim whitespace
 
-echo "$trees" > $HOME/.dm/trees
+echo "$trees" > $DM_USERS/current_trees

@@ -26,7 +26,7 @@ EXAMPLES:
 NOTES:
 
    If the -m options is not provided, the mod postponed is the current one,
-   ie. one indicated in $HOME/.dm/mod
+   ie. one indicated in $DM_USERS/current_mod
 
    All arguments are passed along to the date command --date option
    and so must follow the appropriate syntax. See man date.
@@ -36,7 +36,7 @@ NOTES:
 EOF
 }
 
-mod=$(cat $HOME/.dm/mod);
+mod=$(< $DM_USERS/current_mod);
 force=
 
 while getopts "fhm:" options; do
@@ -86,7 +86,7 @@ hold_has_usage_comment $mod || hold_add_usage_comment $mod
 
 hold_crontab "$mod" "$date" >> $DM_MODS/$mod/hold
 
-holds_dir="$DM_ROOT/var/holds"
+holds_dir="$DM_USERS/holds"
 mkdir -p $holds_dir
 cd $holds_dir
 ln -f -s ../../mods/$mod/hold  ./$mod

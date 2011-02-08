@@ -8,7 +8,7 @@ usage() {
 
 usage: $0 [mod_id]
 
-This script sets the current mod, ie. the contents of $HOME/.dm/mod
+This script sets the current mod, ie. the contents of $DM_USERS/current_mod
 
 OPTIONS:
 
@@ -61,4 +61,4 @@ if [[ -z $mod_id ]]; then
     exit 1
 fi
 
-echo $mod_id > $HOME/.dm/mod
+echo $mod_id > $DM_USERS/current_mod

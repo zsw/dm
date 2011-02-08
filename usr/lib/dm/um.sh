@@ -31,7 +31,7 @@ EXAMPLES:
 
 NOTES:
 
-   The mod updated is the current one, ie. one indicated in $HOME/.dm/mod
+   The mod updated is the current one, ie. one indicated in $DM_USERS/current_mod
 
    All arguments are passed to update_mod.sh. See that script for option syntax.
 EOF

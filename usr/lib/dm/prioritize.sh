@@ -29,7 +29,7 @@ NOTES:
     prioritized first, then mods from the second tree, etc.
 
     If no trees are provided, a list of trees from the local file,
-    $HOME/.dm/trees, is used.
+    $DM_USERS/current_trees, is used.
 EOF
 }
 
@@ -74,24 +74,19 @@ fi
 logger_debug "Expanding tree file names"
 trees="$@"
 
-if [[ -z "$trees" ]]; then
-    trees=$(cat $HOME/.dm/trees | tr "\n" " ")
-fi
+[[ ! $trees ]] && trees=$(< $DM_USERS/current_trees)
 
-# The call to tree.sh will convert tree names to tree files preserving the order of the trees.
-
+# The call to tree.sh will convert tree names to tree files preserving the
+# order of the trees.
 tree_files=$($DM_BIN/tree.sh $trees | tr "\n" " ")
 
 if [[ -z "$tree_files" ]]; then
-    echo 'No tree files prioritize.'
+    echo 'No tree files to prioritize.'
     exit 0
 fi
 
-logger_debug "Backing up todo file: $DM_TODO."
-cp $DM_TODO ${DM_TODO}.bak
-
 logger_debug "Prioritizing mods using dependency tree."
-cat $tree_files | $DM_BIN/dependency_schema.pl --available $DM_ROOT | awk -v root=$DM_ROOT '{print root"/mods/"$1}' | $DM_BIN/format_mod.sh "%i %w %t %d" > $DM_TODO
+cat $tree_files | $DM_BIN/dependency_schema.pl --available $DM_ROOT | awk -v root=$DM_ROOT '{print root"/mods/"$1}' | $DM_BIN/format_mod.sh "%i %w %t %d" > $DM_USERS/todo
 
 logger_debug "Committing changes if necessary."
 cd $DM_ROOT

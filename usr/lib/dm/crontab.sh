@@ -28,7 +28,7 @@ NOTES:
 
     If the -r option is provided, the crontab is reloaded. Reloading the
     crontab implies combining the \$HOME/.crontab file and the
-    \$HOME/dm/var/holds/* files into one, and replacing the existing
+    \$DM_USERS/holds/* files into one, and replacing the existing
     crontab with that file.
 
     If reloading with either the -e or -r options, the effective userid's
@@ -84,7 +84,7 @@ if [[ -n $reloading ]]; then
     tmpfile=$(tmp_file)
     cp $HOME/.crontab $tmpfile
     echo "$HOLD_HEADER" >> $tmpfile
-    grep -h -v '^#' $DM_ROOT/var/holds/* | sort -n -k 4 -k 3 -k 2 -k 1  >> $tmpfile
+    grep -h -v '^#' $DM_USERS/holds/* | sort -n -k 4 -k 3 -k 2 -k 1  >> $tmpfile
     /usr/bin/crontab $tmpfile
 fi
 

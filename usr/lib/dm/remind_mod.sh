@@ -32,7 +32,7 @@ NOTES:
     To read the mod list from stdin, use the mod_id '-'.
 
     If a mod id is not provided the current one is used, ie. the one
-    indicated in $HOME/.dm/mod
+    indicated in $DM_USERS/current_mod
 
     This script will send reminders regardless if the mod is in the mods
     directory of in the archive directory.
@@ -124,7 +124,7 @@ $dryrun && logger_debug "** Dry run **"
 
 fetch=false
 
-[[ "$#" -eq "0" ]] && set -- $(cat $HOME/.dm/mod)
+[[ "$#" -eq "0" ]] && set -- $(< $DM_USERS/current_mod)
 
 while [[ ! "$#" -eq "0" ]]; do
     if [ "$1" == "-" ]; then

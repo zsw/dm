@@ -67,7 +67,7 @@ fi
 
 logger_debug "Purging older than: $limit"
 
-alert_dir="$DM_ROOT/var/alerts"
+alert_dir="$DM_USERS/alerts"
 
 tmpfile=$(tmp_file)
 logger_debug "Temp file: $tmpfile"

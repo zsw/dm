@@ -40,7 +40,7 @@ EXAMPLES:
 NOTES:
 
     If the -m options is not provided, the mod updated is the current one,
-    ie. one indicated in \$HOME/.dm/mod
+    ie. one indicated in \$DM_USERS/current_mod
 
     All arguments for the -b option are passed along to remind_by.sh.
     See that script for option syntax.
@@ -56,7 +56,7 @@ NOTES:
 EOF
 }
 
-mod_id=$(cat $HOME/.dm/mod);
+mod_id=$(< $DM_USERS/current_mod);
 by=
 time=
 quiet=false

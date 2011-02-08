@@ -15,7 +15,7 @@ OPTIONS:
 NOTES:
 
     If a mod_id is not provided, the mod used is the current one,
-    ie. one indicated in \$HOME/.dm/mod
+    ie. one indicated in \$DM_USERS/current_mod
 EOF
 }
 
@@ -36,7 +36,7 @@ shift $(($OPTIND - 1))
 
 mod_id=$1
 if [[ -z $mod_id ]]; then
-    mod_id=$(cat $HOME/.dm/mod)
+    mod_id=$(< $DM_USERS/current_mod)
 fi
 
 echo "$mod_id" | $DM_BIN/format_mod.sh "Mod %i - %d"

@@ -19,12 +19,11 @@ rm -r $test_dir 2>/dev/null
 mkdir -p $test_dir
 
 export DM_ARCHIVE=$test_dir/archive
-export DM_IDS=$test_dir/ids
+export DM_IDS=$test_dir/users/ids
 export DM_MODS=$test_dir/mods
-export DM_PEOPLE=$test_dir/people
-export DM_TODO=$test_dir/todo
+export DM_PEOPLE=$test_dir/users/people
 export DM_TREES=$test_dir/trees
-export DM_VAR=$test_dir/var
+export DM_USERS=$test_dir/users/$USERNAME
 
 function tst {
 

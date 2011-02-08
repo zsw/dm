@@ -101,7 +101,7 @@ function process_mod {
     logger_debug "Commenting out all lines in $hold_file"
 
     # Comment all uncommented lines
-    $dryrun || { sed -i -e 's/^\([^#]\)/#\1/' $hold_file && rm $DM_ROOT/var/holds/$mod 2>/dev/null ; }
+    $dryrun || { sed -i -e 's/^\([^#]\)/#\1/' $hold_file && rm $DM_USERS/holds/$mod 2>/dev/null ; }
 
     $dryrun && logger_debug "Dry run, mod $mod left unchanged."
 

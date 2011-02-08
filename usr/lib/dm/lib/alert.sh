@@ -34,7 +34,7 @@ function create_alert {
     fi
 
     local username=$(person_attribute username initials $who)
-    local alert_dir="$DM_VAR/alerts"
+    local alert_dir="$DM_USERS/alerts"
     mkdir -p "$alert_dir"
     local alert_file="$alert_dir/$username"
     local date=$(date "+%s")

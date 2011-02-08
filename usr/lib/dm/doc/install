@@ -34,7 +34,7 @@ Assuming current user is root.
 $ su USERNAME
 $ mkdir -p $HOME/dm/trees/USERNAME
 $ mkdir $HOME/.dm
-$ touch $HOME/.dm/mod
+$ touch $DM_USERS/current_mod
 $ touch $HOME/dm/todo
 
 

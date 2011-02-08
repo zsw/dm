@@ -41,13 +41,13 @@ Dependencies amongst mods are indicated by offsets (indentation).
 The dependency relationship above indicates the first mod, assigned to
 AB, must be done before the second mod, assigned to CD, can be started.
 
-The initials of people indicate who the task will be assigned to.
-Initials can be those specified in the people file, $HOME/dm/people, or
-aliases specified in $HOME/dm/initial_aliases.
+The initials of people indicate who the task will be assigned to. Initials can
+be those specified in the people file, $DM_ROOT/users/people, or aliases
+specified in $DM_ROOT/users/initial_aliases.
 
 Examples of initial usage.
 
-$ cat $HOME/dm/initial_aliases
+$ cat $DM_ROOT/users/initial_aliases
 a=AB
 ab=AB
 A=AB

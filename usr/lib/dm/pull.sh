@@ -162,7 +162,7 @@ logger_debug "git merge $server"
 git merge $server || exit 1
 
 logger_debug "Log pull."
-pull_dir="$DM_ROOT/var/pulls"
+pull_dir="$DM_USERS/pulls"
 mkdir -p "$pull_dir"
 date "+%s" > "$pull_dir/$server"
 
