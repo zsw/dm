@@ -89,6 +89,6 @@ hold_crontab "$mod" "$date" >> $DM_MODS/$mod/hold
 holds_dir="$DM_USERS/holds"
 mkdir -p $holds_dir
 cd $holds_dir
-ln -f -s ../../mods/$mod/hold  ./$mod
+ln -f -s ../../../mods/$mod/hold  ./$mod
 $DM_BIN/crontab.sh -r
 echo "Mod $mod on hold until $date."
