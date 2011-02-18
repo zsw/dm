@@ -181,7 +181,7 @@ run_checks() {
     logger_debug "Looking for mods found in both the mods and archive directory."
     dupes=$(find $DM_MODS $DM_ARCHIVE -maxdepth 1 -mindepth 1 -type d | sed -e "s@$DM_MODS/@@g;s@$DM_ARCHIVE/@@g" | sort | uniq -d)
     for dupe in $dupes; do
-        echo "mod|$dup|ERROR: Mod found in both mods and archive subdirectories." >> $message_file
+        echo "mod|$dupe|ERROR: Mod found in both mods and archive subdirectories." >> $message_file
     done
 
     logger_debug "Syntax checking dependency tree."
