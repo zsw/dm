@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -43,33 +44,33 @@ while getopts "fhm:" options; do
   case $options in
     f ) force=1;;
     m ) mod=$OPTARG;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
   esac
 done
 
 shift $(($OPTIND - 1))
 
-if [[ -z "$*" ]]; then
-    usage
+if [[ ! "$*" ]]; then
+    _u
     exit 1
 fi
 
-if [ -z $mod ]; then
+if [ ! $mod ]; then
     echo 'ERROR: Unable to determine mod id.' >&2
     exit 1
 fi
 
 date=$(date "+%Y-%m-%d %H:%M:%S" --date="$*")
-if [[ -z $date ]]; then
+if [[ ! $date ]]; then
     exit 1
 fi
 
-if [[ -z $force ]]; then
+if [[ ! $force ]]; then
     date_as_sec=$(date "+%s" --date="$*")
     now_as_sec=$(date "+%s")
     if [[ $date_as_sec -lt $now_as_sec ]]; then
@@ -81,7 +82,7 @@ fi
 # Take the mod off hold if it currently is on hold
 $DM_BIN/take_off_hold.sh -f $mod
 
-# Add a usage comment to hold file if not already done
+# Add a FIXME:Usage comment to hold file if not already done
 hold_has_usage_comment $mod || hold_add_usage_comment $mod
 
 hold_crontab "$mod" "$date" >> $DM_MODS/$mod/hold

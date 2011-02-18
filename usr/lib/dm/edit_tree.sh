@@ -1,66 +1,51 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
-
-    cat << EOF
-
-usage: $0 tree_name
+script=${0##*/}
+_u() { cat << EOF
+usage: $script tree_name
 
 This script allows a user to edit a tree and create mods directly within
 the tree.
-
-OPTIONS:
-
-    -d      Dry run. No changes are made to dm system data.
     -v      Verbose.
 
     -h      Print this help message.
 
 EXAMPLE:
-
-    $0 main                 # Edit the main tree.
-    $0 reminders            # Edit your personal reminders tree.
-
+    $script main                 # Edit the main tree.
+    $script reminders            # Edit your personal reminders tree.
 EOF
 }
 
+_options() {
+    # set defaults
+    args=()
+    unset verbose
 
-dry_run=
-verbose=
+    while [[ $1 ]]; do
+        case "$1" in
+            -v) verbose=true    ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-while getopts "dhv" options; do
-  case $options in
+    (( ${#args[@]} != 1 )) && { _u; exit 1; }
+    tree_name=${args[0]}
+}
 
-    d ) dry_run=1;;
-    v ) verbose=1;;
-    h ) usage
-        exit 0;;
-    \?) usage
-        exit 1;;
-    * ) usage
-        exit 1;;
+_options "$@"
 
-  esac
-done
+tree=$("$DM_BIN/tree.sh" "$tree_name")
+[[ ! $tree ]] && exit 1
 
-shift $(($OPTIND - 1))
-
-if [ $# -ne 1 ]; then
-    usage
-    exit 1
-fi
-
-tree=$($DM_BIN/tree.sh $1)
-if [[ "$?" != "0" ]]; then
-    # tree.sh will provide an error message
-    exit 1
-fi
-
-[[ -n $verbose ]] && echo "Editing tree: $tree"
+__mi "Editing tree: $tree"
 
 # The tmpfile is use to store new mod specs
 tmpfile=$(tmp_file)
@@ -69,70 +54,62 @@ tmpfile=$(tmp_file)
 # that used in the dm system. Replace the base $DM_ROOT directory with
 # the tmpdir.
 tmpdir=$(tmp_dir)
-file=$(echo $tree | sed -e "s@^$DM_ROOT@$tmpdir@")
-file_dir=$(dirname $file)
+file=${tree/$DM_ROOT/$tmpdir}
+file_dir=${file%/*}
 mkdir -p "$file_dir"
-cp $tree $file
+cp "$tree" "$file"
 
 # Back up tree file so the original can be diff'd against.
 file_bak=${file}.bak
-cp -p $file $file_bak
-[[ -n $verbose ]] && echo "Tree backup: $file_bak"
+cp -p "$file" "$file_bak"
+__mi "Tree backup: $file_bak"
 
 # Edit the tree file
-/usr/bin/vim -c 'set ft=our_doc' $file
+vim "$file"
 
 # Test if file was changed, if so save is required.
-diff -q $file $file_bak > /dev/null
-if [[ "$?" == "0" ]]; then
-    echo "Quit without saving."
-    exit 0
-fi
+diff -q "$file" "${file}.bak" >/dev/null && __me "Quit without saving."
 
 # The string '---' is used as a delimiter later in the script. If the
 # user happened to add that string to the tree file, it will cause foo,
 # interpreting it as an delimiter where it wasn't intended. Append
 # another hypen on the string so the foo doesn't happen.
 
-sed -i -e 's/^---$/----/' $file
+sed -i -e 's/^---$/----/' "$file"
 
-replace_dir="$file_dir/replace"
-mkdir -p $replace_dir
-split_dir="$file_dir/csplit"
-mkdir -p $split_dir
-cd $split_dir
-rm $split_dir/*   2>&1 | grep -v 'No such file or directory'
-rm $replace_dir/* 2>&1 | grep -v 'No such file or directory'
+replace_dir=$file_dir/replace
+[[ $replace_dir =~ ^/tmp ]] && rm -r "$replace_dir" &>/dev/null
+mkdir -p "$replace_dir"
+
+split_dir=$file_dir/csplit
+[[ $split_dir =~ ^/tmp ]] && rm -r "$split_dir" &>/dev/null
+mkdir -p "$split_dir"
+
+cd "$split_dir"
 
 # Strategy: Phase I - Update existing mods
 # In this phase, if the description of a existing mod is changed, update the
 # mod description file.
 
-# A breakdown of the next command.
-# line 1: diff the edited file and the backup.
-# line 2: Ignore any line not starting with '>'
-# line 3: Get only output associated with existing mods.
-# line 4: Strip leading space and box.
-# lines 5-6: Extract the mod_id and description.
-# lines 7-8: Determine the mod description file name.
-# lines 9-16: Write the description to the descriptiion file.
-diff $file_bak $file | \
-    awk '{ if (/^> /) {print} }' | \
-    awk --re-interval '{if (/[ ]*\[( |x)\] [0-9]{5}/) {print}}' | \
-    sed 's/^>\s*\[[ x]\]\s*//g' | while read line; do
-        mod_id=${line%% *}
-        description=${line#* }
-        mod_dir=$(mod_dir $mod_id)
-        descr_file="${mod_dir}/description"
-        if [[ -w "$descr_file" ]]; then
-            [[ -n $verbose ]] && echo "Updating mod description: $mod_id $description"
-            if [[ -z "$dry_run" ]]; then
-                echo "$description" > $descr_file
-            else
-                echo "Dry run: mod not updated."
-            fi
-        fi
-done
+# A breakdown of the awk in the next command.
+#   --re-interval: Required to use {5} syntax
+#   /^> /        : Ignore any line not starting with '>'
+#   /[ ]...{5}/  : Get only output associated with existing mods. Eg [x] 12345
+while read -r line; do
+    # Example line='12345 This is the mod description'
+    mod_id=${line%% *}
+    description=${line#* }
+    mod_dir=$(mod_dir "$mod_id")
+    descr_file=$mod_dir/description
+    [[ ! -w $descr_file ]] && continue
+    __mi "Updating mod description: $mod_id $description"
+    echo "$description" > "$descr_file"
+done < <(diff "$file_bak" "$file" | \
+        awk --re-interval '
+            /^> / &&
+            /[ ]*\[( |x)\] [0-9]{5}/ {
+                sub(/>[ \t]+\[[x ]\][ \t]+/, ""); print
+            }')
 
 # Strategy: Phase II - Create new mods
 # A diff of the edited tree file and it's backup will reveal the
@@ -143,61 +120,48 @@ done
 # the tree file. The mod spec in the tree file is then replaced by the
 # tree structured create_mods.sh produces using block_substitute.py.
 
-# A breakdown of the next command.
-# line 1: diff the edited file and the backup.
-# line 2: Replace '> ---' with '> ----' so incidental dividers in the
-#         mod text are not interpreted as a delimiter.
-# line 3: Any line *not* starting with '> ' is ignored. This includes diff
-#         overhead, eg line numbers, and diff text from the original
-#         file.
-# line 4: Any diff output related to existing mods can be ignored.
-# line 5: Remove the '> ' from the text.
-# line 6: Split into section files delimited on '---'
-
-diff $file_bak $file | \
-    awk '{ if ( /^> ---$/) {print "> ----"} else {print}}' | \
-    awk '{ if (! /^> /) {print "---"} else {print} }' | \
-    awk --re-interval '{if (/[ ]*\[( |x)\] [0-9]{5}/) {print "---" } else {print}}' | \
-    sed -e 's/^> //' | \
+# A breakdown of the awk in the next command.
+#   --re-interval: Required to use {5} syntax
+#  /> ---/       : Replace '> ---' with '----' so incidental dividers in the
+#  !/> /         : Any line *not* starting with '> ' is ignored. This includes
+#                  diff overhead, eg line numbers, and diff text from the
+#                  original file.
+#   /[ ]...{5}/  : Any diff output related to existing mods can be ignored.
+#   {sub...}     : Remove the leading '> '
+diff "$file_bak" "$file" | \
+    awk --re-interval '
+         /> ---/                  {print "----";next}
+        !/> /                     {print "---";next}
+         /[ ]*\[( |x)\] [0-9]{5}/ {print "---";next}
+                                  {sub(/^>[ \t]/, "")};{print}' | \
     csplit -z -s - '/^---$/' {*}
 
-[[ -n $verbose ]] && echo "New entries split out here: $split_dir"
-
-d_flag=''
-[[ -n "$dry_run" ]] && d_flag='-d'
+__mi "New entries split out here: $split_dir"
 
 file_new=${file}.new
-cp -p $file $file_new
+cp -p "$file" "$file_new"
 tmp=$(tmp_file)
-for x in $(find ${split_dir} -maxdepth 1 -mindepth 1 -type f -name "xx*"); do
-    base_x=$(basename "$x")
-    [[ -n $verbose ]] && echo "Processing section: $x"
+cd "$split_dir"
+for base_file in *; do
+    file=$split_dir/$base_file
+    __mi "Processing section: $file"
     # Remove the '---' delimiter on the first line.
-    awk '{if(!/^---$/ || NR>1) {print} }' "$x" > $tmp && mv $tmp "$x"
-    replace_file="$replace_dir/$base_x"
-    [[ -n $verbose ]] && echo "Creating mods."
-    cat "$x" | $DM_BIN/create_mods.sh $d_flag > $replace_file
-    [[ -n $verbose ]] && echo "Replacing mod spec with checkbox in tree."
-    [[ -n $verbose ]] && echo "$DM_BIN/block_substitute.py $file_new $x $replace_file"
-    $DM_BIN/block_substitute.py $file_new $x $replace_file > $tmp && mv $tmp $file_new
+    awk '/^---$/ && NR==1 {next;} {print}' "$file" > "$tmp" && mv "$tmp" "$file"
+    [[ ! -s $file ]] && continue
+    replace_file=$replace_dir/$base_file
+    __mi "Creating mods."
+    $DM_BIN/create_mods.sh "$file" > "$replace_file"
+    __mi "Replacing mod spec with checkbox in tree."
+    __mi "$DM_BIN/block_substitute.py $file_new $file $replace_file"
+    "$DM_BIN/block_substitute.py" "$file_new" "$file" "$replace_file" > "$tmp" && mv "$tmp" "$file_new"
 done
 
-[[ -n $verbose ]] && echo "Copy of updated tree: $file_new"
+__mi "Copy of updated tree: $file_new"
 
-if [[ -z "$dry_run" ]]; then
-    cp $file_new $tree
-fi
+cp "$file_new" "$tree"
 
 # Validate schema in tree
-[[ -n $verbose ]] && echo "Validating schema in tree."
-val_tree=$tree
-[[ -n "$dry_run" ]] && val_tree=$file_new
-cat $val_tree | $DM_BIN/dependency_schema.pl $DM_ROOT
-if [[ "$?" != "0" ]]; then
-    echo "ERROR: The schema in the tree is not valid: $val_tree" >&2
-    echo "Use this command to repeat schema validation check." >&2
-    echo "cat $val_tree | $DM_BIN/dependency_schema.pl $DM_ROOT" >&2
-    exit 1
+__mi "Validating schema in tree."
+if ! { cat "$tree" | "$DM_BIN/dependency_schema.pl" "$DM_ROOT"; }; then
+    __me "The schema in the tree is not valid: $tree\n===> ERROR: Use this command to repeat schema validation check\n===> ERROR: cat $tree | $DM_BIN/dependency_schema.pl $DM_ROOT"
 fi
-
-exit 0

@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -39,11 +40,11 @@ while getopts "hv" options; do
   case $options in
 
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -51,8 +52,8 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 cd $DM_ROOT
 
@@ -63,7 +64,7 @@ if [[ "$current_branch" != "master" ]]; then
     echo "Switching to master..."
     checkout_failed=
     git checkout master || checkout_failed=1
-    if [[ -n $checkout_failed ]]; then
+    if [[ $checkout_failed ]]; then
         echo "ERROR: git checkout master failed." >&2
         echo "Refusing to prioritize in case data is corrupted." >&2
         echo "Run 'git checkout master' at prompt and review messages" >&2
@@ -80,7 +81,7 @@ trees="$@"
 # order of the trees.
 tree_files=$($DM_BIN/tree.sh $trees | tr "\n" " ")
 
-if [[ -z "$tree_files" ]]; then
+if [[ ! "$tree_files" ]]; then
     echo 'No tree files to prioritize.'
     exit 0
 fi

@@ -1,8 +1,9 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -48,11 +49,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -70,11 +71,11 @@ function search {
 
     tree_file=$(find $DM_TREES -mindepth 1 -maxdepth 1 -type f -name $keyword)
 
-    [[ -n $tree_file ]] && return 0;
+    [[ $tree_file ]] && return 0;
 
     tree_file=$(find $DM_TREES/$DM_PERSON_USERNAME -mindepth 1 -maxdepth 1 -type f -name $keyword)
 
-    [[ -n $tree_file ]] && return 0;
+    [[ $tree_file ]] && return 0;
 
     return 1
 }

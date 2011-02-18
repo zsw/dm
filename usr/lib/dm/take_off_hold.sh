@@ -1,5 +1,5 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
@@ -7,7 +7,8 @@ _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
 _loaded_alert 2>/dev/null || source $DM_ROOT/lib/alert.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -96,7 +97,7 @@ function process_mod {
 
     logger_debug "Hold file: $hold_file"
 
-    [[ -z $hold_file ]] && return
+    [[ ! $hold_file ]] && return
 
     logger_debug "Commenting out all lines in $hold_file"
 
@@ -106,7 +107,7 @@ function process_mod {
     $dryrun && logger_debug "Dry run, mod $mod left unchanged."
 
     # Create an alert if taking a mod off hold for someone else
-    if [[ -n $for_another ]]; then
+    if [[ $for_another ]]; then
         create_alert $who $mod_id
     fi
     return
@@ -123,11 +124,11 @@ while getopts "dfhv" options; do
     d ) dryrun=true;;
     f ) force=true;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -135,14 +136,14 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDOUT=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDOUT=1
 
 $dryrun && logger_debug "Dry run. Mods not changed."
 
 lock_obtained=$(lock_create)
 if [[ "$lock_obtained" == 'false' ]]; then
-    if [[ -n $verbose ]]; then
+    if [[ $verbose ]]; then
         echo "Unable to run $0. The dm system is locked at the moment."
         echo "Try again in a few minutes."
         lock_file=$(lock_file)

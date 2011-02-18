@@ -1,11 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -99,11 +100,11 @@ while getopts "ht:" options; do
 
     t ) tree_format=$OPTARG;;
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -112,7 +113,7 @@ done
 shift $(($OPTIND - 1))
 
 if [[ "$#" -gt "1" ]]; then
-    usage
+    _u
     exit 1
 fi
 
@@ -123,7 +124,7 @@ LOG_TO_STDERR=
 
 format="%i %w %h %t %l %d"
 
-[[ -n $1 ]] && format=$1
+[[ $1 ]] && format=$1
 
 logger_debug "Format: $format"
 
@@ -138,7 +139,7 @@ do
         mod_dir=$(mod_dir $mod)
     fi
 
-    if [[ -z "$mod_dir" ]]; then
+    if [[ ! "$mod_dir" ]]; then
         echo "Unable to locate directory for mod $mod" >&2
         continue
     fi
@@ -166,7 +167,7 @@ do
         hold='---------- --:--:--'
         if [[ -e "$mod_dir/hold" ]]; then
             hold=$(hold_timestamp $id)
-            [[ -z $hold ]] && hold='---------- --:--:--'
+            [[ ! $hold ]] && hold='---------- --:--:--'
         fi
         line=${line//\%h/$hold}
     fi
@@ -195,7 +196,7 @@ do
                   ;;
 
             * ) echo "Invalid tree format." >&2
-                usage
+                _u
                 exit 1;;
         esac
 

@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -24,11 +25,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -39,7 +40,7 @@ shift $(($OPTIND - 1))
 
 # Validate the arguments
 if [ $# -ne 2 ]; then
-    usage
+    _u
     exit 1
 fi
 
@@ -59,7 +60,7 @@ fi
 # Ensure mod is valid
 mod_dir=$(mod_dir $mod_id)
 
-if [[ -z "$mod_dir" ]]; then
+if [[ ! "$mod_dir" ]]; then
     echo "ERROR: Unable to mv mod $mod_id." >&2
     echo "Unable to find mod in either $DM_MODS or $DM_ARCHIVE." >&2
     exit 1
@@ -76,16 +77,16 @@ if [[ "$from_tree" == "$to_tree" ]]; then
 fi
 
 group_id=
-if [[ -n $from_tree ]]; then
+if [[ $from_tree ]]; then
     # If the mod is in a group (project) then we need to move the whole
     # group to prevent the group from being disorganized.
     group_id=$($DM_BIN/tree_parse.py --mods $from_tree | grep "^$mod_id " | awk '{print $2}')
 fi
 
-if [[ -n $group_id ]]; then
+if [[ $group_id ]]; then
     $DM_BIN/mv_group_to_tree.sh "$group_id" "$to_tree"
 else
-    if [[ -n $from_tree ]]; then
+    if [[ $from_tree ]]; then
         # Remove from original tree
         sed -i "/\[.\] $mod_id /d" $from_tree
     fi

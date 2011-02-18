@@ -30,9 +30,9 @@ function person_attribute {
     key=$2
     value=$3
 
-    [[ -z $attribute ]] && return
-    [[ -z $key ]]       && return
-    [[ -z $value ]]     && return
+    [[ ! $attribute ]] && return
+    [[ ! $key ]]       && return
+    [[ ! $value ]]     && return
 
     logger_debug "attribute: $attribute, key: $key, value: $value"
 
@@ -96,16 +96,16 @@ function person_attribute {
 function person_translate_who {
 
     local who=$1
-    [[ -z $who ]] && return
+    [[ ! $who ]] && return
 
     # Default to username
     local attribute='username'
     local all_digits=$(echo $who | grep '^[0-9]\+$')
     local all_uppers=$(echo $who | grep '^[A-Z]\+$')
-    if [[ -n $all_digits ]]; then
+    if [[ $all_digits ]]; then
         # Digits is an id
         attribute='id'
-    elif [[ -n $all_uppers ]]; then
+    elif [[ $all_uppers ]]; then
         # Uppercase is initials
         attribute='initials'
     fi

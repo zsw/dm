@@ -1,10 +1,11 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -73,11 +74,11 @@ while getopts "dg:hv" options; do
     d ) dryrun=true;;
     g ) git_dir=$OPTARG;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -85,11 +86,11 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 server=$1
-[[ ! $server ]] && { usage; exit 1; }
+[[ ! $server ]] && { _u; exit 1; }
 
 [[ ! $git_dir ]] && git_dir=$(pwd)
 if [[ ! -d $git_dir || ! -f $git_dir/.git/config ]]; then
@@ -123,7 +124,7 @@ logger_debug "git pull"
 git_pull_failed=
 git pull || git_pull_failed=1
 
-if [[ -n $git_pull_failed ]]; then
+if [[ $git_pull_failed ]]; then
     pull_fail_message
     logger_debug "git checkout master"
     git checkout master || exit 1
@@ -138,7 +139,7 @@ logger_debug "git diff --stat $server master"
 git diff --stat $server master || exit 1
 
 diff=$(git diff $server master)
-if [[ -z "$diff" ]]; then
+if [[ ! "$diff" ]]; then
     echo "Remote branch $server and local branch master are identical."
     exit 1
 fi
@@ -146,11 +147,11 @@ fi
 reply=
 while :
 do
-    if [[ -n $interactive ]]; then
+    if [[ $interactive ]]; then
         read -p 'Merge changes? (Y/n): ' reply
     fi
 
-    [[ -z "$reply" ]] && reply=y
+    [[ ! "$reply" ]] && reply=y
     reply=$(echo $reply | tr "[:upper:]" "[:lower:]")
 
     [[ "$reply" == "y" ]] || [[ "$reply" == "n" ]] && break

@@ -1,5 +1,5 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 # osd_weechat_events.sh
 
@@ -7,7 +7,8 @@ _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_weechat 2>/dev/null || source $DM_ROOT/lib/weechat.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
 cat << EOF
 
@@ -80,11 +81,11 @@ while getopts "hf" options; do
   case $options in
 
     f ) fork=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -155,9 +156,9 @@ while read -r line; do
     logger_debug "Msg: $msg"
 
     username=$from
-    [[ -n $whitelist ]] && username=$(awk /^$from$/ $whitelist_file)
+    [[ $whitelist ]] && username=$(awk /^$from$/ $whitelist_file)
 
-    if [[ -z $username ]]; then
+    if [[ ! $username ]]; then
         logger_debug "Username not whitelisted. Message not printed to osd pipe."
         continue
     fi

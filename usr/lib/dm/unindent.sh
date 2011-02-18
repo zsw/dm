@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -61,7 +62,7 @@ function unindent {
 
         # If there exists one line with no leading spaces, exit loop
         local found=$(cat $file | awk '!/^[ ]+/')
-        if [[ -n "$found" ]]; then
+        if [[ "$found" ]]; then
             break
         fi
 
@@ -86,11 +87,11 @@ while getopts "hin:" options; do
 
     i ) in_place=1;;
     n ) max_columns=$OPTARG;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -100,7 +101,7 @@ shift $(($OPTIND - 1))
 
 if [[ "$#" == "0" ]]; then
     echo "ERROR: File to unindent required." >&2
-    usage
+    _u
     exit 1
 fi
 
@@ -108,7 +109,7 @@ fi
 count=$(echo "$max_columns" | grep -c '[^0-9]')
 if [[ $count != "0" ]]; then
     echo "ERROR: Invalid -n option value, $max_columns. Digits only." >&2
-    usage
+    _u
     exit 1
 fi
 
@@ -125,7 +126,7 @@ while [[ ! "$#" -eq "0" ]]; do
         fi
     fi
     unindent $tmp
-    if [[ -n $in_place && "$1" != "-" ]]; then
+    if [[ $in_place && "$1" != "-" ]]; then
         cp $tmp $1
     else
         cat $tmp

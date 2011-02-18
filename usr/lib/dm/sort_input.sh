@@ -1,11 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -89,7 +90,7 @@ function create_calendar {
     $DM_BIN/calendar_entry_update.py $tmpfile > $tmpfile_update
 
     local result=$(grep 'result: \w\+' $tmpfile_update)
-    if [[ -z $result ]]; then
+    if [[ ! $result ]]; then
         echo "ERROR: calendar_entry_update.py returned no result." >&2
         echo "Calendar event may not be created properly" >&2
         exit 1
@@ -155,7 +156,7 @@ function create_grocery {
     logger_debug "wget exit status: $exit_status"
     logger_debug "wget error message: $error_msg"
 
-    if [[ -n "$error_msg" ]]; then
+    if [[ "$error_msg" ]]; then
         echo "ERROR: wget returned exit status $exit_status, $error_msg" >&2
         echo "Grocery item add may not have succeeded." >&2
         exit 1
@@ -174,11 +175,11 @@ while getopts "dhv" options; do
 
     d ) debug=1;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -186,16 +187,16 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 v_flag=''
-[[ -n $verbose ]] && v_flag='-v'
+[[ $verbose ]] && v_flag='-v'
 d_flag=''
-[[ -n $dryrun ]] && v_flag='-d'
+[[ $dryrun ]] && v_flag='-d'
 
 grocery_url="http://www.dtjimk.internal/groceries"
-[[ -n $debug ]] && grocery_url="http://test.dtjimk.internal/groceries"
+[[ $debug ]] && grocery_url="http://test.dtjimk.internal/groceries"
 
 tmpdir=$(tmp_dir)
 pipe_dir="${tmpdir}/pipes"
@@ -271,21 +272,21 @@ while read mod; do
 
     esac
 
-    if [[ -z "$tree" ]]; then
+    if [[ ! "$tree" ]]; then
         tree=$unsorted
     fi
 
     # Remove the mod from all other trees (in case mod is reused)
     rm_trees=$(find $DM_TREES/ -type f ! -name 'sed*' | xargs --replace grep -l  "\[.\] $mod"  {})
 
-    if [[ -n $rm_trees ]]; then
+    if [[ $rm_trees ]]; then
         sed -i "/\[.\] $mod /d" $rm_trees
     fi
 
     # Append the mod line to the appropriate dependency tree
     echo "$mod_dir" | $DM_BIN/format_mod.sh "[ ] %i %d" >> $DM_TREES/$tree
 
-    if [[ -n $reuse ]]; then
+    if [[ $reuse ]]; then
         logger_debug "Flagging for reuse, mod $mod"
         $DM_BIN/reuse_mod.sh $v_flag $mod
     fi

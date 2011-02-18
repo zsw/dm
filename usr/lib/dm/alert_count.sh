@@ -1,11 +1,14 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() { cat << EOF
+script=${0##*/}
+_u() {
+
+    cat << EOF
 
 usage: $0 [OPTIONS]
 
@@ -38,11 +41,11 @@ while getopts "hp:v" options; do
 
     p ) dm_people=$OPTARG;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -50,8 +53,8 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 logger_debug "dm_people: $dm_people"
 
@@ -69,7 +72,7 @@ fi
 export DM_PEOPLE="$dm_people"
 
 wget_flag='-q'
-[[ -n $verbose ]] && wget_flag='-v'
+[[ $verbose ]] && wget_flag='-v'
 
 tmpdir=$(tmp_dir)
 tmp_alert_dir="${tmpdir}/alerts"
@@ -80,7 +83,7 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     # Skip the header record
     [[ "$id" == "id" ]] && continue
     username=$(person_attribute username id $id)
-    if [[ -z "$username" ]]; then
+    if [[ ! "$username" ]]; then
         echo "ERROR: Unable to get username for person id=$id" >&2
         continue
     fi
@@ -88,7 +91,7 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     [[ "$username" == "$USERNAME" ]] && continue
 
     server=$(person_attribute server id $id)
-    if [[ -z "$server" ]]; then
+    if [[ ! "$server" ]]; then
         logger_warn "WARNING: Unable to get server for person username: $username"
         logger_warn "Unable to get alert count for person username: $username"
         continue
@@ -120,7 +123,7 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
             ;;
     esac
 
-    if [[ -n "$error_msg" ]]; then
+    if [[ "$error_msg" ]]; then
         logger_debug "$username wget exit status: $exit_status"
         logger_debug "$username wget error message: $error_msg"
         echo "ERROR: wget failed, url $url" >&2
@@ -132,7 +135,7 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     pull_file="$DM_USERS/pulls/$username"
     logger_debug "$username pull file: $pull_file"
     last_pull_secs=$(cat $pull_file)
-    if [[ -z $last_pull_secs ]]; then
+    if [[ ! $last_pull_secs ]]; then
         # If the user has never pulled from the remote, all alerts
         # should be included in the count. Set to 0.
         last_pull_secs=0

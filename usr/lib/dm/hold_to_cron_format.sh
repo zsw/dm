@@ -1,11 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -62,7 +63,7 @@ function process_mod {
 
     local hold_file=$(attr_file $mod 'hold')
 
-    [[ -z $hold_file ]] && return
+    [[ ! $hold_file ]] && return
 
     # Ignore files with git conflict markers. Processing them may cause
     # foo. Eg, the user may be editing the file fixing the conflict or
@@ -76,10 +77,10 @@ function process_mod {
 
     # Validate timestamp
     local line=$(tail -1 $hold_file | grep -v '^#')
-    [[ -z "$line" ]] && logger_debug "$mod - not on hold"
+    [[ ! "$line" ]] && logger_debug "$mod - not on hold"
 
     timestamp=""
-    if [[ -n "$line" ]]; then
+    if [[ "$line" ]]; then
         local print_time=$(echo $line | cut -b -20)
         logger_debug "$mod - hold file line: $print_time"
 
@@ -87,7 +88,7 @@ function process_mod {
         timestamp=$(hold_as_yyyy_mm_dd_hh_mm_ss "$line")
 
         # If not, try old timestamp format
-        if [[ -z $timestamp ]]; then
+        if [[ ! $timestamp ]]; then
             timestamp=$(date --date="$timestamp" "+%F %T" > /dev/null 2>&1)
             if [[ "$?" != "0" ]]; then
                 echo "ERROR: mod $mod - Invalid crontab format." >&2
@@ -104,7 +105,7 @@ function process_mod {
     logger_debug "$mod - converting..."
 
     cp /dev/null $hold_file
-    if [[ -n "$timestamp" ]]; then
+    if [[ "$timestamp" ]]; then
         $DM_BIN/postpone.sh -m "$mod" "$timestamp"
     fi
 
@@ -120,11 +121,11 @@ while getopts "dhv" options; do
 
     d ) dryrun=true;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -132,8 +133,8 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDOUT=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDOUT=1
 
 [[ "$#" -eq "0" ]] && set -- $(< $DM_USERS/current_mod)
 

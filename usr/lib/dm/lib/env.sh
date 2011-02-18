@@ -8,14 +8,18 @@
 # All dm system scripts need to source this file before running.
 #
 
-function _loaded_env {
+__mi() { __v && echo -e "===: $*" ;}
+__me() { echo -e "===> ERROR: $*" >&2; exit 1 ;}
+__v()  { ${verbose-false} ;}
+
+_loaded_env() {
     export -f _loaded_env
 }
 
-[[ -z $DM_ROOT ]] && unset DM_ROOT
+[[ ! $DM_ROOT ]] && unset DM_ROOT
 : ${DM_ROOT?"environment variable not set or empty."}
 
-[[ -z $USERNAME ]] && unset USERNAME
+[[ ! $USERNAME ]] && unset USERNAME
 : ${USERNAME?"environment variable not set or empty."}
 
 export DM_ARCHIVE=$DM_ROOT/archive
@@ -32,10 +36,7 @@ export DM_USERS=$DM_ROOT/users/$USERNAME
 # The dev system cannot run properly with $USERNAME=root.
 # Die if that is the case.
 
-if [[ "$USERNAME" == "root" ]]; then
-    echo "Dev system cannot run with USERNAME set to root." >&2
-    exit 1
-fi
+[[ $USERNAME == root ]] && __me "Dev system cannot run with USERNAME set to root."
 
 #
 # Set the PERSON_* variables based on $USERNAME env variable
@@ -51,7 +52,7 @@ IFS=$(echo)             # Change IFS to newline
 # DM_PERSON_USERNAME="jimk"
 # etc.
 #
-
 eval $(awk -v username=$USERNAME 'BEGIN { FS = ",[ \t]*" }  $1 ~ /^id$/ && NR==FNR{ split($0,a); next; }  $3 ~ username && NR!=FNR{ for (i in a) print "export DM_PERSON_" toupper(a[i])"=\""$i"\""} ' $DM_PEOPLE $DM_PEOPLE )
 
 IFS="$save_ifs"         # Restore IFS
+

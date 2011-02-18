@@ -1,8 +1,9 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -29,11 +30,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -45,7 +46,7 @@ shift $(($OPTIND - 1))
 mod_id=
 
 if [ $# -gt 1 ]; then
-    usage
+    _u
     exit 1
 fi
 
@@ -55,7 +56,7 @@ else
     mod_id=$($DM_BIN/todo.sh -u $DM_PERSON_USERNAME -l 1 | awk '{print $3}' |  tr -d '*' )
 fi
 
-if [[ -z $mod_id ]]; then
+if [[ ! $mod_id ]]; then
 
     echo 'ERROR: Unable to determine top mod id.' >&2
     exit 1

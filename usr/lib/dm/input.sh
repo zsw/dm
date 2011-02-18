@@ -1,10 +1,11 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -43,14 +44,14 @@ EOF
 #
 function create_mod {
 
-    [[ -n $dryrun ]] && echo "Dry run: create mod skipped" >&2
-    [[ -n $dryrun ]] && return
+    [[ $dryrun ]] && echo "Dry run: create mod skipped" >&2
+    [[ $dryrun ]] && return
 
     logger_debug "Checking for a reusable mod"
 
     # Reuse a mod if possible
     local mod=$($DM_BIN/reusable_mods.sh -u $DM_PERSON_USERNAME | head -1 | $DM_BIN/gut_mod.sh -)
-    if [[ -n $mod ]]; then
+    if [[ $mod ]]; then
         logger_debug "Reusing mod $mod"
         $DM_BIN/undone_mod.sh $mod
         logger_debug "Undoned mod $mod"
@@ -59,14 +60,15 @@ function create_mod {
 
     # Otherwise create a blank mod
     # create_mods.sh returns: [ ] 10028 Blank mod
-    if [[ -z $mod ]]; then
+    if [[ ! $mod ]]; then
         logger_debug "Creating a new mod"
-        mod=$(echo "[$DM_PERSON_INITIALS] Blank mod" | $DM_BIN/create_mods.sh | awk '{print $3}')
+        mod=$("$DM_BIN/create_mods.sh" -b | awk '{print $3}')
+        "$DM_BIN/assign_mod.sh" -m "$mod" "$DM_PERSON_INITIALS"
         logger_debug "Created mod $mod"
     fi
     logger_debug "After create mod $mod"
 
-    if [[ -z "$mod" ]]; then
+    if [[ ! "$mod" ]]; then
         echo "Error: Unable to get id of mod" >&2
         exit 1
     fi
@@ -97,13 +99,13 @@ function create_mod {
 function confirm {
 
     reply=
-    while [[ -z "$reply" ]]; do
+    while [[ ! "$reply" ]]; do
 
         echo -n "Process input? (Y/n/e) "
         read reply
 
         # Default reply to 'y'
-        [[ -z "$reply" ]] && reply='y'
+        [[ ! "$reply" ]] && reply='y'
 
         # Convert reply to lowercase
         reply=$(echo $reply | tr "[:upper:]" "[:lower:]")
@@ -193,10 +195,10 @@ function section {
     # without a description.
     #
 
-    if [[ -z "$description" ]]; then
+    if [[ ! "$description" ]]; then
 
         grocery=$( echo "$subject" | sed '/^\s*[gG]\s/!d')
-        [[ -z "$grocery" ]] && description=$subject
+        [[ ! "$grocery" ]] && description=$subject
     fi
 
     return;
@@ -210,11 +212,11 @@ while getopts "dhv" options; do
   case $options in
     d ) dryrun=1;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -222,15 +224,15 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 v_flag=''
-[[ -n $verbose ]] && v_flag='-v'
+[[ $verbose ]] && v_flag='-v'
 d_flag=''
-[[ -n $dryrun ]] && d_flag='-d'
+[[ $dryrun ]] && d_flag='-d'
 
-[[ -n $dryrun ]] && logger_debug 'Dry run: Actions will not be performed.'
+[[ $dryrun ]] && logger_debug 'Dry run: Actions will not be performed.'
 
 file=$(tmp_file)
 echo -e "Sbjct: \nDescr: " > $file
@@ -261,7 +263,7 @@ fi
 logger_debug "Creating mod"
 mod=$(create_mod)
 logger_debug "Created mod $mod"
-if [[ -n $mod ]]; then
+if [[ $mod ]]; then
     logger_debug "Sorting mod"
     echo "$mod" | $DM_BIN/sort_input.sh $v_flag $d_flag
     if [[ "$?" != "0" ]]; then

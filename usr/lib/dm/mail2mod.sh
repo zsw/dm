@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_ripmime 2>/dev/null || source $DM_ROOT/lib/ripmime.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -47,7 +48,7 @@ function do_attachment {
 
     local file=$1
 
-    [[ -z $file ]] && return
+    [[ ! $file ]] && return
 
     local files_dir="$DM_FILES/attachments"
     local attach_dir="$DM_MODS/$mod/attachments"
@@ -77,11 +78,11 @@ function do_attachment {
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -90,7 +91,7 @@ done
 shift $(($OPTIND - 1))
 
 if [ $# -lt 1 ]; then
-    usage
+    _u
     exit 1
 fi
 
@@ -104,13 +105,16 @@ fi
 
 # Reuse a mod if possible
 mod=$($DM_BIN/reusable_mods.sh -u $DM_PERSON_USERNAME | head -1 | $DM_BIN/gut_mod.sh -)
-[[ -n $mod ]] && $DM_BIN/undone_mod.sh $mod
+[[ $mod ]] && $DM_BIN/undone_mod.sh $mod
 
 # Otherwise create a blank mod
 # create_mods.sh returns: [ ] 10028 Blank mod
-[[ -z $mod ]] && mod=$(echo "[$DM_PERSON_INITIALS] Blank mod" | $DM_BIN/create_mods.sh | awk '{print $3}')
+if [[ ! "$mod" ]]; then
+    mod=$("$DM_BIN/create_mods.sh" -b | awk '{print $3}')
+    "$DM_BIN/assign_mod.sh" -m "$mod" "$DM_PERSON_INITIALS"
+fi
 
-if [[ -z "$mod" ]]; then
+if [[ ! "$mod" ]]; then
     echo "Error: Unable to get id of mod" >&2
     exit 1
 fi

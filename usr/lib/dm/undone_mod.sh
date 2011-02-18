@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -42,11 +43,11 @@ while getopts "fhq" options; do
     f ) force=1;;
     q ) quiet=1;;
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -56,7 +57,7 @@ shift $(($OPTIND - 1))
 
 
 if [ $# -ne 1 ]; then
-    usage
+    _u
     exit 1
 fi
 
@@ -65,7 +66,7 @@ mod_id=$1;
 mod_dir=$(mod_dir $mod_id)
 
 
-if [[ -z "$mod_dir" ]]; then
+if [[ ! "$mod_dir" ]]; then
     echo "ERROR: Unable to mv mod $mod_id." >&2
     echo "Unable to find mod in either $DM_MODS or $DM_ARCHIVE." >&2
     exit 1
@@ -90,7 +91,7 @@ fi
 
 from_trees=$(find $DM_TREES/ -type f ! -name 'sed*' | xargs --replace grep -l  "\[.\] $mod_id"  {})
 tree_count=$(echo "$from_trees" | wc -l)
-if [[ -z "$from_trees" ]]; then
+if [[ ! "$from_trees" ]]; then
     echo "WARNING: mod $mod_id is not found in any trees" >&2
 elif [[ $tree_count -gt 1 ]]; then
     echo "WARNING: mod $mod_id is found in multiple trees" >&2
@@ -99,7 +100,7 @@ fi
 for from_tree in $from_trees; do
     # Is the tree an archive tree? if so move it out.
     found=$(echo $from_tree | grep "^$DM_TREES_ARCHIVE/")
-    if [[ -n $found ]]; then
+    if [[ $found ]]; then
         to_tree=$(echo $from_tree | sed -e "s@^$DM_TREES_ARCHIVE@$DM_TREES@")
         # If the calculated to tree doesn't exist, use a default tree
         # instead, and inform the user
@@ -124,10 +125,10 @@ fi
 # Take the mod off hold if applicable
 status=$($DM_BIN/hold_status.sh $mod_id | awk '{print $5}')
 if [[ "$status" != 'off_hold' ]]; then
-    if [[ -n $force ]]; then
+    if [[ $force ]]; then
         $DM_BIN/take_off_hold.sh -f $mod_id
     else
-        if [[ -z $quiet ]]; then
+        if [[ ! $quiet ]]; then
             echo "undone_mod.sh: Mod $mod_id has been undone but is on hold."
             echo "No force option provided. Mod is left on hold."
             echo ""

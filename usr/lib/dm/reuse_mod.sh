@@ -1,11 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -56,7 +57,7 @@ function process_mod {
 
     logger_debug "Mod: $mod_id, mod_dir: $mod_dir"
 
-    [[ -z $mod_dir ]] && return
+    [[ ! $mod_dir ]] && return
 
     [[ ! -d $mod_dir ]] && return
 
@@ -84,11 +85,11 @@ while getopts "hv" options; do
   case $options in
 
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -96,8 +97,8 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDOUT=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDOUT=1
 
 # Default to current mod if not provided
 [[ "$#" -eq "0" ]] && set -- $(< $DM_USERS/current_mod)

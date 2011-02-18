@@ -19,7 +19,7 @@ LOG_LEVEL_ERROR=4
 LOG_LEVEL_FATAL=5
 LOG_LEVEL_OFF=6
 
-[[ -z $LOG_LEVEL ]] && LOG_LEVEL='off'
+[[ ! $LOG_LEVEL ]] && LOG_LEVEL='off'
 
 # Log format
 
@@ -58,13 +58,13 @@ function logger_log {
     fi
 
     if [[ $syslog ]]; then
-        [[ -n $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
-        [[ -n $LOG_FORMAT_MESSAGE ]] && log="$log $*"
+        [[ $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
+        [[ $LOG_FORMAT_MESSAGE ]] && log="$log $*"
     else
-        [[ -n $LOG_FORMAT_DATE ]] && log="$log $(date '+%Y-%m-%d %H:%M:%S')"
-        [[ -n $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
-        [[ -n $LOG_FORMAT_MESSAGE ]] && log="$log $*"
-        [[ -n $LOG_FORMAT_FILE ]] && log="$log, $0"
+        [[ $LOG_FORMAT_DATE ]] && log="$log $(date '+%Y-%m-%d %H:%M:%S')"
+        [[ $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
+        [[ $LOG_FORMAT_MESSAGE ]] && log="$log $*"
+        [[ $LOG_FORMAT_FILE ]] && log="$log, $0"
     fi
 
     log=$(echo "$log" | sed 's/^[ \t]*//')
@@ -77,16 +77,16 @@ function logger_log {
     else
         [[ $DM_LOG ]] && echo "$log" >> $DM_LOG
     fi
-    [[ -n $LOG_TO_STDERR ]] && echo "$log" >&2
-    #[[ -n $LOG_TO_STDOUT ]] && [[ -t 1 ]] && echo "$log" >&1    # -t 1 tests stdout
-    [[ -n $LOG_TO_STDOUT ]] && echo "$log" >&1    # -t 1 tests stdout
+    [[ $LOG_TO_STDERR ]] && echo "$log" >&2
+    #[[ $LOG_TO_STDOUT ]] && [[ -t 1 ]] && echo "$log" >&1    # -t 1 tests stdout
+    [[ $LOG_TO_STDOUT ]] && echo "$log" >&1    # -t 1 tests stdout
 }
 
 function logger_debug {
 
     log_level=$(logger_level)
 
-    [[ -z $log_level ]] && return
+    [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_DEBUG ]] && return
 
     logger_log 'DEBUG' "$*"
@@ -96,7 +96,7 @@ function logger_info {
 
     log_level=$(logger_level)
 
-    [[ -z $log_level ]] && return
+    [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_INFO ]] && return
 
     logger_log 'INFO' "$*"
@@ -106,7 +106,7 @@ function logger_warn {
 
     log_level=$(logger_level)
 
-    [[ -z $log_level ]] && return
+    [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_WARN ]] && return
 
     logger_log 'WARN' "$*"
@@ -116,7 +116,7 @@ function logger_error {
 
     log_level=$(logger_level)
 
-    [[ -z $log_level ]] && return
+    [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_ERROR ]] && return
 
     logger_log 'ERROR' "$*"
@@ -126,7 +126,7 @@ function logger_fatal {
 
     log_level=$(logger_level)
 
-    [[ -z $log_level ]] && return
+    [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_FATAL ]] && return
 
     logger_log 'FATAL' "$*"

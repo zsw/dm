@@ -1,7 +1,8 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 usage: $0 [mod_id]
@@ -22,11 +23,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -35,7 +36,7 @@ done
 shift $(($OPTIND - 1))
 
 mod_id=$1
-if [[ -z $mod_id ]]; then
+if [[ ! $mod_id ]]; then
     mod_id=$(< $DM_USERS/current_mod)
 fi
 

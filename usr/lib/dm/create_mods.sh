@@ -1,37 +1,29 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
-
-    cat << EOF
-
-usage: cat specs | $0 [options]
+script=${0##*/}
+_u() { cat << EOF
+usage: $script [options] [path/to/spec]
 
 This script will create file and directory-based mods within DM_ROOT for the
-specs received through STDIN.
+provided spec file.
+    -b      Create a single blank mod assigned to current user and exit.
+    -v      Verbose
 
-OPTIONS:
-
-    -d      Debug mode. Dm system not affected.
-    -t      Run tests.
-    -v      Verbose.
-
-    -h      Print this help message.
+    -h      Print this help message
 
 EXAMPLE:
+    $script ~/tmp/spec.txt          # Create mods from spec file
+    $script ~/tmp/spec*.txt         # Create mods from multiple spec files
+    $script -b                      # Create a single mod.
 
-    cat ~/tmp/spec.txt | $0         # Create mods from spec file
-    echo "[JK] Blank mod" | $0      # Create a blank mod.
-
+    mod_id=\$($script -b)                     # Create mod
+    assign_mod.sh -m \$mod_id ABC             # Assign mod to ABC
 
 NOTES:
-
-    If the -d debug option is provided, mods are created in a /tmp subdirectory,
-    not in the dm system. The option is useful for testing.
-
     Specs should be of the form:
 
         <offset>[<initials>] <description>
@@ -42,9 +34,9 @@ NOTES:
         <notes>
         etc.
 
-    After creating directories and files, the script will output this same schema
-    with the ids that were used for the mods.  The output should follow the format
-    of a depedency tree.
+    After creating directories and files, the script will output this same
+    schema with the ids that were used for the mods.  The output should follow
+    the format of a depedency tree.
 
         <offset>[ ] <id> <description>
         <offset>[ ] <id> <description>
@@ -76,172 +68,84 @@ EOF
 
 
 #
-# run_tests
+# _create_mods
 #
-# Sent: nothing
-# Return: nothing
+# Sent: file - name of file with specs
+# Return: nothing, tree structure printed to stdout.
 # Purpose:
 #
-#   Run some tests.
+#   Create mods from spec file.
 #
-# Notes:
-#
-#   The tests ensure the script outputs the expected tree structure.
-#   Testing the created mods is limited.
-#
-function run_tests {
+_create_mods() {
+    local count description file indent len mod mod_dir mod_id
+    local prev_notes re saveIFS scrubbed_who who
 
-    declare -a label
-    declare -a test
-    declare -a expect
-    local i=0
+    file=$1
 
-    mod_id=$($DM_BIN/next_mod_id.sh -d)
-    let mod_id_2="mod_id + 1"
-    let mod_id_3="mod_id + 2"
+    unset mod_dir
+    unset prev_notes
+    count=0
+    re="^[ ]*\[([A-Za-z]+)\][ ]*(.+)[ ]*$"
 
+    while IFS=$'\n' read -r line; do
+        if [[ ! $line =~ $re ]]; then
+            # Check for group start or end tag. Eg, any of these.
+            # group 111 Project title.
+            #   group 222
+            #   end
+            # end
+            if grep -Eq '^\s*(group [0-9]+|end$)' <<< "$line"; then
+                echo "$line"
+                # A group tag signals the mod notes are done as well.
+                unset mod_dir
+            elif [[ $mod_dir ]]; then
+                # If we have a mod_dir, we're processing a mod, we can
+                # assume the text is from the mod notes
+                echo "$line" >> "$mod_dir/notes"
+            else
+                # Print non-mod text to stdout as is.
+                echo "$line"
+            fi
 
-    label[++i]="Single mod"
-    test[$i]=$( cat <<EOT
-[s] Test 001.
-EOT
-)
-
-    expect[$i]=$( cat <<EOT
-[ ] $mod_id Test 001.
-EOT
-)
-
-    label[++i]="Multiple mods"
-    test[$i]=$( cat <<EOT
-[j] Test 001.
-[m] Test 002.
-[s] Test 003.
-EOT
-)
-
-    expect[$i]=$( cat <<EOT
-[ ] $mod_id Test 001.
-[ ] $mod_id_2 Test 002.
-[ ] $mod_id_3 Test 003.
-EOT
-)
-
-    label[++i]="Mod dependency"
-    test[$i]=$( cat <<EOT
-[j] Test 001.
-    [m] Test 002.
-[s] Test 003.
-EOT
-)
-
-    expect[$i]=$( cat <<EOT
-[ ] $mod_id Test 001.
-    [ ] $mod_id_2 Test 002.
-[ ] $mod_id_3 Test 003.
-EOT
-)
-
-    label[++i]="Mod with complex description"
-    test[$i]=$( cat <<"EOT"
-[s] Test 001.
-This mod has a multiline description including non-alpha characters.
-This is the second line.
-[ ] bullet line no 1
-[ ] bullet line no 2
-/usr/include
-P@$$W0RD$?
-"I didn't", said Jane O'Brien and O'nickel.
-`ls -l`
-~!@#$%^&*()_+-=:''}{[]/.,``""\|
-EOT
-)
-
-    expect[$i]=$( cat <<EOT
-[ ] $mod_id Test 001.
-EOT
-)
-
-    label[++i]="Spec without initials"
-    test[$i]=$( cat <<EOT
-[ ] Test 001.
-This is a description.
-EOT
-)
-
-    # Should leave mod unchanged.
-    expect[$i]=$( cat <<EOT
-[ ] Test 001.
-This is a description.
-EOT
-)
-
-    label[++i]="Single group"
-    test[$i]=$( cat <<EOT
-group 001
-# Project description
-[s] Test 002.
-Description 002.
-end
-EOT
-)
-
-    expect[$i]=$( cat <<EOT
-group 001
-# Project description
-[ ] $mod_id Test 002.
-end
-EOT
-)
-
-    label[++i]="Group within group"
-    test[$i]=$( cat <<EOT
-group 001
-# Project description
-[s] Test 001.
-Description 001.
-    group 002
-    # Project 2 description
-    [j] Test 002.
-    Description 002
-    end
-end
-EOT
-)
-
-    expect[$i]=$( cat <<EOT
-group 001
-# Project description
-[ ] $mod_id Test 001.
-    group 002
-    # Project 2 description
-    [ ] $mod_id_2 Test 002.
-    end
-end
-EOT
-)
-
-    for i in ${!label[@]}; do
-        echo -n "Test $i: ${label[$i]} ... "
-        got=$(echo "${test[$i]}" | $DM_BIN/create_mods.sh -d 2>/dev/null)
-        if [[ "$got" == "${expect[$i]}" ]]; then
-            echo "ok"
-        else
-            echo "FAIL"
-            echo "Expected: ------------------"
-            echo "${expect[$i]}"
-            echo "Got: -----------------------"
-            echo "$got"
-            echo ""
+            continue
         fi
-    done
 
-    return
+        [[ $prev_notes ]] && "$DM_BIN/unindent.sh" -i "$prev_notes"
+
+        # Mod line: [JK] the description
+        mod_id=$("$DM_BIN/next_mod_id.sh")
+        [[ $? != '0' || ! $mod_id ]] && __me "Unable to get mod id." && continue
+
+        mod=$(printf %05d $mod_id)
+        mod_dir=$DM_ROOT/mods/$mod
+        prev_notes="$mod_dir/notes"
+        who=${BASH_REMATCH[1]}
+        description=${BASH_REMATCH[2]}
+        scrubbed_who=$(_scrub_who "$who")
+
+        [[ -d $mod_dir ]] && rm -r "$mod_dir"
+        mkdir -p "$mod_dir"
+        cp /dev/null "$mod_dir/notes"       # Initialize notes file
+
+        if [[ ! $scrubbed_who ]]; then
+            scrubbed_who=$DM_PERSON_INITIALS
+            echo -e "\nASSIGN TO $who\n" >> $mod_dir/notes
+        fi
+        echo "$scrubbed_who" > "$mod_dir/who"
+        echo "$description" > "$mod_dir/description"
+
+        indent=${line%%[^ ]*}
+        len=${#indent}
+        (( $len > 0 )) && printf "%${len}s" " "
+        printf "[ ] %05d %s\n" "$mod" "$description"
+
+    done < "$file"
+
+    [[ $prev_notes ]] && $DM_BIN/unindent.sh -i "$prev_notes"
 }
 
-
 #
-# scrub_who
+# _scrub_who
 #
 # Sent: nothing
 # Return: nothing
@@ -257,146 +161,57 @@ EOT
 #   * Changing to uppercase.
 #   * Validating initials in people file
 #
-function scrub_who {
+_scrub_who() {
+    local from_alias who
 
     who=$1
-    if [[ -z "$who" ]]; then
-        [[ -n $verbose ]] && echo "scrub_who: no who provided."
+    if [[ ! $who ]]; then
+        __v && __mi "scrub_who: no who provided."
         return
     fi
 
-    aliases="$DM_ROOT/users/initial_aliases"
-    from_alias=$(grep  "^${who}=" $aliases | head -1 | awk -F'=' '{print $2}')
-    [[ -n "$from_alias" ]] && who=$from_alias
+    from_alias=$(awk -F'=' -v var="^${who}=" '$0 ~ var {print $2;exit}' "$DM_ROOT/users/initial_aliases")
+    [[ $from_alias ]] && who=$from_alias
 
-    who=$(echo "$who" | tr "[:lower:]" "[:upper:]")
+    who=$(tr "[:lower:]" "[:upper:]" <<< "$who")
 
     # Check if a user exists with those initials
-    username=$(person_attribute username initials "$who")
-    if [[ -z "$username" ]]; then
-        return
-    fi
+    [[ ! $(person_attribute username initials "$who") ]] && return
 
     echo "$who"
-    return
 }
 
+_options() {
+    # set defaults
+    args=()
+    unset verbose
+    unset blank
 
-debug=
-verbose=
+    while [[ $1 ]]; do
+        case "$1" in
+            -b) blank=1         ;;
+            -v) verbose=true    ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-while getopts "dhtv" options; do
-  case $options in
+    [[ ! $blank ]] && (( ${#args[@]} < 1 )) && { _u; exit 1; }
+    [[ $blank ]] && (( ${#args[@]} > 0 )) && { _u; exit 1; }
+}
 
-    d ) debug=1;;
-    t ) run_tests
-        exit 0;;
-    v ) verbose=1;;
+_options "$@"
 
-    h ) usage
-        exit 0;;
-    \?) usage
-        exit 1;;
-    * ) usage
-        exit 1;;
-
-  esac
-done
-
-shift $(($OPTIND - 1))
-
-d_flag=
-dm_root=$DM_ROOT
 tmpdir=$(tmp_dir)
-if [[ -n "$debug" ]]; then
-    d_flag='-d'
-    dm_root="${tmpdir}/create_mods"
-    [[ ! -d $dm_root ]] && mkdir -p $dm_root
-    echo "** Debug mode **" >&2
-    echo "Dev system is not affected." >&2
-    echo "Mods are created in $dm_root directory" >&2
+
+if [[ $blank ]]; then
+    args[0]=$(tmp_file)
+    echo "[$DM_PERSON_INITIALS] Blank mod" > "${args[0]}"
 fi
 
-tree_file="${tmpdir}/create_mods_tree"
-cp /dev/null $tree_file
-
-if [[ ! -d $dm_root ]]; then
-    echo "ERROR: DM root directory, $dm_root, does not exist. Refusing to create." >&2
-    exit 1
-fi
-
-mod_dir=
-re="^[ ]*\[([A-Za-z]+)\][ ]*(.+)[ ]*$"
-saveIFS=$IFS
-IFS=$'\n'
-count=0
-prev_notes=
-while read line; do
-    if [[ ! $line =~ $re ]]; then
-        # Check for group start or end tag
-        found=$(echo "$line" | awk '/^[ ]*(group [0-9]+|end$)/')
-        if [[ -n "$found"  ]]; then
-            echo $line >> $tree_file
-            # A group tag signals the mod notes are done as well.
-            mod_dir=
-            continue
-        fi
-        if [[ -n "$mod_dir" ]]; then
-            # If we have a mod_dir, we're processing a mod, we can
-            # assume the text is from the mod notes
-            echo "$line" >> ${mod_dir}/notes
-        else
-            # Print non-mod text to stdout as is.
-            echo $line >> $tree_file
-        fi
-        continue
-    fi
-
-    if [[ -n "$prev_notes" ]]; then
-        $DM_BIN/unindent.sh -i $prev_notes
-    fi
-
-    # Mod line: [JK] the description
-    mod_id=$($DM_BIN/next_mod_id.sh $d_flag)
-    if [[ "$?" != '0' || -z "$mod_id" ]]; then
-        echo "ERROR: Unable to get mod id." >&2
-        continue
-    fi
-    if [[ -n "$debug" ]]; then
-        # In debug mod the mod_id won't increment. Simulate it.
-        let mod_id="mod_id + count"
-        let count++
-    fi
-    [[ -n $verbose ]] && echo "next_mod_id.sh returns: $mod_id"
-    mod=$(printf %05d $mod_id)
-    mod_dir="${dm_root}/mods/${mod}"
-    [[ -d "$mod_dir" ]] && rm -r "$mod_dir"
-    mkdir -p $mod_dir
-    # Initialize notes file
-    cp /dev/null ${mod_dir}/notes
-    prev_notes="${mod_dir}/notes"
-    who=${BASH_REMATCH[1]}
-    description=${BASH_REMATCH[2]}
-    scrubbed_who=$(scrub_who "$who")
-    if [[ -z "$scrubbed_who" ]]; then
-        scrubbed_who=$DM_PERSON_INITIALS
-        echo -e "\nASSIGN TO $who\n" >> ${mod_dir}/notes
-    fi
-    echo "$scrubbed_who" > ${mod_dir}/who
-    echo "$description" > ${mod_dir}/description
-    [[ -n $verbose ]] && echo "Mod created: $mod_dir"
-    [[ -n $verbose ]] && echo "Mod id: $mod, who: $scrubbed_who, description: $description"
-
-    indent=${line%%[^ ]*}
-    len=${#indent}
-    if [[ $len -gt 0 ]]; then
-        printf "%${len}s" " " >> $tree_file
-    fi
-    printf "[ ] %05d %s\n" "$mod" "$description" >> $tree_file
+for spec_file in ${args[@]}; do
+    _create_mods "$spec_file"
 done
-IFS=$saveIFS
-if [[ -n "$prev_notes" ]]; then
-    $DM_BIN/unindent.sh -i $prev_notes
-fi
-cat $tree_file
-

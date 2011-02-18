@@ -20,7 +20,7 @@ _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 function is_locked {
 
     file=$1
-    if [[ -z $file ]]; then
+    if [[ ! $file ]]; then
         file=$(lock_file)
     fi
 
@@ -47,12 +47,12 @@ function lock_alert {
     to=$1
     file=$2
 
-    if [[ -z $to ]]; then
+    if [[ ! $to ]]; then
         echo "false"
         return
     fi
 
-    if [[ -z $file ]]; then
+    if [[ ! $file ]]; then
         file=$(lock_file)
     fi
 
@@ -102,13 +102,13 @@ function lock_create {
 
     file=$1
 
-    if [[ -z $file ]]; then
+    if [[ ! $file ]]; then
         file=$(lock_file)
     fi
 
     # Make sure the directory exists
     path=${file%/*}
-    if [[ -n $path ]]; then
+    if [[ $path ]]; then
         mkdir -p $path
     fi
 
@@ -132,7 +132,7 @@ function lock_create {
         sleep $t
     done
 
-    if [[ -n $success ]]; then
+    if [[ $success ]]; then
         echo "true"
     else
         echo "false"
@@ -199,11 +199,11 @@ function lock_file_key_value {
     key=$1
     file=$2
 
-    if [[ -z $key ]]; then
+    if [[ ! $key ]]; then
         return
     fi
 
-    if [[ -z $file ]]; then
+    if [[ ! $file ]]; then
         file=$(lock_file)
     fi
 
@@ -247,11 +247,11 @@ function lock_is_alertable {
     age=$1
     file=$2
 
-    if [[ -z $age ]]; then
+    if [[ ! $age ]]; then
         age="0 minutes"
     fi
 
-    if [[ -z $file ]]; then
+    if [[ ! $file ]]; then
         file=$(lock_file)
     fi
 
@@ -261,7 +261,7 @@ function lock_is_alertable {
     fi
 
     created_on=$(lock_file_key_value created_on $file)
-    if [[ -z $created_on ]]; then
+    if [[ ! $created_on ]]; then
         echo 'false'
         return
     fi
@@ -297,7 +297,7 @@ function lock_is_alertable {
 function lock_remove {
 
     file=$1
-    if [[ -z $file ]]; then
+    if [[ ! $file ]]; then
         file=$(lock_file)
     fi
 

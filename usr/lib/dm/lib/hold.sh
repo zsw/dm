@@ -28,7 +28,7 @@ _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 function hold_add_usage_comment {
 
     local mod=$1
-    [[ -z $mod ]] && return 1
+    [[ ! $mod ]] && return 1
 
     hold_file="$DM_MODS/$mod/hold"
     hold_usage_comment $mod >> $hold_file
@@ -107,10 +107,10 @@ function hold_as_yyyy_mm_dd_hh_mm_ss {
 
     # With the exception of "year", all fields must return a valid
     # amount or we have an invalid crontab entry.
-    if [[ -z $minute ]] || \
-        [[ -z $hour ]]  || \
-        [[ -z $day ]]   || \
-        [[ -z $month ]]; then
+    if [[ ! $minute ]] || \
+        [[ ! $hour ]]  || \
+        [[ ! $day ]]   || \
+        [[ ! $month ]]; then
         echo "Unable to parse crontab expression: $cron_exp" >&2
         return
     fi
@@ -128,7 +128,7 @@ function hold_as_yyyy_mm_dd_hh_mm_ss {
     # If the year value is not available then guess it. Take the
     # earliest year that makes the date in the future, ie this year if
     # it's not past, else next year.
-    if [[ -z $year ]]; then
+    if [[ ! $year ]]; then
         year=$(date "+%Y")
         local today_as_seconds=$(date "+%s")
         local ymdhms_as_seconds=$(date "+%s" \
@@ -162,7 +162,7 @@ function hold_crontab {
     local mod_id=$1
     local timestamp=$2
     local cron_exp=$(hold_as_crontab "$timestamp")
-    if [[ -z "$cron_exp" ]]; then
+    if [[ ! "$cron_exp" ]]; then
         return
     fi
     year=$(date --date="$timestamp" "+%Y")
@@ -184,17 +184,17 @@ function hold_crontab {
 function hold_has_usage_comment {
 
     local mod=$1
-    [[ -z $mod ]] && return 1
+    [[ ! $mod ]] && return 1
 
     hold_file="$DM_MODS/$mod/hold"
 
     [[ ! -e "$hold_file" ]] && return 1
 
     comment=$(hold_usage_comment $mod)
-    [[ -z "$comment" ]] && return 1
+    [[ ! "$comment" ]] && return 1
 
     found=$(grep "$comment" $hold_file)
-    if [[ -z $found ]]; then
+    if [[ ! $found ]]; then
         return 1
     fi
 
@@ -225,15 +225,15 @@ function hold_timestamp {
 
     local mod=$1
 
-    [[ -z $mod ]] && return
+    [[ ! $mod ]] && return
 
     local hold_file=$(attr_file $mod 'hold')
 
-    [[ -z $hold_file ]] && return
+    [[ ! $hold_file ]] && return
 
     local crontab=$(tail -1 $hold_file | grep -v '^#')
 
-    [[ -z "$crontab" ]] && return
+    [[ ! "$crontab" ]] && return
 
     local timestamp=$(hold_as_yyyy_mm_dd_hh_mm_ss "$crontab")
 
@@ -272,7 +272,7 @@ function hold_timestamp_status {
 
     local status='off_hold'
 
-    if [[ -n $timestamp ]]; then
+    if [[ $timestamp ]]; then
 
         local time=$(date +%s -d "$timestamp")
         local  now=$(date +%s)                # present in seconds-since-epoch form
@@ -301,7 +301,7 @@ function hold_timestamp_status {
 function hold_usage_comment {
 
     local mod=$1
-    [[ -z $mod ]] && return
+    [[ ! $mod ]] && return
 
     echo "# <minute> <hour> <day> <month> <dow> \$HOME/dm/bin/take_off_hold.sh $mod # <descr> @<year>"
     return

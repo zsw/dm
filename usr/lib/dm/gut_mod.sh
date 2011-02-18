@@ -1,10 +1,11 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -57,7 +58,7 @@ function process_mod {
 
     logger_debug "Mod: $mod, mod_dir: $mod_dir"
 
-    [[ -z $mod_dir ]] && return
+    [[ ! $mod_dir ]] && return
 
     [[ ! -d $mod_dir ]] && return
 
@@ -79,11 +80,11 @@ function process_mod {
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac

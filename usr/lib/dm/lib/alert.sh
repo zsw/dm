@@ -23,12 +23,12 @@ function create_alert {
     local who=$1
     local mod_id=$2
 
-    if [[ -z $who ]]; then
+    if [[ ! $who ]]; then
         logger_error "Unable to create alert. No initials provided."
         return
     fi
 
-    if [[ -z $mod_id ]]; then
+    if [[ ! $mod_id ]]; then
         logger_error "Unable to create alert. No mod id provided."
         return
     fi

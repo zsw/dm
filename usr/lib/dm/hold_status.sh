@@ -1,10 +1,11 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -73,8 +74,8 @@ function process_mod {
 
     status=$(hold_timestamp_status "$timestamp")
 
-    [[ -z "$timestamp" ]] && timestamp='---------- --:--:--'
-    [[ -z "$status" ]]    && status='off_hold'
+    [[ ! "$timestamp" ]] && timestamp='---------- --:--:--'
+    [[ ! "$status" ]]    && status='off_hold'
 
     who_file=$(attr_file $mod 'who')
     who=$(cat $who_file | tr -d -c 'A-Z')
@@ -86,11 +87,11 @@ function process_mod {
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac

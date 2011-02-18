@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -39,11 +40,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -95,7 +96,7 @@ while : ; do
     [[ $mod == "$ONLY" ]] && match='mods'
     [[ $mod == "$NONE" ]] && match='arch'
 
-    if [[ -n $match ]]; then
+    if [[ $match ]]; then
         cat $work_file1 | awk -v m=$match '$6 ~ m' > $work_file2
         cp $work_file2 $work_file1
     fi
@@ -109,7 +110,7 @@ while : ; do
     [[ $hold == "$ONLY" ]] && match='[0-9]'
     [[ $hold == "$NONE" ]] && match='-----'
 
-    if [[ -n $match ]]; then
+    if [[ $match ]]; then
         cat $work_file1 | awk -v m=$match '$3 ~ m' > $work_file2
         cp $work_file2 $work_file1
     fi
@@ -139,12 +140,12 @@ while : ; do
     x=$(cat $work_file1 | sort --ignore-case --key="${sort_key}${r}")
     echo "$x"
 
-    if [[ -n $print_help ]]; then
-        usage
+    if [[ $print_help ]]; then
+        _u
         print_help=
     fi
 
-    if [[ -n $cmd ]]; then
+    if [[ $cmd ]]; then
         eval $cmd
         cmd=
     fi

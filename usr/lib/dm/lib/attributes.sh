@@ -35,7 +35,7 @@ function attr_file_name {
 
     dir=$(mod_dir $mod)
 
-    [[ -z $dir ]] && return
+    [[ ! $dir ]] && return
 
     echo $dir/$attr
 
@@ -67,7 +67,7 @@ function attr_file {
 
     file_name=$(attr_file_name "$mod" "$attr")
 
-    [[ -z $file_name ]] && return
+    [[ ! $file_name ]] && return
 
     [[ ! -e $file_name ]] && return
 
@@ -104,7 +104,7 @@ function attribute {
 
     file=$(attr_file "$mod" "$attr")
 
-    [[ -z $file ]] && return
+    [[ ! $file ]] && return
 
     cat $file
 
@@ -125,13 +125,13 @@ function has_conflict_markers {
 
     file=$1
 
-    [[ -z $file ]] && return 1
+    [[ ! $file ]] && return 1
 
     [[ ! -e $file ]] && return 1
 
     marker=$(cat $file | grep -E '^(<<<<<<<|=======|>>>>>>>)$')
 
-    [[ -n $marker ]] && return 0
+    [[ $marker ]] && return 0
 
     return 1
 }
@@ -155,7 +155,7 @@ function mod_dir {
 
     mod=$1
 
-    [[ -z $mod ]] && return
+    [[ ! $mod ]] && return
 
     find $DM_MODS/$mod -maxdepth 0 -type d > /dev/null 2>&1
     if [[ "$?" == "0" ]]; then

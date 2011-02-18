@@ -1,8 +1,9 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -72,11 +73,11 @@ while getopts "hb:m:p:qt:w:" options; do
     q ) quiet=true;;
     t ) tree=$OPTARG;;
     w ) who=$OPTARG;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -87,29 +88,29 @@ done
 #+ if one exists.
 shift $(($OPTIND - 1))
 
-if [[ -z $mod_id ]]; then
+if [[ ! $mod_id ]]; then
 
     echo 'ERROR: Unable to determine mod id.' >&2
     exit 1
 fi
 
-if [[ -n "$by" ]]; then
+if [[ "$by" ]]; then
     $quiet || echo "Setting mod $mod_id to remind by $by."
     $DM_BIN/remind_by.sh -m $mod_id $by
 fi
 
-if [[ -n "$tree" ]]; then
+if [[ "$tree" ]]; then
     $quiet || echo "Moving mod $mod_id to $tree tree."
     # Capture results in a var so they are not echoed to stdout
     res=$($DM_BIN/mv_mod_to_tree.sh $mod_id $tree)
 fi
 
-if [[ -n "$time" ]]; then
+if [[ "$time" ]]; then
     $quiet || echo "Postponing mod $mod_id for $time."
     $DM_BIN/postpone.sh -m $mod_id $time
 fi
 
-if [[ -n "$who" ]]; then
+if [[ "$who" ]]; then
     $quiet || echo "Assigning mod $mod_id to $who."
     $DM_BIN/assign_mod.sh -m $mod_id $who
 fi

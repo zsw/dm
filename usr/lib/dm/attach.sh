@@ -1,34 +1,24 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-source $DM_ROOT/lib/attributes.sh
-
-usage() {
-
-    cat << EOF
-
-usage: $0 [options] FILES...
+script=${0##*/}
+_u() { cat << EOF
+usage: $script [options] FILES...
 
 This script attaches files to a mod.
-
-OPTIONS:
-
     -m ID   Id of mod to attach file to.
-    -v      Verbose.
 
     -h      Print this help message.
 
 EXAMPLE:
-
-    $0 $DM_ROOT/files/advanced_bash.pdf        # Attach advanced_bash.pdf to the current mod
-    $0 $DM_ROOT/files/payroll/t4200.pdf        # Attach payroll/t4200.pdf to the current mod
-    $0 -m 12345 $DM_ROOT/files/xpdfrc.txt      # Attach xpdfrc.txt to mod 12345
+    $script $DM_ROOT/files/advanced_bash.pdf        # Attach advanced_bash.pdf to the current mod
+    $script $DM_ROOT/files/payroll/t4200.pdf        # Attach payroll/t4200.pdf to the current mod
+    $script -m 12345 $DM_ROOT/files/xpdfrc.txt      # Attach xpdfrc.txt to mod 12345
 
 NOTES:
-
     If the -m mod option is not provided the file is attached to the
     current mod, ie. the one indicated in $DM_USERS/current_mod
 
@@ -40,59 +30,37 @@ NOTES:
 EOF
 }
 
+_options() {
+    # set defaults
+    args=()
+    mod=$(< "$DM_USERS/current_mod")
 
-mod=$(< $DM_USERS/current_mod);
-verbose=
+    while [[ $1 ]]; do
+        case "$1" in
+            -m) shift; mod=$1   ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-while getopts "hm:v" options; do
-  case $options in
+    (( ${#args[@]} < 1 )) && { _u; exit 1; }
+}
 
-    m ) mod=$OPTARG;;
-    v ) verbose=1;;
-    h ) usage
-        exit 0;;
-    \?) usage
-        exit 1;;
-    * ) usage
-        exit 1;;
+_options "$@"
 
-  esac
-done
+dir=$(mod_dir "$mod")
+[[ ! $dir ]] && __me 'Unable to locate mod $mod in mods or archive directories.'
 
-shift $(($OPTIND - 1))
+canonical_dm_root=$(readlink -f "$DM_ROOT")
+[[ ! $canonical_dm_root ]] && __me 'Unable to determine canonical DM_ROOT. Aborting.'
 
-if [ $# -lt 1 ]; then
-    usage
-    exit 1
-fi
-
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
-
-dir=$(mod_dir $mod)
-
-if [[ -z $dir ]]; then
-    echo "ERROR: Unable to locate mod $mod in mods or archive directories." >&2
-    exit 1
-fi
-
-canonical_dm_root=$(readlink -f $DM_ROOT)
-if [[ -z $canonical_dm_root ]]; then
-    echo "ERROR: Unable to determine canonical DM_ROOT. Aborting." >&2
-    exit 1
-fi
-logger_debug "Canonical DM_ROOT: $canonical_dm_root"
-
-dm_root=$(readlink -f $DM_ROOT)
+dm_root=$(readlink -f "$DM_ROOT")
 exit_status=0
 
-logger_debug "Attaching to mod: $mod"
-while :; do
-
-    [[ -z "$1" ]] && break
-
-    logger_debug "Attaching file: $1"
-
+for i in "${args[@]}"; do
     #
     # Strategy by example
     #
@@ -107,15 +75,14 @@ while :; do
     #
 
     # Translate symlinks.
-    file=$(readlink -f $1)
+    file=$(readlink -f "$i")
 
     # Determine the name of the file relative to DM_ROOT, ie, strip the
     # dm_root path from the file.
     rel_file=${file#${dm_root}/files/}
-    if [[ "$rel_file" == "$file" ]]; then
-        echo "ERROR: Attachment file must be in a subdirectory of DM_ROOT/files: $file" >&2
+    if [[ $rel_file == $file ]]; then
+        __mi "ERROR: Attachment file must be in a subdirectory of DM_ROOT/files: $file" >&2
         exit_status=1
-        shift
         continue
     fi
 
@@ -123,34 +90,27 @@ while :; do
     # Example
     #   file:              $DM_ROOT/files/path/to/attach.txt
     #   in mod: $DM_ROOT/mods/12345/files/path/to/attach.txt
-
     to_file="$dir/files/$rel_file"
     to_dir=${to_file%/*}            # Remove the file name
-    [[ ! -d $to_dir ]] && mkdir -p $to_dir
+    [[ ! -d $to_dir ]] && mkdir -p "$to_dir"
 
     # Relative symlinks can be made only in the destination directory,
     # so cd to it.
-    cd $to_dir
+    cd "$to_dir"
 
     # Create the ../ relative path.
     found=
     r=
-    while : ; do
+    while true; do
         r="../$r"
-        rl=$(readlink -f $r)
-        if [[ "$rl" == "/" ]]; then
-            # Can't go any further
-            break
-        fi
-        if [[ "$rl" == "$dm_root" ]]; then
-            found=1
-            break
-        fi
+        rl=$(readlink -f "$r")
+        [[ $rl == / ]] && break     # Can't go any further
+        [[ $rl == $dm_root ]] && { found=1; break; }
     done
-    if [[ -z $found ]]; then
-        echo "ERROR: Destination does not appear to be a subdirectory of DM_ROOT. Link failed." >&2
+
+    if [[ ! $found ]]; then
+        __mi 'ERROR: Destination does not appear to be a subdirectory of DM_ROOT. Link failed.' >&2
         exit_status=1
-        shift
         continue
     fi
 
@@ -161,11 +121,6 @@ while :; do
     # And finally make the link.
     ln -snf "$from_file" .
 
-    if [[ "$?" != "0" ]]; then
-        exit_status=1
-        shift
-    fi
-
-    shift
+    (( $? != 0 )) && exit_status=1
 done
 exit $exit_status

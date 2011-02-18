@@ -1,8 +1,9 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -45,12 +46,12 @@ EOF
 # Return: nothing
 # Purpose:
 #
-#   Print message, usage and exit.
+#   Print message, FIXME:Usage and exit.
 #
 function exit_with_message {
 
     echo "ERROR: One of 'at', 'by', 'in' or 'to' plus argument must be provided" >&2
-    usage
+    _u
     exit 1
 }
 
@@ -87,44 +88,44 @@ while [ "$1" != "" ]; do
     case $1 in
 
         at|by|in|to)
-                            [[ -n "$key" ]] && options["$key"]="$value"
+                            [[ "$key" ]] && options["$key"]="$value"
                             key $1
                             key=$?
                             value=
                            ;;
 
-        -h | --help )       usage
+        -h | --help )       _u
                             exit 0
                             ;;
-        * )                 [[ -n "$value" ]] && value="$value $1" || value=$1
+        * )                 [[ "$value" ]] && value="$value $1" || value=$1
                             ;;
     esac
     shift
 done
 
-[[ -n "$key" ]] && options[$key]=$value
+[[ "$key" ]] && options[$key]=$value
 
 cmd="$DM_BIN/update_mod.sh"
 
 [[ "${#options[@]}" == "0" ]] && exit_with_message
 
-[[ -z ${options[$at]} ]] &&  \
-[[ -z ${options[$by]} ]] &&  \
-[[ -z ${options[$in]} ]] &&  \
-[[ -z ${options[$to]} ]] &&  \
+[[ ! ${options[$at]} ]] &&  \
+[[ ! ${options[$by]} ]] &&  \
+[[ ! ${options[$in]} ]] &&  \
+[[ ! ${options[$to]} ]] &&  \
 exit_with_message
 
-if [[ -n ${options[$at]} ]]; then
+if [[ ${options[$at]} ]]; then
     [[ "${#options[$at]}" == "0" ]] && exit_with_message
     cmd="$cmd -p \"${options[$at]}\""
 fi
 
-if [[ -n ${options[$by]} ]]; then
+if [[ ${options[$by]} ]]; then
     [[ "${#options[$by]}" == "0" ]] && exit_with_message
     cmd="$cmd -b \"${options[$by]}\""
 fi
 
-if [[ -n ${options[$in]} ]]; then
+if [[ ${options[$in]} ]]; then
     [[ "${#options[$in]}" == "0" ]] && exit_with_message
 
     # Convert the tree name to a tree file w/ path
@@ -132,7 +133,7 @@ if [[ -n ${options[$in]} ]]; then
     cmd="$cmd -t \"$tree\""
 fi
 
-if [[ -n ${options[$to]} ]]; then
+if [[ ${options[$to]} ]]; then
     [[ "${#options[$to]}" == "0" ]] && exit_with_message
     cmd="$cmd -w \"${options[$to]}\""
 fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 #
 # Test script for lib/tmp.sh functions.
@@ -105,7 +105,7 @@ function tst_tmp_file {
 
     # Cleanup
     subdir=$(echo "$value" | grep -o 'dm_\([a-zA-Z0-9]\{12\}\)')
-    [[ -n $subdir ]] && rm -rf "/tmp/${subdir}"
+    [[ $subdir ]] && rm -rf "/tmp/${subdir}"
 
     USERNAME=$save_USERNAME
     DM_TMP=$save_DM_TMP
@@ -116,7 +116,7 @@ function tst_tmp_file {
 
 functions=$(cat $0 | grep '^function tst_' | awk '{ print $2}')
 
-[[ -n "$1" ]] && functions="$*"
+[[ "$1" ]] && functions="$*"
 
 for function in  $functions; do
     if [[ ! $(declare -f $function) ]]; then

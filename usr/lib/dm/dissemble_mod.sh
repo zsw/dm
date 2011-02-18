@@ -1,29 +1,24 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##/}
+_u() { cat << EOF
+usage: $script file mod_id
 
-    cat << EOF
-
-    usage: $0 file mod_id
-
-This script dissembles a file  and writes the content to mod directory files.
-
-OPTIONS:
+This script dissembles a file  and writes the content to mod directory
+files.
 
    -h      Print this help message.
 
 EXAMPLE:
-
-    $0 /tmp/fil.txt 12345
+    $0 /tmp/file.txt 12345
 
 NOTES:
-
     Intended to be used on files created by assemble_mod.sh.
 
     The assemble script adds some space lines to make the content
@@ -34,136 +29,139 @@ NOTES:
 EOF
 }
 
+#
+# _filename_from_section
+#
+# Sent: mod          - eg 12345
+#       section name - eg 'who', 'files/attachment.txt'
+# Return: filename - eg '/root/dm/mods/12345/who' '/root/dm/mods/12345/files/attachment.txt'
+# Purpose:
+#
+#   Return the full file name the section should be associated with.
+#
+_filename_from_section() {
 
-while getopts "h" options; do
-  case $options in
+    local mod mod_dir section
+    mod=$1
+    section=$2
 
-    h ) usage
-        exit 0;;
-    \?) usage
-        exit 1;;
-    * ) usage
-        exit 1;;
+    [[ ! $mod ]] && return
+    [[ ! $section ]] && return
 
-  esac
-done
+    mod_dir=$(mod_dir "$mod")
 
-shift $(($OPTIND - 1))
+    echo "$mod_dir/$section"
+}
 
+#
+# _section_name
+#
+# Sent: section name
+# Return: section name
+# Purpose:
+#
+#   Return a properly formatted section name.
+#
+_section_name() {
 
-if [ $# -ne 2 ]; then
+    local attachment attr section
+    section=$1
 
-    echo "Usage: $0 dev_id" >&2
-    exit 1;
-fi
+    [[ ! $section ]] && return
 
-if [[ -z "$DM_MODS" ]]; then
-    echo "DM_MODS not defined. Aborting." >&2
-    exit 1;
-fi
+    attachment=$(grep -o "^files/" <<< "$section")
 
-assemble_file=$1
-mod_id=$2
-mod_dir=$(mod_dir $mod_id)
+    attr=$(grep -v "/" <<< "$section")
 
-mkdir -p $mod_dir
+    # If the section is not a attribute or attachment then it's foo
+    # We're going to assume it's an attachment and configure it as so.
+    # Prepend the section with files.
+    [[ ! $attachment && ! $attr ]] && section="files/$section"
+
+    echo "$section"
+}
+
+_options() {
+    # set defaults
+    args=()
+
+    while [[ $1 ]]; do
+        case "$1" in
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
+
+    (( ${#args[@]} != 2 )) && { _u; exit 1; }
+    assemble_file=${args[0]}
+    mod_id=${args[1]}
+}
+
+_options "$@"
+
 
 # Remove existing mod attributes and attachment symlinks so files
 # associated with sections removed from mod file will be removed in mod
 # directory. The test on mod_dir is a precaution since the next command
-# does a rm -rf.
+# does a rm -r.
 
-if [[ -z "$mod_dir" ]]; then
-    echo "mod_dir not defined. Aborting." >&2
-    exit 1;
-fi
-
-rm -rf $mod_dir
-mkdir -p $mod_dir
+mod_dir=$(mod_dir "$mod_id")
+[[ ! $mod_dir ]] && __me "mod_dir not defined. Aborting."
+[[ $mod_dir =~ /(mods|archive)/ ]] && rm -r "$mod_dir" &>/dev/null
+mkdir -p "$mod_dir"
 
 tmpdir=$(tmp_dir)
-split_dir="$tmpdir/dissemble/csplit"
-mkdir -p $split_dir
-rm -f $split_dir/*
+split_dir=$tmpdir/dissemble/csplit
+mkdir -p "$split_dir"
+rm -f "$split_dir"/*
 
-cd $split_dir
+cd "$split_dir"
 
-csplit -s $assemble_file '/^--------------------------------------------- .* ---$/' {*}
+csplit -s "$assemble_file" '/^--------------------------------------------- .* ---$/' {*}
 
 for file in *; do
+    # csplit may create empty files. Ignore them.
+    [[ ! -s $file ]] && continue
 
-    # csplit may create empty files. Remove them.
-
-    size=$(du $file | awk '{ print $1}')
-    if [[ $size -eq 0 ]]; then
-        rm $file
-        continue
-    fi
-
-    name=$(grep  '^--------------------------------------------- .* ---$' $file | awk '{print $2}')
+    name=$(awk '/^--------------------------------------------- .* ---$/ {print $2}' "$file")
 
     # If we can't determine the section name, we're screwed.
+    [[ ! $name ]] && { __mi "No section name found in $split_dir/$file"; continue; }
+    section=$(_section_name "$name")
+    new_file=$(_filename_from_section "$mod_id" "$name")
 
-    if [[ -z $name ]]; then
-        echo "No section name found in $split_dir/$file" >&2
-        continue
-    fi
+    # Line 1: Delete the section line
+    # Line 2: Delete all leading blank lines at top of file
+    # Line 3: Delete all trailing blank lines at end of file
+    sed -i -e '/^--------------------------------------------- .* ---$/d' \
+           -e '/./,$!d' \
+           -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$file"
 
-
-    # Delete the section line
-    sed -i -e '/^--------------------------------------------- .* ---$/d' $file
-
-    ## Delete the # }}} fold indicator on last line of file
-    grep -qE '# }}}' <(tail -1 "$file") && sed -i '$d' "$file"
-
-    # Delete all leading blank lines at top of file
-    sed -i '/./,$!d' $file
-
-    # Delete all trailing blank lines at end of file
-    sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' $file
-
-    section=$(section_name $name)
-
-    new_file=$(filename_from_section $mod_id $name)
-
-
-    echo $section | grep -q "^files/"
-
-    if [[ "$?" -ne "0" ]]; then
-
+    if ! grep -qE '^files/' <<< "$section"; then
         # Mod attributes are saved as is
-        mv $file "$new_file"
+        mv "$file" "$new_file"
 
     else
         # Attachments are saved in DM_FILES and symlinked to the mods
         # directory.
-
-        $DM_BIN/attach.sh -m "$mod_id"  "$DM_ROOT/$section"
+        "$DM_BIN/attach.sh" -m "$mod_id" "$DM_ROOT/$section"
 
         # For non-text files, leave it up to the user to cp the file to
         # DM_FILES. For text files, cp the content of the section.
 
-        text=$(is_text $file)
-
-        logger_debug "Section: $section, text: $text, path: $path"
-
-        if [[ -n "$text" ]]; then
-
-            # If the section file is empty, the user could be linking to
-            # an existing file created in another mod, say. Best not to
-            # overwrite an existing file.
-
-            size=$(du $file | awk '{ print $1}')
-            if [[ $size -gt 0 ]]; then
-                mv $file "$DM_ROOT/$section"
-            fi
-        fi
+        # Copy the attachment file to the attachment directory. Use caution. If
+        # after removing the divider, blank lines, etc, the section file is now
+        # empty, the user could be linking to an existing file created in
+        # another mod, say. Best not to overwrite it. Only copy if the size is
+        # non-zero.
+        [[ -s $file ]] && __is_text "$file" && mv "$file" "$DM_ROOT/$section"
 
         # Warn the user if the symlink points to an non-existent file.
         # This will remind them to cp the attachment to the correct
         # directory.
-
-        ! test -f $DM_ROOT/$section && echo "WARNING: Linking to non existent file $DM_ROOT/$section" >&2
+        [[ ! -f $DM_ROOT/$section ]] && __mi "WARNING: Linking to non existent file $DM_ROOT/$section"
     fi
-
 done

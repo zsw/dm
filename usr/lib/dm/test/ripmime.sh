@@ -1,5 +1,5 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 #
 # Test script for lib/ripmime.sh functions.
@@ -55,7 +55,7 @@ To: "Karsten, Jim - input" <jimkarsten+input@gmail.com>
 Content-Type: multipart/alternative; boundary=0015174bdcee16ca360476b3bb9d
 EOT
 
-[[ -n $text_plain ]] && cat >> $test_file << EOT
+[[ $text_plain ]] && cat >> $test_file << EOT
 --0015174bdcee16ca360476b3bb9d
 Content-Type: text/plain; charset=ISO-8859-1
 
@@ -63,7 +63,7 @@ This is a mime body.
 
 EOT
 
-[[ -n $text_html ]] && cat >> $test_file << EOT
+[[ $text_html ]] && cat >> $test_file << EOT
 --0015174bdcee16ca360476b3bb9d
 Content-Type: text/html; charset=ISO-8859-1
 
@@ -71,7 +71,7 @@ This is a mime body.<br>
 
 EOT
 
-[[ -n $attachment ]] && cat >> $test_file << EOT
+[[ $attachment ]] && cat >> $test_file << EOT
 --0015174bdcee16ca360476b3bb9d
 
 Content-Type: text/html; charset=US-ASCII; name="__test__.htm"
@@ -213,7 +213,7 @@ function tst_ripmime_tmpdir {
 
 functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
 
-[[ -n "$1" ]] && functions="$*"
+[[ "$1" ]] && functions="$*"
 
 for function in  $functions; do
     if [[ ! $(declare -f $function) ]]; then

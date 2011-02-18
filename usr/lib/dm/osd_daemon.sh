@@ -1,12 +1,13 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 # osd_daemon.sh
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
 cat << EOF
 
@@ -77,7 +78,7 @@ function fork {
 }
 
 function push {
-    if [ -z "$1" ]; then
+    if [ ! "$1" ]; then
         return
     fi
 
@@ -115,7 +116,7 @@ function kill_osd_cat() {
     logger_debug "kill_osd_cat"
 
     pid=$(/usr/bin/pgrep -P $$ osd_cat);
-    if [[ -z "$pid" ]]; then
+    if [[ ! "$pid" ]]; then
         return;
     fi
 
@@ -151,11 +152,11 @@ while getopts "hf" options; do
   case $options in
 
     f ) fork=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -247,7 +248,7 @@ while true; do
 
     esac
 
-    if [[ -z $message ]]; then
+    if [[ ! $message ]]; then
         pop
     fi
 

@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -36,11 +37,11 @@ while getopts "dhu:" options; do
   case $options in
 
     u ) user=$OPTARG;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -51,8 +52,7 @@ shift $(($OPTIND - 1))
 count=0
 path=
 
-for fifo in $(find $HOME/.weechat/ -type p -name 'weechat_fifo_*');
-do
+for fifo in $(find $HOME/.weechat/ -type p -name 'weechat_fifo_*'); do
     count=$(( $count + 1 ))
 
     logger_debug "Pipe: $fifo"
@@ -60,7 +60,7 @@ do
     pid=$(basename $fifo | sed -e "s/weechat_fifo_//g")
     logger_debug "PID: $pid"
 
-    if [[ -z "$pid" ]]; then
+    if [[ ! "$pid" ]]; then
         echo "Unable to determine weechat pipe pid for $fifo" >&2
         continue
     fi
@@ -71,7 +71,7 @@ do
     comm=$(ps -p $pid -o comm --no-headers)
     logger_debug "Command: $comm"
 
-    if [[ -z "$euser" ]] || [[ -z "$comm" ]]; then
+    if [[ ! "$euser" ]] || [[ ! "$comm" ]]; then
         echo -n "Unable to determine effective user or command of pid $pid. " >&2
         echo -n "Weechat may not have been exited properly. " >&2
         echo "Consider deleting $fifo" >&2
@@ -88,7 +88,7 @@ do
         continue
     fi
 
-    if [[ -n $path ]]; then
+    if [[ $path ]]; then
         echo "Multiple effective weechat named pipes. One should be deleted." >&2
         exit 1
     fi
@@ -101,7 +101,7 @@ if [[ "$count" -eq "0" ]]; then
     exit 1
 fi
 
-if [[ -z "$path" ]]; then
+if [[ ! "$path" ]]; then
     echo "No weechat named pipes found. Is weechat running under user: $user?" >&2
     exit 1
 fi

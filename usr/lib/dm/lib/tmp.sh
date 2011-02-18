@@ -34,8 +34,8 @@ function tmp_dir {
 	    echo "$DM_TMP"
     else
 	    username=$1
-	    [[ -z $username ]] && username=$USERNAME
-	    [[ -z $username ]] && username=$(mktemp -d -u XXXXXXXXXXXX)
+	    [[ ! $username ]] && username=$USERNAME
+	    [[ ! $username ]] && username=$(mktemp -d -u XXXXXXXXXXXX)
 	    echo "/tmp/dm_${username}"
     fi
     return
@@ -65,8 +65,8 @@ function tmp_dir {
 function tmp_file {
 
     tmpdir=$1
-    [[ -z $tmpdir ]] && tmpdir=$(tmp_dir)
-    [[ -z $tmpdir ]] && tmpdir='/tmp'
+    [[ ! $tmpdir ]] && tmpdir=$(tmp_dir)
+    [[ ! $tmpdir ]] && tmpdir='/tmp'
 
     mkdir -p $tmpdir
 

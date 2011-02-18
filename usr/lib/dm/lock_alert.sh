@@ -1,11 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -65,11 +66,11 @@ while getopts "a:hv" options; do
 
     a ) age=$OPTARG;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -78,28 +79,28 @@ done
 shift $(($OPTIND - 1))
 
 lock_status=$(is_locked)
-[[ -n "$verbose" ]] && echo "lock status: $lock_status"
+[[ "$verbose" ]] && echo "lock status: $lock_status"
 if [[ "$lock_status" != 'true' ]]; then
-    [[ -n "$verbose" ]] && echo "dm system is not locked, no alerts sent"
+    [[ "$verbose" ]] && echo "dm system is not locked, no alerts sent"
     exit 0
 fi
 
 alert_status=$(lock_is_alertable "$age")
-[[ -n "$verbose" ]] && echo "alert status: $alert_status"
+[[ "$verbose" ]] && echo "alert status: $alert_status"
 if [[ "$alert_status" != 'true' ]]; then
-    [[ -n "$verbose" ]] && echo "dm system is locked but no alertable, no alerts sent"
+    [[ "$verbose" ]] && echo "dm system is locked but no alertable, no alerts sent"
     exit 0
 fi
 
 if [[ "$#" == "0" ]]; then
-    [[ -n "$verbose" ]] && echo "alerting email: $DM_PERSON_EMAIL"
+    [[ "$verbose" ]] && echo "alerting email: $DM_PERSON_EMAIL"
     result=$(lock_alert $DM_PERSON_EMAIL)
     if [[ "$result" != 'true' ]]; then
         echo "Alert email for $DM_PERSON_EMAIL failed." >&2
     fi
 else
     while (( "$#" )); do
-        [[ -n "$verbose" ]] && echo "alerting email: $1"
+        [[ "$verbose" ]] && echo "alerting email: $1"
         result=$(lock_alert $1)
         if [[ "$result" != 'true' ]]; then
             echo "Alert email for $1 failed." >&2

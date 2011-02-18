@@ -1,5 +1,5 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 #
 # Test script for lib/person.sh functions.
@@ -139,7 +139,7 @@ EOT
 
 functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
 
-[[ -n "$1" ]] && functions="$*"
+[[ "$1" ]] && functions="$*"
 
 for function in  $functions; do
     if [[ ! $(declare -f $function) ]]; then

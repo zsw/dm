@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 usage: $0 [OPTION] SOURCE DESTINATION
@@ -48,11 +49,11 @@ while getopts "hiv" options; do
 
     i ) interactive=true;;
     v ) verbose=true;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    *)  usage
+    *)  _u
         exit 1;;
 
   esac
@@ -61,7 +62,7 @@ done
 shift $(($OPTIND - 1))
 
 if [[ "$#" -ne "2" ]]; then
-    usage
+    _u
     exit 1
 fi
 

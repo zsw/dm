@@ -1,33 +1,25 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 _loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
-usage() {
+script=${0##*/}
+_u() { cat << EOF
+usage: $script [options] email_address /path/to/mod
 
-    cat << EOF
-
-usage: $0 [options] /path/to/file
-
-This script sends a message stored in a file.
-
-OPTIONS:
-
-    -t  To username. Defaults to \$DM_PERSON_USERNAME
-    -v  Verbose
+This script sends a message to the email address for a mod.
+    -j  Send a jabber message instead of an email.
 
     -h  Print this help message.
 
 EXAMPLES:
-
-    $0 /tmp/message.txt         # Send message contained in file.
+    $script username@gmail.com $HOME/dm/12345
 
 NOTES:
-
-    The script attempts to use a weechat pipe to send message. If that is not
-    possible the message is sent by email.
+    If the -j option is provided then the script attempts to use a weechat pipe
+    to send message.
 EOF
 }
 
@@ -41,20 +33,18 @@ EOF
 #
 #   Send message by weechat
 #
-function by_weechat {
+_by_weechat() {
 
-    [[ -z $file ]] && return
-    [[ -z $to ]] && return
+#    pid=$(pidof weechat-curses)
+    pid=31024
+#    [[ ! $pid ]] && __me "Reminder for mod $mod_dir aborted. Unable to get pid of weechat"
 
-    logger_debug "Sending by weechat"
+    fifo=$HOME/.weechat/weechat_fifo_$pid
+#    [[ ! -p $fifo ]] && __me "Reminder for mod $mod_dir aborted. Not a named pipe: $fifo"
 
-    saveIFS=$IFS
-    IFS=$'\n'
-    for line in $(cat $file); do
-        $DM_ROOT/bin/weechat_fifo.sh -u $to "$line"
-    done
-    IFS=$saveIFS
-    return
+    msg=$(< $mod_dir/description)
+
+    echo "$account */jmsg $DM_PERSON_USERNAME $msg" > "$fifo"
 }
 
 
@@ -67,7 +57,7 @@ function by_weechat {
 #
 #   Send message by email
 #
-function by_email {
+_by_email() {
 
     logger_debug "Sending email"
 
@@ -83,58 +73,33 @@ function by_email {
     logger_debug "$res"
 
     return
+
+    subject=$(cat $mod_dir/description | sed -e "s/\"/\\\\\"/" )
+    notes=$(cat $mod_dir/notes | sed -e "s/\"/\\\\\"/" )
+
 }
 
-verbose=
-to=$DM_PERSON_USERNAME
+_options() {
+    # set defaults
+    args=()
+    unset jabber
 
-while getopts "ht:v" options; do
-  case $options in
+    while [[ $1 ]]; do
+        case "$1" in
+            -j) jabber=1        ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-    t ) to=$OPTARG;;
-    v ) verbose=1;;
-    h ) usage
-        exit 0;;
-    \?) usage
-        exit 1;;
-    * ) usage
-        exit 1;;
+    (( ${#args[@]} != 2 )) && { _u; exit 1; }
+    account=${args[0]}
+    mod_dir=${args[1]}
+}
 
-  esac
-done
+_options "$@"
 
-shift $(($OPTIND - 1))
-
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
-
-if [ $# -lt 1 ]; then
-    echo "ERROR: Please provide the name of the file containing the message."
-    usage
-    exit 1
-fi
-
-if [ -z "$to" ]; then
-    echo "ERROR: Please provide username to send to with -t option."
-    usage
-    exit 1
-fi
-
-file=$1;
-
-if [[ ! -r "$file" ]]; then
-    echo "ERROR: Unable to read file $file" >&2
-    exit 1
-fi
-
-tmpfile=$(tmp_file)
-pipe=$($DM_BIN/weechat_fifo_pipe.sh 2> $tmpfile)
-exit_status=$?
-logger_debug "weechat_fifo_pipe.sh exit status: $exit_status"
-logger_debug "weechat pipe: $pipe"
-
-if [[ "$exit_status" == '0' && -n "$pipe" ]]; then
-    by_weechat
-else
-    by_email
-fi
+[[ $jabber ]] && _by_weechat || _by_email

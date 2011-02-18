@@ -1,161 +1,73 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
 
-usage() { cat << EOF
-
-usage: $0 mod_id
+script=${0##*/}
+_u() { cat << EOF
+usage: $script mod_id
 
 This script assembles content of attribute files of a dev mod and prints to
-STDOUT
-
-OPTIONS:
-
-    -v      Verbose.
-
-    -h      Print this help message.
+STDOUT.
+    -h      Print this help message
 
 EXAMPLE:
-
-    $0 12345 > /tmp/file.txt
+    $script 12345 > /tmp/file.txt
 
 NOTES:
-
-    If the mods is in the unsorted tree, a notice is added to the top with sort instructions.
+    If the mods is in the unsorted tree, a notice is added to the top with sort
+    instructions.
 EOF
 }
 
+_options() {
+    # set defaults
+    args=()
 
-#
-# section_index
-#
-# Sent: section name
-# Return: integer section index
-# Purpose:
-#
-#   Return the section index indicating the order of the section for the given
-#   section name.
-#
-function section_index {
-
-    section=$1
-
-    for i in ${!section_order[@]}; do
-        if [[ "$section" == "${section_order[$i]}" ]]; then
-            echo $i
-            break
-        fi
+    while [[ $1 ]]; do
+        case "$1" in
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
     done
 
-    return
+    (( ${#args[@]} != 1 )) && { _u; exit 1; }
+    mod=${args[0]}
 }
 
+_options "$@"
 
-verbose=
-
-while getopts "hv" options; do
-  case $options in
-
-    v ) verbose=1;;
-    h ) usage
-        exit 0;;
-    \?) usage
-        exit 1;;
-    * ) usage
-        exit 1;;
-
-  esac
-done
-
-shift $(($OPTIND - 1))
-
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
-
-declare -a list
-declare -a other
-declare -a a_notes
-
-# These variables determine the order of the mod sections in the list
-# array. Each must have unique values. The names of the variables match
-# names of mod directory files. Any filename not matched will be
-# appended to the end. The 'notes' section is always the very last file
-# appended.
-
-
-section_order=( \
-    description \
-    who \
-    hold \
-    remind \
-    spec \
-    notes \
-);
-
-
-description=1
-who=2
-hold=3
-remind=4
-spec=5
-
-notes=999
-
-if [ $# -ne 1 ]; then
-
-    usage
-    exit 1;
-fi
-
-mod=$1
 mod_dir=$(mod_dir $mod)
+[[ ! -d $mod_dir ]] && __me "assemble_mod.sh $mod: No such directory"
 
-if [ ! -e $mod_dir ]; then
-
-    echo "assemble_mod.sh $mod: No such directory $mod_dir." >&2
-    exit 1;
-fi
-
-count=0
-
-for file in $(find $mod_dir -type f -o -type l | sort); do
-
-    section=$(section_name_from_file "$mod" "$file")
-
-    attachment=$(echo $section | grep -o "^files/")
-
-    index=$(section_index $section )
-
-    if [[ -n $attachment || -z "$index" ]]; then
-
-        other[$count]=$section
-        count=$(($count + 1))
-
-    elif [[ "$section" == "notes" ]]; then
-
-        a_notes[0]=$section
-    else
-
-        list[$index]=$section
-    fi
+# Set the sections indexes so sections are ordered properly and
+# consistently. Files not explicitly indicated are appended to the end
+# of the array. The 'notes' section is not added to the sections array
+# until after the for loop to guarantee it will be the last section.
+sections=()
+notes=
+shopt -s globstar
+for file in "$mod_dir"/** ; do
+    file=${file/$mod_dir\//}
+    [[ $file == description ]] && sections[0]=$file && continue
+    [[ $file == who ]]         && sections[1]=$file && continue
+    [[ $file == hold ]]        && sections[2]=$file && continue
+    [[ $file == remind ]]      && sections[3]=$file && continue
+    [[ $file == specs ]]       && sections[4]=$file && continue
+    [[ $file == spec ]]        && sections[5]=$file && continue
+    [[ $file == notes ]]       && notes='notes'     && continue
+    sections+=($file)
 done
+[[ $notes ]] && sections+=($notes)
+shopt -u globstar
 
-for section in ${list[@]} ${other[@]} ${a_notes[@]}; do
-
+for section in ${sections[@]}; do
     echo "--------------------------------------------- $section ---"
     echo
-
-    file=$mod_dir/$section
-
-    text=$(is_text $file)
-
-    if [[ -n "$text" ]]; then
-        cat $file
-    fi
-
+    __is_text "$mod_dir/$section" && cat "$mod_dir/$section"
     echo
 done
-

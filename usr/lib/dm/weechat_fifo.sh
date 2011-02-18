@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_weechat 2>/dev/null || source $DM_ROOT/lib/weechat.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -86,12 +87,12 @@ username=$DM_PERSON_USERNAME
 while getopts "hu:" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0 ;;
     u ) username=$OPTARG;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -99,8 +100,8 @@ done
 
 shift $(($OPTIND - 1))
 
-if [[ -z $1 ]]; then
-    usage
+if [[ ! $1 ]]; then
+    _u
     exit 1
 fi
 
@@ -108,7 +109,7 @@ fi
 set -f      # Disable parameter expansion, prevents * in message from expanding
 message=$(echo -e "$*")              # Echo interprets escaped characters
 
-if [[ -z $username ]]; then
+if [[ ! $username ]]; then
     echo "ERROR: Unable to determine username." >&2
     exit 1
 fi
@@ -116,7 +117,7 @@ fi
 
 pipe=$($DM_BIN/weechat_fifo_pipe.sh)
 
-[[ -z "$pipe" ]] && exit 1      # exit without messages
+[[ ! "$pipe" ]] && exit 1      # exit without messages
                                 # weechat_fifo_pipe.sh provides error messages
 
 
@@ -143,7 +144,7 @@ for line in $message; do
 
         loggable_msg=$(loggable_msg "$msg")
 
-        if [[ -n "$loggable_msg" ]]; then
+        if [[ "$loggable_msg" ]]; then
             echo "$loggable_msg" >> "$events_file"
         fi
         echo "python.jabber.server.gtalk *$username: $line" > $pipe

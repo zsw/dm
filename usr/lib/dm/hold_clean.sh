@@ -1,11 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -65,7 +66,7 @@ function process_mod {
 
     hold_file=$(attr_file $mod 'hold')
 
-    [[ -z $hold_file ]] && return
+    [[ ! $hold_file ]] && return
 
     # Ignore files with git conflict markers. Processing them may cause
     # foo. Eg, the user may be editing the file fixing the conflict or
@@ -87,7 +88,7 @@ function process_mod {
 
     # Validate timestamp
     local crontab=$(tail -1 $hold_file | grep -v '^#')
-    [[ -z "$crontab" ]] && return
+    [[ ! "$crontab" ]] && return
 
     logger_debug "Crontab: $crontab"
 
@@ -112,11 +113,11 @@ while getopts "dhv" options; do
 
     d ) dryrun=true;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -124,8 +125,8 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDOUT=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDOUT=1
 
 [[ "$#" -eq "0" ]] && set -- $(< $DM_USERS/current_mod)
 

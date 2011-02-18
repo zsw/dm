@@ -1,10 +1,11 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -38,11 +39,11 @@ username=
 while getopts "hu:" options; do
   case $options in
     u ) username=$OPTARG;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -55,7 +56,7 @@ logger_debug "username: $username"
 for mod in $(find $DM_ARCHIVE/ -name description -exec grep -l '^REUSE$' '{}' \; | xargs --replace dirname {} | $DM_BIN/format_mod.sh "%i" | sort);
 do
     logger_debug "mod: $mod"
-    if [[ -n $username ]]; then
+    if [[ $username ]]; then
 
         who=$(person_attribute username initials `attribute $mod 'who'`)
         logger_debug "who: $who"

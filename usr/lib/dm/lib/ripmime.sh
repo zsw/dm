@@ -23,7 +23,7 @@ function ripmime_attachments {
     local file=$1
 
     local ripmime_cmd=$(ripmime_command)
-    if [[ -z "$ripmime_cmd" ]]; then
+    if [[ ! "$ripmime_cmd" ]]; then
         echo "ripmime: command not found. Unable to parse $file"
         return
     fi
@@ -44,7 +44,7 @@ function ripmime_attachments {
 #
 # Usage:
 #   ripmime_cmd=$(ripmime_command)
-#   if [[ -z ripmime_cmd ]]; then
+#   if [[ ! ripmime_cmd ]]; then
 #       echo 'Ripmime not found'
 #   fi
 #
@@ -75,7 +75,7 @@ function ripmime_files_cat {
     local file=$1
 
     local ripmime_cmd=$(ripmime_command)
-    if [[ -z "$ripmime_cmd" ]]; then
+    if [[ ! "$ripmime_cmd" ]]; then
         echo "ripmime: command not found. Unable to parse $file"
         return
     fi
@@ -84,7 +84,7 @@ function ripmime_files_cat {
 
     # Default to plain text files. If none, cat others.
     file_list=$(find $ripmime_dir -name '__rip__text-plain*')
-    if [[ -z "$file_list" ]]; then
+    if [[ ! "$file_list" ]]; then
         file_list=$(find $ripmime_dir -name '__rip__*')
     fi
 

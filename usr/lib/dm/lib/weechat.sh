@@ -30,11 +30,11 @@ function weechat_log_path {
     weechat_version=$1
     conf_log_path=$2
 
-    if [[ -z "$weechat_version" ]]; then
+    if [[ ! "$weechat_version" ]]; then
         weechat_version=$(weechat-curses --version)
     fi
 
-    if [[ -z "$conf_log_path" ]]; then
+    if [[ ! "$conf_log_path" ]]; then
         conf_log_path="$HOME/.weechat/logs/"
         if [[ ! -d $conf_log_path ]]; then
             echo "Weechat logs directory not found: $conf_log_path" >&2

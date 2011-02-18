@@ -1,12 +1,13 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 _loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 _loaded_alert 2>/dev/null || source $DM_ROOT/lib/alert.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -74,7 +75,7 @@ function old_contents {
         tr '.' ' ' | \
         awk '{print $2}')
 
-    if [[ -z $object ]]; then
+    if [[ ! $object ]]; then
         logger_debug "Unable to get object of old who file."
         return
     fi
@@ -100,7 +101,7 @@ function parse_line {
     logger_debug "Parsing line: $line"
 
     local init=$(echo $line | awk '{print $1}' | grep -E '[A|D|M]')
-    if [[ -z $init ]]; then
+    if [[ ! $init ]]; then
         logger_debug "Line is not A,D or M. Ignoring."
         return
     fi
@@ -130,7 +131,7 @@ function parse_line {
             ;;
     esac
 
-    if [[ -z $alert ]]; then
+    if [[ ! $alert ]]; then
         logger_debug "No alert."
         return
     fi
@@ -156,11 +157,11 @@ while getopts "hvi:" options; do
 
     i ) input_file=$OPTARG;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -168,13 +169,13 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 # Git commands require we are in the repo directory
 cd $DM_ROOT
 
-if [[ -n $input_file ]]; then
+if [[ $input_file ]]; then
     logger_debug "Parsing file: $input_file"
     who_lines=$(cat "$input_file")
 else

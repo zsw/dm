@@ -1,5 +1,5 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null  || . $DM_ROOT/lib/attributes.sh
 _loaded_hold 2>/dev/null        || . $DM_ROOT/lib/hold.sh
@@ -9,7 +9,8 @@ _loaded_person 2>/dev/null      || . $DM_ROOT/lib/person.sh
 _loaded_tmp 2>/dev/null         || . $DM_ROOT/lib/tmp.sh
 
 script="${0##*/}"
-usage() {
+script=${0##*/}
+_u() {
     cat << EOF
 usage: $script [ OPTIONS ]
 This script runs integrity checks and dm system cleanup.
@@ -76,11 +77,11 @@ print_messages() {
 
         # Should we be printing the line?
         local printing=1
-        if [[ -z $indented ]]; then
-            if [[ -n $who_initials ]]; then
+        if [[ ! $indented ]]; then
+            if [[ $who_initials ]]; then
                 if [[ $type == 'mod' ]]; then
                     who=$(attribute $id 'who')
-                    if [[ -n "$who" && "$who" != "$who_initials" ]]; then
+                    if [[ "$who" && "$who" != "$who_initials" ]]; then
                         printing=
                         previous_printed=
                     fi
@@ -91,8 +92,8 @@ print_messages() {
         fi
 
         # Print the line if applicable
-        if [[ -n $printing ]]; then
-            if [[ -z $indented ]]; then
+        if [[ $printing ]]; then
+            if [[ ! $indented ]]; then
                 let "i += 1"
                 if (( $i == 1 )); then
                     echo "Messages:"
@@ -157,7 +158,7 @@ run_checks() {
     invalids=$(for i in $(find $DM_MODS -maxdepth 1 -mindepth 1) ; do grep -rqP "\s*\[ \] ${i##*/}\b" $DM_TREES/* || echo ${i##*/} ; done)
     for invalid in $invalids; do
         flagged_done=$(grep -rqP "\s*\[x\] 0*${invalid}\b" $DM_TREES/* && echo $invalid)
-        if [[ -n $flagged_done ]]; then
+        if [[ $flagged_done ]]; then
             echo "mod|$invalid|WARNING: Mod does not appear to be flagged undone properly." >> $message_file
             echo "    Update tree with this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " >> $message_file
         else
@@ -169,7 +170,7 @@ run_checks() {
     invalids=$(for i in $(find $DM_ARCHIVE -maxdepth 1 -mindepth 1) ; do grep -rqP "\s*\[x\] ${i##*/}\b" $DM_TREES/* || echo ${i##*/} ; done)
     for invalid in $invalids; do
         flagged_undone=$(grep -rqP "\s*\[ \] 0*${invalid}\b" $DM_TREES/* && echo $invalid)
-        if [[ -n $flagged_undone ]]; then
+        if [[ $flagged_undone ]]; then
             echo "mod|$invalid|WARNING: Mod does not appear to be flagged undone properly." >> $message_file
             echo "    Update tree with this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " >> $message_file
         else
@@ -187,7 +188,7 @@ run_checks() {
     while read -d ' ' tree ; do
         tree_file=$($DM_BIN/tree.sh $tree)
         msg=$(cat $tree_file | $DM_BIN/dependency_schema.pl $DM_ROOT 2>&1)
-        [[ -n $msg ]] && echo "tree|$tree|$msg" >> $message_file
+        [[ $msg ]] && echo "tree|$tree|$msg" >> $message_file
     done < $DM_USERS/current_trees
 
 
@@ -264,7 +265,7 @@ run_checks() {
     logger_debug "Looking for mods with missing component files."
     for dm_dir in $DM_MODS $DM_ARCHIVE; do
         msg=$(find $dm_dir -maxdepth 1 -mindepth 1 -type d | $DM_BIN/format_mod.sh 2>&1 | grep '^cat')
-        if [[ -n $msg ]]; then
+        if [[ $msg ]]; then
             # Example message:
             #   cat: /root/dm/archive/10001/who: No such file or directory
             mod_id=$(grep -o '[0-9]\+' <<< "$msg")
@@ -303,16 +304,16 @@ run_checks() {
 
     for hold in $(find $DM_MODS -maxdepth 2 -mindepth 2 -type f -name "hold"); do
         local crontab=$(tail -1 $hold | grep -v '^#')
-        [[ -z "$crontab" ]] && continue
+        [[ ! "$crontab" ]] && continue
         local stripped=${hold%/*}
         local mod_id=${stripped##*/}
         local clean_msg=$($DM_BIN/hold_clean.sh -v $mod_id 2>&1)
         local timestamp=$(hold_timestamp "$mod_id" 2>/dev/null)
         local status=$(hold_timestamp_status "$timestamp")
-        if [[ -n "$clean_msg" || "$status" != "on_hold" ]]; then
+        if [[ "$clean_msg" || "$status" != "on_hold" ]]; then
             cp /dev/null $msg_file
             echo "mod|$mod_id|ERROR: Mod hold file $hold"  >> $msg_file
-            if [[ -n $clean_msg ]]; then
+            if [[ $clean_msg ]]; then
                 echo "    $clean_msg" >> $msg_file
             else
                 echo "    Mod may not have been taken off hold properly, hold status: $status" >> $msg_file
@@ -338,17 +339,17 @@ while getopts "hu:v" options; do
 
     u ) user=$OPTARG    ;;
     v ) verbose=1       ;;
-    h ) usage ; exit 0  ;;
-    \?) usage ; exit 1  ;;
-    * ) usage ; exit 1  ;;
+    h ) _u ; exit 0  ;;
+    \?) _u ; exit 1  ;;
+    * ) _u ; exit 1  ;;
 
   esac
 done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 cd $DM_ROOT
 
@@ -356,11 +357,11 @@ message_file=$(tmp_file)
 out_file=$(tmp_file)
 
 who_initials=
-if [[ -n $user ]]; then
+if [[ $user ]]; then
     who_initials=$(person_translate_who $user)
-    if [[ -z $who_initials ]]; then
+    if [[ ! $who_initials ]]; then
         echo "Invalid user $user" >&2
-        usage
+        _u
         exit 1
     fi
 fi
@@ -373,7 +374,7 @@ run_checks 2>&1  >> $out_file
 print_messages 2>&1 >> $out_file
 
 if [[ -s $out_file ]]; then
-    if [[ -n $verbose ]]; then
+    if [[ $verbose ]]; then
         # If verbose, print output to stdout
         cat $out_file
     else

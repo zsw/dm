@@ -1,5 +1,5 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 #
 # Functions and setup for test scripts.
@@ -61,7 +61,7 @@ function tst_is_not_empty {
 
     if [[ ! ${!var} && ${!var-_} ]]; then
         logger_error "$function - $label"
-    elif [[ -z ${!var} ]]; then
+    elif [[ ! ${!var} ]]; then
         logger_error "$function - $label"
     else
         logger_info "$function - $label"

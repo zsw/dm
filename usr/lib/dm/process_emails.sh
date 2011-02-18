@@ -1,9 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -30,11 +31,11 @@ while getopts "hv" options; do
   case $options in
 
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -42,8 +43,8 @@ done
 
 shift $(($OPTIND - 1))
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDOUT=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDOUT=1
 
 # Set nullglob to prevent messages if directory is empty
 shopt -s nullglob
@@ -63,7 +64,7 @@ for email in $(find $DM_USERS/input/ -maxdepth 1 -type f); do
     errors=
     logger_debug "Processing email: $email"
     mod_id=$($DM_BIN/mail2mod.sh "$email")
-    if [[ "$?" != "0" ]] || [[ -z $mod_id ]];then
+    if [[ "$?" != "0" ]] || [[ ! $mod_id ]];then
         echo "ERROR: Unable to convert email to mod: $email" >&2
         errors=1
     else
@@ -76,7 +77,7 @@ for email in $(find $DM_USERS/input/ -maxdepth 1 -type f); do
         fi
     fi
 
-    if [[ -n $errors ]]; then
+    if [[ $errors ]]; then
         logger_debug "Moving email $email to email_fail."
         mkdir -p $fail_dir
         mv $email $fail_dir/

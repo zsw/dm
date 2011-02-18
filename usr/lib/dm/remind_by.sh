@@ -1,14 +1,13 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() { cat << EOF
 
-    cat << EOF
-
-usage: $0 [ -m mod_id ] <remind_by options> <email addresses>
+usage: $script [ -m mod_id ] <remind_by options> <email addresses>
 
 This script sets the methods (email, jabber, pager) for which alerts will be sent for a mod.
 
@@ -148,9 +147,9 @@ while [ "$1" != "" ]; do
              let "pager_opts++"
              ;;
 
-        -h ) usage
+        -h ) _u
              exit 0;;
-         * ) usage
+         * ) _u
              exit 1;;
 
     esac
@@ -158,68 +157,77 @@ while [ "$1" != "" ]; do
 done
 
 
-if [ -z $mod ]; then
+if [ ! $mod ]; then
 
     echo 'ERROR: Unable to determine mod id.' >&2
     exit 1
 fi
 
 if [[ "$email_opts" -gt "1" ]]; then
-    usage
+    _u
     exit 1
 fi
 
 if [[ "$jabber_opts" -gt "1" ]]; then
-    usage
+    _u
     exit 1
 fi
 
 if [[ "$pager_opts" -gt "1" ]]; then
-    usage
+    _u
     exit 1
 fi
 
 
 remind=$DM_MODS/$mod/remind
+remind_by=$DM_MODS/$mod/remind_by
 
-if [[ -n $empty ]]; then
+if [[ $empty ]]; then
     logger_debug "Clearing $remind"
     echo -n '' > $remind
+    echo -n '' > $remind_by
 fi
 
-if [[ -n $email || -n $email_plus ]]; then
+if [[ $email || -n $email_plus ]]; then
     logger_debug "Adding email $DM_PERSON_EMAIL to remind_by options for mod $mod"
     echo $DM_PERSON_EMAIL >> $remind
+    echo 'email' >> $remind_by
 fi
 
-if [[ -n $email_minus ]]; then
+if [[ $email_minus ]]; then
     logger_debug "Removing email $DM_PERSON_EMAIL from remind_by options for mod $mod"
     sed -i "/$DM_PERSON_EMAIL/d" $remind
+    sed -i "/email/d" $remind_by
 fi
 
 
-if [[ -n $jabber || -n $jabber_plus ]]; then
+if [[ $jabber || -n $jabber_plus ]]; then
     logger_debug "Adding jabber $DM_PERSON_JABBER to remind_by options for mod $mod"
     echo $DM_PERSON_JABBER >> $remind
+    echo 'jabber' >> $remind_by
 fi
 
-if [[ -n $jabber_minus ]]; then
+if [[ $jabber_minus ]]; then
     logger_debug "Removing jabber $DM_PERSON_JABBER from remind_by options for mod $mod"
     sed -i "/$DM_PERSON_JABBER/d" $remind
+    sed -i "/jabber/d" $remind_by
 fi
 
 
-if [[ -n $pager || -n $pager_plus ]]; then
+if [[ $pager || -n $pager_plus ]]; then
     logger_debug "Adding pager $DM_PERSON_PAGER to remind_by options for mod $mod"
     echo $DM_PERSON_PAGER >> $remind
+    echo 'pager' >> $remind_by
 fi
 
-if [[ -n $pager_minus ]]; then
+if [[ $pager_minus ]]; then
     logger_debug "Removing pager $DM_PERSON_PAGER from remind_by options for mod $mod"
     sed -i "/$DM_PERSON_PAGER/d" $remind
+    sed -i "/pager/d" $remind_by
 fi
 
 clean_remind $remind
+clean_remind $remind_by
 
 logger_debug "cat $remind"
 logger_debug $(cat $remind)

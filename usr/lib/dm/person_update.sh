@@ -1,8 +1,9 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -20,11 +21,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -33,17 +34,17 @@ done
 shift $(($OPTIND - 1))
 
 # Resource dmrc file in case variables were reset by env.sh
-. $HOME/.dm/dmrc || exit 1
+source $HOME/.dm/dmrc || exit 1
 
 # Make sure we have a username
-if [[ -z "$USERNAME" ]]; then
+if [[ ! "$USERNAME" ]]; then
     echo "ERROR: USERNAME not defined. Unable to identify user." >&2
     exit 1
 fi
 
 # Make sure we have a people file.
 
-if [[ -z "$DM_PEOPLE" ]]; then
+if [[ ! "$DM_PEOPLE" ]]; then
     echo "ERROR: DM_PEOPLE not defined. Unable to access people file." >&2
     exit 1
 fi
@@ -56,7 +57,7 @@ fi
 # Access detail line
 # Eg 1,JK,jimk,Jim Karsten,jimkarsten@gmail.com,jimkarsten+jabber@gmail.com,5195042188@pcs.rogers.com,jimkarsten+input@gmail.com,dtjimk
 detail_line=$(grep "[0-9]\+,[A-Z]\+,$USERNAME," $DM_PEOPLE)
-if [[ -z "$detail_line" ]]; then
+if [[ ! "$detail_line" ]]; then
     echo "ERROR: Unable to find line in people file $DM_PEOPLE for username $USERNAME." >&2
     exit 1
 fi

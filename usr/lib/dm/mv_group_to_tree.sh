@@ -1,10 +1,11 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -42,11 +43,11 @@ while getopts "dht:v" options; do
     d ) dryrun=1;;
     t ) dm_trees=$OPTARG;;
     v ) verbose=1;;
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -58,12 +59,12 @@ shift $(($OPTIND - 1))
 # Validate the tree argument
 
 if [ $# -ne 2 ]; then
-    usage
+    _u
     exit 1
 fi
 
-[[ -n $verbose ]] && LOG_LEVEL=debug
-[[ -n $verbose ]] && LOG_TO_STDERR=1
+[[ $verbose ]] && LOG_LEVEL=debug
+[[ $verbose ]] && LOG_TO_STDERR=1
 
 group=$1
 to_tree=$2
@@ -97,7 +98,7 @@ fi
 # in.
 
 from_tree=$(grep -lsr "^[ ]*group $group_id" $dm_trees | head -1)
-if [[ -z $from_tree ]]; then
+if [[ ! $from_tree ]]; then
     echo "Unable to find group $group_id in any tree." >&2
     exit 1
 fi
@@ -162,7 +163,7 @@ to_new=$(tmp_file)
 pattern_file=$(tmp_file)
 replace_file=$(tmp_file)
 final_end=$(cat $to_tagged | grep '^[ ]*end' | tail -1)
-if [[ -n "$final_end" ]]; then
+if [[ "$final_end" ]]; then
     logger_debug "Adding group to the 'to' tree"
     echo "$final_end" > $pattern_file
     echo "$final_end" > $replace_file           # We don't want the end tag removed
@@ -194,7 +195,7 @@ logger_debug "to_tagged: $to_tagged"
 logger_debug "to_new: $to_new"
 
 # Nothing yet has affected live data. Time to update live trees.
-if [[ -z $dryrun ]]; then
+if [[ ! $dryrun ]]; then
     logger_debug "Copying new trees to live."
     cp $from_new $from_tree && cp $to_new $to_tree
 else

@@ -1,10 +1,11 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -45,11 +46,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -59,7 +60,7 @@ shift $(($OPTIND - 1))
 
 if [[ $# -lt 1 ]]; then
     echo "ERROR: Missing mod id."
-    usage
+    _u
     exit 1
 fi
 
@@ -72,14 +73,14 @@ fi
 # Ensure mod is valid
 mod_dir=$(mod_dir $mod_id)
 
-if [[ -z "$mod_dir" ]]; then
+if [[ ! "$mod_dir" ]]; then
     echo "ERROR: Invalid mod, id: $mod_id." >&2
     echo "Unable to find mod in either $DM_MODS or $DM_ARCHIVE." >&2
     exit 1
 fi
 
 trees=
-if [[ -n $tree ]]; then
+if [[ $tree ]]; then
     # This will verify the tree exists and is a tree file
     trees=$(find $tree -type f ! -name 'sed*' | grep "^$DM_TREES")
 else
@@ -88,7 +89,7 @@ else
 fi
 
 # If the mod is in no trees exit quietly.
-[[ -z $trees ]] && exit 0
+[[ ! $trees ]] && exit 0
 
 # The code below attempts to:
 # * Match characters with special meaning within regexp properly.
@@ -103,7 +104,7 @@ line=$(echo $mod_id | $DM_BIN/format_mod.sh "%b %i %d")
 pattern="[ ]*\\\[[ x]\\\] $mod_id "
 for t in $trees; do
     found=$(grep -l "\[.\] $mod_id" $t)
-    if [[ -n $found ]]; then
+    if [[ $found ]]; then
         # Replace in tree file
         # Preserve indentation
         indent=$(grep "\[.\] $mod_id" $t | grep -o '^[ ]*')

@@ -1,8 +1,9 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { . $HOME/.dm/dmrc && . $DM_ROOT/lib/env.sh || exit 1 ; }
+_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 
-usage() {
+script=${0##*/}
+_u() {
 
     cat << EOF
 
@@ -24,11 +25,11 @@ EOF
 while getopts "h" options; do
   case $options in
 
-    h ) usage
+    h ) _u
         exit 0;;
-    \?) usage
+    \?) _u
         exit 1;;
-    * ) usage
+    * ) _u
         exit 1;;
 
   esac
@@ -44,7 +45,7 @@ while :
 do
     read -p "Reuse mod(s) $@? (Y/n): " reply
 
-    [[ -z "$reply" ]] && reply=y
+    [[ ! "$reply" ]] && reply=y
     reply=$(echo $reply | tr "[:upper:]" "[:lower:]")
 
     [[ "$reply" == "y" ]] || [[ "$reply" == "n" ]] && break
