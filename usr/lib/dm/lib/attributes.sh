@@ -28,7 +28,7 @@
 #   The routine does not attempt to determine if the file exists or not.
 #   Use attr_file for that.
 #
-function attr_file_name {
+__attr_file_name() {
 
     mod=$1
     attr=$2
@@ -60,7 +60,7 @@ function attr_file_name {
 #   mod=12345
 #   file_name=$(attr_file $mod 'hold')
 #
-function attr_file {
+__attr_file() {
 
     mod=$1
     attr=$2
@@ -97,7 +97,7 @@ function attr_file {
 #
 #   Nothing is echo'd if the attribute file does not exist.
 #
-function attribute {
+__attribute() {
 
     mod=$1
     attr=$2
@@ -121,7 +121,7 @@ function attribute {
 #
 #   Determine if the file has conflict markers.
 #
-function has_conflict_markers {
+__has_conflict_markers() {
 
     file=$1
 
@@ -151,7 +151,7 @@ function has_conflict_markers {
 #   mod=12345
 #   dir=$(mod_dir $mod)
 #
-function mod_dir {
+__mod_dir() {
 
     mod=$1
 
@@ -171,11 +171,11 @@ function mod_dir {
 }
 
 # This function indicates this file has been sourced.
-function _loaded_attributes {
+__loaded_attributes() {
     return 0
 }
 
 # Export all functions to any script sourcing this library file.
-for function in $(awk '/^function / { print $2}' $DM_ROOT/lib/attributes.sh); do
-    export -f $function
-done
+while read -r function; do
+    export -f "${function%%(*}"         # strip '()'
+done < <(awk '/^__*()/ {print $1}' "$DM_ROOT"/lib/attributes.sh)

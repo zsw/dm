@@ -6,7 +6,7 @@
 # Library of functions related to alerting.
 #
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 #
 # create_alert
@@ -18,7 +18,7 @@ _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 #
 #   Create an alert for the indicate person regarding the indicated mod.
 #
-function create_alert {
+__create_alert() {
 
     local who=$1
     local mod_id=$2
@@ -44,7 +44,7 @@ function create_alert {
 }
 
 # This function indicates this file has been sourced.
-function _loaded_alert {
+__loaded_alert() {
     return 0
 }
 

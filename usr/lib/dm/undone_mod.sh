@@ -1,7 +1,8 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 
 script=${0##*/}
 _u() {
@@ -123,7 +124,7 @@ if [[ "$mod_dir" == "$DM_ARCHIVE/$mod_id" ]]; then
 fi
 
 # Take the mod off hold if applicable
-status=$($DM_BIN/hold_status.sh $mod_id | awk '{print $5}')
+status=$(__hold_status $mod_id | awk '{print $5}')
 if [[ "$status" != 'off_hold' ]]; then
     if [[ $force ]]; then
         $DM_BIN/take_off_hold.sh -f $mod_id
@@ -139,7 +140,7 @@ if [[ "$status" != 'off_hold' ]]; then
 fi
 
 
-status=$($DM_BIN/hold_status.sh $mod_id | awk '{print $5}')
+status=$(__hold_status $mod_id | awk '{print $5}')
 if [[ "$status" == 'off_hold' ]]; then
     # Trigger remind alerts if necessary (useful if mod was undoned by cron)
     $DM_BIN/remind_mod.sh $mod_id

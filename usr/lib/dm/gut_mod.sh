@@ -1,35 +1,19 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 
 script=${0##*/}
-_u() {
+_u() { cat << EOF
+usage:   $script mod_id
 
-    cat << EOF
-
-usage:   $0 mod_id ...
-      or echo mod_id | $0 -
-
-This script guts a mod and prints the mod id.
-
-OPTIONS:
-
+This script guts a mod.
     -h  Print this help message.
 
 EXAMPLES:
-
-    $0 12345 23456      # Gut mods 12345 and 23456
-    echo 12345 | $0 -   # Gut mod 12345
+    $script 12345       # Gut mod 12345
 
 NOTES:
-
-    Mod ids can be provided through stdin or as arguments.
-    To read the mod list from stdin, use the mod_id '-'.
-
-    The mod id is printed to stdout if the gut is successful.
-
     Gutting a mod does the following
 
     * Removes all mod attribute files and attachments.
@@ -40,66 +24,32 @@ NOTES:
 EOF
 }
 
+_options() {
+    # set defaults
+    args=()
 
-#
-# process_mod
-#
-# Sent: mod
-# Return: nothing
-# Purpose:
-#
-#   Gut a mod.
-#
-function process_mod {
+    while [[ $1 ]]; do
+        case "$1" in
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-    mod=$1
-
-    mod_dir=$(mod_dir $mod)
-
-    logger_debug "Mod: $mod, mod_dir: $mod_dir"
-
-    [[ ! $mod_dir ]] && return
-
-    [[ ! -d $mod_dir ]] && return
-
-    # Add a few precautions since we are about to do a rm -r
-    [[ "$mod_dir" == '/' ]] && return
-    [[ ! $mod_dir = "$DM_ROOT/archive/$mod" && ! $mod_dir =~ "$DM_ROOT/mods/$mod" ]] && return
-
-    rm -r $mod_dir || return
-
-    mkdir -p $mod_dir || return
-
-    echo 'Blank mod' > $mod_dir/description || return
-    echo $DM_PERSON_INITIALS > $mod_dir/who || return
-
-    echo "$mod"
+    (( ${#args[@]} != 1 )) && { _u; exit 1; }
+    mod_id=${args[0]}
 }
 
+_options "$@"
 
-while getopts "h" options; do
-  case $options in
+mod_dir=$(mod_dir "$mod_id")
 
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
+[[ ! -d $mod_dir ]] && __me "Directory $mod_dir not found"
 
-  esac
-done
+[[ $mod_dir =~ /(mods|archive)/ ]] && rm -r "$mod_dir"
+mkdir -p "$mod_dir"
 
-shift $(($OPTIND - 1))
-
-while [[ ! "$#" -eq "0" ]]; do
-    if [ "$1" == "-" ]; then
-        # eg echo 12345 | gut_mod.sh -
-        while read arg; do
-            process_mod "$arg"
-        done
-    else
-        process_mod "$1"
-    fi
-    shift
-done
+echo 'Blank mod' > "$mod_dir/description"
+echo "$DM_PERSON_INITIALS" > "$mod_dir/who"

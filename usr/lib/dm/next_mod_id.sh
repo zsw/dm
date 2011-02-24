@@ -1,26 +1,19 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
-_loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0
+_u() { cat << EOF
+usage: $script
 
 This script prints the next mod id to use for creating a new mod, and
 increments the next mod id counter.
-
-OPTIONS:
-    -d      Dry run. Next mod id is not incremented.
     -h      Print this help message.
 
 NOTES:
-
     See: $DM_ROOT/doc/mods for an explanation of the design of mod ids.
 
     Blocks of ids assigned to the user are determiend by reading the
@@ -39,41 +32,25 @@ EOF
 }
 
 
-#
-# exit_with_message
-#
-# Sent: message
-# Return: nothing
-# Purpose:
-#
-#   Exit script with message.
-#
-function exit_with_message {
+_options() {
+    # set defaults
+    args=()
 
-    msg=$1
+    while [[ $1 ]]; do
+        case "$1" in
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-    echo "$msg" >&2
-    rm $LOCK_FILE
-    exit 1
+    (( ${#args[@]} != 0 )) && { _u; exit 1; }
 }
 
+_options "$@"
 
-dryrun=false
-while getopts "hd" options; do
-  case $options in
-
-    d ) dryrun=true;;
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-         exit 1;;
-
-  esac
-done
-
-shift $(($OPTIND - 1))
 
 # Two instances of this script running concurrently can create foo. If
 # the first instance does not increment the counter before the second
@@ -85,67 +62,65 @@ shift $(($OPTIND - 1))
 
 tmpdir=$(tmp_dir)
 mkdir -p $tmpdir
-LOCK_FILE="${tmpdir}/next_mod_id.LOCK"
+lock_file=$tmpdir/next_mod_id.LOCK
 
-TRIES=300       # Approximately 5 minutes
+trap 'rm $lock_file; exit;' EXIT SIGINT
 
-
+tries=300       # Approximately 5 minutes
 count=0
-while : ; do
-    ! test -e $LOCK_FILE && break
-    count=$(($count+1))
-    [[ "$count" -ge "$TRIES" ]] && break
+
+while true; do
+    [[ ! -e $lock_file ]] && break
+    ((count += 1))
+    (( $count > $tries )) && break
     sleep 1
 done
 
-if [[ -e $LOCK_FILE ]]; then
-    echo "Unable to determine next mod id due to lock file: $LOCK_FILE" >&2
-    exit 1
+[[ -e $lock_file ]] && __me "Unable to determine next mod id due to lock file: $lock_file"
+
+echo $$ > "$lock_file"  ## Store PID
+
+warn_at=10                      # Warn when only this many ids remain
+
+[[ ! $DM_PERSON_ID ]] && __me "Unable to determine person id."
+
+# Check for reusable mods
+if [[ -s $DM_USERS/reusable_ids ]]; then
+    dupes=$(sort $DM_USERS/reusable_ids | uniq -d | tr "\n" " ")
+    [[ $dupes ]] && __me "Duplicate IDs in reusable_ids file: $dupes"
+    next_mod_id=$(head -1 "$DM_USERS/reusable_ids")
+    sed -i '1d' "$DM_USERS/reusable_ids"    ## Remove first line from file
+    echo "$next_mod_id"
+    exit 0
 fi
 
-echo $$ > $LOCK_FILE
 
-$dryrun && logger_debug "**Dry run on. Next mod id is not incremented."
+# $ cat ids
+# 10000,29999,1
+# 30000,49999,2
+# 50000,99949,0
+# 99950,99999,4
 
-WARN_AT=10                      # Warn when only this many ids remain
+# gsub strips leading zeros.
+start_mod_id=$(awk -v p_id="$DM_PERSON_ID" -F",[ \t]*" '!/^#/ && $3 == p_id {gsub(/^0*/,"",$1); print $1}' "$DM_IDS")
+[[ ! $start_mod_id ]] && __me "Unable to determine start of block of ids for person id $DM_PERSON_ID."
 
-if [[ ! "$DM_PERSON_ID" ]]; then
-    exit_with_message "Unable to determine person id."
-fi
-
-logger_debug "Person id: $DM_PERSON_ID"
-
-
-start_mod_id=$(cat $DM_IDS | awk -v pid=$DM_PERSON_ID 'BEGIN { FS = ",[ \t]*"} !/^#/ && $3 == pid {print $1}' | sed 's/^0*\([0-9]\+\)/\1/')
-
-if [[ ! "$start_mod_id" ]]; then
-    exit_with_message "Unable to determine start of block of ids for person id $DM_PERSON_ID."
-fi
-
-logger_debug "Start mod id: $start_mod_id"
-
-
-end_mod_id=$(cat $DM_IDS | awk -v pid=$DM_PERSON_ID 'BEGIN { FS = ",[ \t]*"} !/^#/ && $3 == pid {print $2}' | sed 's/^0*\([0-9]\+\)/\1/')
-
-if [[ ! "$end_mod_id" ]]; then
-    exit_with_message "Unable to determine end of block of ids for person id $DM_PERSON_ID."
-fi
-
-logger_debug "End mod id: $end_mod_id"
+end_mod_id=$(awk -v p_id="$DM_PERSON_ID" -F",[ \t]*" '!/^#/ && $3 == p_id {gsub(/^0*/,"",$2); print $2}' "$DM_IDS")
+[[ ! $end_mod_id ]] && __me "Unable to determine end of block of ids for person id $DM_PERSON_ID."
 
 last_mod_id=$(sed 's/^0*\([0-9]\+\)/\1/' "$DM_USERS/mod_counter")            # Strip leading zeros
-
-if [[ ! "$last_mod_id" ]]; then
-    exit_with_message "Unable to determine last mod id for person id $DM_PERSON_ID."
-fi
-
-logger_debug "Last mod id: $last_mod_id"
-
-last_in_range=$(echo $last_mod_id | awk -v min=$start_mod_id -v max=$end_mod_id 'min <= $1 && $1 <= max')
+[[ ! $last_mod_id ]] && __me "Unable to determine last mod id for person id $DM_PERSON_ID."
 
 next_mod_id=0
 
-if [[ $last_in_range ]]; then
+# Normally the next_mod_id is just the last_mod_id incremented. However, there
+# is one exception. When a range of ids is completed, a user will be assigned
+# to a new range. The last_mod_id will still point to the old range and there
+# is no guarantee incrementing it will return a mod in the new range. A check
+# for that condition should be made and handled.
+
+last_id_is_in_range=$(awk -v min="$start_mod_id" -v max="$end_mod_id" 'min <= $1 && $1 <= max' <<< "$last_mod_id")
+if [[ $last_id_is_in_range ]]; then
     #Increment
     next_mod_id=$(($last_mod_id + 1))
 else
@@ -153,34 +128,23 @@ else
     next_mod_id=$start_mod_id
 fi
 
-logger_debug "Next mod id: $next_mod_id"
-
-
-next_in_range=$(echo $next_mod_id | awk -v min=$start_mod_id -v max=$end_mod_id 'min <= $1 && $1 <= max')
+next_in_range=$(awk -v min="$start_mod_id" -v max="$end_mod_id" 'min <= $1 && $1 <= max' <<< "$next_mod_id")
 
 if [[ ! $next_in_range ]]; then
-    echo "No mod ids remaining for person $DM_PERSON_ID." >&2
-    exit_with_message "Assign the person a new block of ids in the $DM_IDS file"
+    __mi "No mod ids remaining for person $DM_PERSON_ID." >&2
+    __me "Assign the person a new block of ids in the $DM_IDS file"
 fi
 
+warn_min=$(($end_mod_id - $warn_at))
 
-warn_min=$(($end_mod_id - $WARN_AT))
-
-warn=$(echo $next_mod_id | awk -v min=$warn_min -v max=$end_mod_id 'min <= $1 && $1 <= max')
+warn=$(awk -v min="$warn_min" -v max="$end_mod_id" 'min <= $1 && $1 <= max' <<< "$next_mod_id")
 
 if [[ $warn ]]; then
     remaining=$(( $end_mod_id - $next_mod_id ))
-    echo "Warning: $remaining mod ids remaining for person $DM_PERSON_ID." >&2
-    echo "Consider assigning the person a new block of ids in the $DM_IDS file" >&2
+    __mi "Warning: $remaining mod ids remaining for person $DM_PERSON_ID." >&2
+    __mi "Consider assigning the person a new block of ids in the $DM_IDS file" >&2
 fi
 
-
-printf %05d $next_mod_id
-
-$dryrun && logger_debug "Next mod id is not incremented."
-! $dryrun && printf %05d $next_mod_id > "$DM_USERS/mod_counter"
-
-rm $LOCK_FILE
+printf %05d "$next_mod_id" | tee "$DM_USERS/mod_counter"
 
 exit 0
-

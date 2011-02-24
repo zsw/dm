@@ -1,8 +1,8 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
 _u() { cat << EOF
@@ -60,7 +60,7 @@ unsorted=$DM_PERSON_USERNAME/unsorted
 now=$DM_PERSON_USERNAME/now
 tree=$(grep -lsr "\[.\] $mod_id" $DM_TREES/*)
 
-"$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file"
+"$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file" || exit 1
 
 cp -p "$file"{,.bak}    # Back up file
 vim '+' "$file"         # Edit the file

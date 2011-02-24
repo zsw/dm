@@ -1,47 +1,36 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
-_loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage:   $0 [ mod_id ... ]
-      or echo mod_id | $0 -
+_u() { cat << EOF
+usage:   $script [ mod_id ... ]
 
 This script flags mods as reusable.
-
-OPTIONS:
-    -v  Verbose.
     -h  Print this help message.
 
 EXAMPLES:
-
-    $0                  # Flag the current mod as reusable.
-    $0 12345 23456      # Flag mods 12345 and 23456 as reusable.
-    echo 12345 | $0 -   # Flag mod 12345 as reusable.
+    $script                  # Flag the current mod as reusable.
+    $script 12345 23456      # Flag mods 12345 and 23456 as reusable.
 
 NOTES:
-
-    Mod ids can be provided through stdin or as arguments.
-    To read the mod list from stdin, use the mod_id '-'.
-
     If a mod id is not provided the current one is used, ie. the one
     indicated in $DM_USERS/current_mod
 
-    The mod id is printed to stdout if successful.
-
-    A mod is flagged as reusable by setting the description to REUSE.
+    The follow actions are taken when a mod is set as reusable:
+        * The mod is removed from all trees.
+        * The mod is deleted.
+        * The id of the mod is added to the reusable_ids file of the
+          mod's creator.
 EOF
 }
 
 
 #
-# process_mod
+# _process_mod
 #
 # Sent: mod
 # Return: nothing
@@ -49,68 +38,69 @@ EOF
 #
 #   Process a mod for reuse.
 #
-function process_mod {
+_process_mod() {
+    local mod_id mod_dir mods dir
 
-    local mod_id=$1
-
-    local mod_dir=$(mod_dir $mod_id)
-
-    logger_debug "Mod: $mod_id, mod_dir: $mod_dir"
-
-    [[ ! $mod_dir ]] && return
+    mod_id=$1
+    mod_dir=$(mod_dir "$mod_id")
 
     [[ ! -d $mod_dir ]] && return
 
-    # Replace description
-    echo 'REUSE' > $mod_dir/description || return
+    # Add to reusable_ids
 
-    # Reassign mod to the original creator
-    $DM_BIN/assign_mod.sh -m "$mod_id" -o
+    # Reassign mod to the original creator so we know who the original creator
+    # is.
+    "$DM_BIN/assign_mod.sh" -m "$mod_id" -o
+    initials=$(< "$mod_dir/who")
+    username=$(person_attribute username initials "$initials")
+    ids=$DM_ROOT/users/$username/reusable_ids
+    echo "$mod_id" >> "$ids"
+    sort "$ids" -o "$ids"
 
-    # Done mod
-    local mods=${mod_dir%/*}
-    local dir=${mods##*/}
+    # Remove mod from all trees
+    while read -r tree; do
+        sed -i "/\[.\] $mod_id /d" "$tree"
+    done < <(grep -rl "\[.\] $mod_id" "$DM_TREES")
 
-    if [[ "$dir" == "mods" ]]; then
-        logger_debug "Doning mod $mod_id"
-        $DM_BIN/done_mod.sh $mod_id
-    fi
-
-    echo "$mod_id"
+    # Delete mod from mods/archive directory
+    [[ $mod_dir =~ /(mods|archive)/ ]] && rm -r "$mod_dir" &>/dev/null
 }
 
-verbose=
+_options() {
+    # set defaults
+    args=()
+    unset interactive
 
-while getopts "hv" options; do
-  case $options in
+    while [[ $1 ]]; do
+        case "$1" in
+            -i) interactive=1   ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-    v ) verbose=1;;
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
+    (( ${#args[@]} == 0 )) && args[0]=$(< "$DM_USERS/current_mod")
+}
 
-  esac
-done
+_options "$@"
 
-shift $(($OPTIND - 1))
 
-[[ $verbose ]] && LOG_LEVEL=debug
-[[ $verbose ]] && LOG_TO_STDOUT=1
+for mod_id in "${args[@]}"; do
+    if [[ $interactive ]]; then
+        unset reply
+        while true; do
+            read -p "Reuse mod $mod_id ? (Y/n): " reply
 
-# Default to current mod if not provided
-[[ "$#" -eq "0" ]] && set -- $(< $DM_USERS/current_mod)
+            [[ ! $reply ]] && reply=y
+            reply=$(tr "[:upper:]" "[:lower:]" <<< "$reply")
 
-while [[ ! "$#" -eq "0" ]]; do
-    if [ "$1" == "-" ]; then
-        # eg echo 12345 | reuse_mod.sh -
-        while read arg; do
-            process_mod "$arg"
+            [[ $reply == y || $reply == n ]] && break
         done
-    else
-        process_mod "$1"
+        [[ $reply == n ]] && continue
     fi
-    shift
+
+    _process_mod "$mod_id"
 done

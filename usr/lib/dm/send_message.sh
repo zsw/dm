@@ -1,9 +1,9 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
-_loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
 script=${0##*/}
 _u() { cat << EOF
@@ -34,17 +34,15 @@ EOF
 #   Send message by weechat
 #
 _by_weechat() {
-
-#    pid=$(pidof weechat-curses)
-    pid=31024
-#    [[ ! $pid ]] && __me "Reminder for mod $mod_dir aborted. Unable to get pid of weechat"
+    pid=$(pidof weechat-curses)
+    [[ ! $pid ]] && __me "Reminder for mod $mod_dir aborted. Unable to get pid of weechat"
 
     fifo=$HOME/.weechat/weechat_fifo_$pid
-#    [[ ! -p $fifo ]] && __me "Reminder for mod $mod_dir aborted. Not a named pipe: $fifo"
+    [[ ! -p $fifo ]] && __me "Reminder for mod $mod_dir aborted. Not a named pipe: $fifo"
 
     msg=$(< $mod_dir/description)
 
-    echo "$account */jmsg $DM_PERSON_USERNAME $msg" > "$fifo"
+    echo "$account */jabber_echo_message $msg" > "$fifo"
 }
 
 
@@ -58,25 +56,9 @@ _by_weechat() {
 #   Send message by email
 #
 _by_email() {
-
-    logger_debug "Sending email"
-
-    note="------------------\nNote: Weechat is not available."
-    body=$(cat $file && echo "" && echo -e $note && echo "" && cat $tmpfile)
-    # Please update your dev system
-    # 123456789012345678901234567890
-    subject=$(head -1 $file | cut -c1-30)
-    to_email=$(person_attribute email username $to)
-    logger_debug "Subject: $subject"
-    logger_debug "To: $to_email"
-    res=$(echo -e "To: $to_email\nSubject: $subject\n\n$body" | sendmail -v -- $to_email)
-    logger_debug "$res"
-
-    return
-
-    subject=$(cat $mod_dir/description | sed -e "s/\"/\\\\\"/" )
-    notes=$(cat $mod_dir/notes | sed -e "s/\"/\\\\\"/" )
-
+    subject=$(sed -e "s/\"/\\\\\"/" "$mod_dir/description")
+    notes=$(sed -e "s/\"/\\\\\"/" "$mod_dir/notes")
+    res=$(echo -e "To: $account\nSubject: $subject\n\n$notes" | sendmail -v -- "$to_email")
 }
 
 _options() {

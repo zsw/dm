@@ -6,7 +6,7 @@
 # Library of functions related to temporary files.
 #
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 #
 # tmp_dir
@@ -28,7 +28,7 @@ _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 #   2. $USERNAME
 #   3. mktemp -d -u XXXXXXXXXXXX
 #
-function tmp_dir {
+__tmp_dir() {
 
     if [[ $DM_TMP ]]; then
 	    echo "$DM_TMP"
@@ -62,7 +62,7 @@ function tmp_dir {
 #   2. that provided by tmp_dir with no username passed.
 #   3. /tmp
 #
-function tmp_file {
+__tmp_file() {
 
     tmpdir=$1
     [[ ! $tmpdir ]] && tmpdir=$(tmp_dir)
@@ -81,7 +81,7 @@ function tmp_file {
 
 
 # This function indicates this file has been sourced.
-function _loaded_tmp {
+__loaded_tmp() {
     return 0
 }
 

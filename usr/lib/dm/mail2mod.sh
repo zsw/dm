@@ -1,7 +1,7 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_ripmime 2>/dev/null || source $DM_ROOT/lib/ripmime.sh
+__loaded_ripmime 2>/dev/null || source $DM_ROOT/lib/ripmime.sh
 
 script=${0##*/}
 _u() {
@@ -97,31 +97,22 @@ fi
 
 file=$1;
 
-if [[ ! -r "$file" ]]; then
+if [[ ! -r $file ]]; then
     echo "Unable to read file $file" >&2
     exit 1
 fi
 
+mod=$("$DM_BIN/create_mods.sh" -b | awk '{print $3}')
 
-# Reuse a mod if possible
-mod=$($DM_BIN/reusable_mods.sh -u $DM_PERSON_USERNAME | head -1 | $DM_BIN/gut_mod.sh -)
-[[ $mod ]] && $DM_BIN/undone_mod.sh $mod
-
-# Otherwise create a blank mod
-# create_mods.sh returns: [ ] 10028 Blank mod
-if [[ ! "$mod" ]]; then
-    mod=$("$DM_BIN/create_mods.sh" -b | awk '{print $3}')
-    "$DM_BIN/assign_mod.sh" -m "$mod" "$DM_PERSON_INITIALS"
-fi
-
-if [[ ! "$mod" ]]; then
+if [[ ! $mod ]]; then
     echo "Error: Unable to get id of mod" >&2
     exit 1
 fi
 
+"$DM_BIN/assign_mod.sh" -m "$mod" "$DM_PERSON_INITIALS"
 
-notes="$DM_MODS/$mod/notes"
-descr="$DM_MODS/$mod/description"
+notes=$DM_MODS/$mod/notes
+descr=$DM_MODS/$mod/description
 
 cat $file | grep '^Subject: ' | head -1 | sed -e "s/Subject: //g" > $descr
 

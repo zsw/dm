@@ -6,7 +6,7 @@
 # Library of functions related to attachment files.
 #
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 
 #
 # __is_text
@@ -29,8 +29,9 @@ __is_text() {
     file -b "$(readlink -f "$file")" | grep -qE 'FORTRAN|text'
 }
 
+
 # This function indicates this file has been sourced.
-function _loaded_files {
+__loaded_files() {
     return 0
 }
 

@@ -1,10 +1,10 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-_loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##/}
 _u() { cat << EOF

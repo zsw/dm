@@ -1,8 +1,8 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
 _u() { cat << EOF
@@ -113,6 +113,7 @@ _create_mods() {
         [[ $prev_notes ]] && "$DM_BIN/unindent.sh" -i "$prev_notes"
 
         # Mod line: [JK] the description
+
         mod_id=$("$DM_BIN/next_mod_id.sh")
         [[ $? != '0' || ! $mod_id ]] && __me "Unable to get mod id." && continue
 
@@ -141,7 +142,7 @@ _create_mods() {
 
     done < "$file"
 
-    [[ $prev_notes ]] && $DM_BIN/unindent.sh -i "$prev_notes"
+    [[ $prev_notes ]] && "$DM_BIN/unindent.sh" -i "$prev_notes"
 }
 
 #

@@ -7,7 +7,7 @@
 # attachments from MIME encoded files (email).
 #
 
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 #
 # ripmime_attachments
@@ -18,7 +18,7 @@ _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 #
 #   Return the names of files attached in a mime file.
 #
-function ripmime_attachments {
+__ripmime_attachments() {
 
     local file=$1
 
@@ -48,7 +48,7 @@ function ripmime_attachments {
 #       echo 'Ripmime not found'
 #   fi
 #
-function ripmime_command {
+__ripmime_command() {
 
     local cmd=$(which ripmime 2>/dev/null)
 
@@ -70,7 +70,7 @@ function ripmime_command {
 #
 #   Return the ripmime files concatenated.
 #
-function ripmime_files_cat {
+__ripmime_files_cat() {
 
     local file=$1
 
@@ -103,7 +103,7 @@ function ripmime_files_cat {
 #
 #   Rip a mime file and return a path.
 #
-function ripmime_run {
+__ripmime_run() {
 
     local file=$1
 
@@ -130,7 +130,7 @@ function ripmime_run {
 #
 #   Return a the temporary directory mime files are ripped in.
 #
-function ripmime_tmpdir {
+__ripmime_tmpdir() {
 
     tmpdir=$(tmp_dir)
     echo "$tmpdir/ripmime"
@@ -138,7 +138,7 @@ function ripmime_tmpdir {
 
 
 # This function indicates this file has been sourced.
-function _loaded_ripmime {
+__loaded_ripmime() {
     return 0
 }
 

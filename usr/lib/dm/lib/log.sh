@@ -36,13 +36,13 @@ LOG_FORMAT_MESSAGE=1
 #LOG_TO_STDOUT=
 
 
-function logger_level {
+__logger_level() {
 
     eval "expr \$LOG_LEVEL_`echo $LOG_LEVEL | tr '[:lower:]' '[:upper:]'` 2>/dev/null"
 }
 
 
-function logger_log {
+__logger_log() {
 
     local level=$1
     shift
@@ -82,7 +82,7 @@ function logger_log {
     [[ $LOG_TO_STDOUT ]] && echo "$log" >&1    # -t 1 tests stdout
 }
 
-function logger_debug {
+__logger_debug() {
 
     log_level=$(logger_level)
 
@@ -92,7 +92,7 @@ function logger_debug {
     logger_log 'DEBUG' "$*"
 }
 
-function logger_info {
+__logger_info() {
 
     log_level=$(logger_level)
 
@@ -102,7 +102,7 @@ function logger_info {
     logger_log 'INFO' "$*"
 }
 
-function logger_warn {
+__logger_warn() {
 
     log_level=$(logger_level)
 
@@ -112,7 +112,7 @@ function logger_warn {
     logger_log 'WARN' "$*"
 }
 
-function logger_error {
+__logger_error() {
 
     log_level=$(logger_level)
 
@@ -122,7 +122,7 @@ function logger_error {
     logger_log 'ERROR' "$*"
 }
 
-function logger_fatal {
+__logger_fatal() {
 
     log_level=$(logger_level)
 
@@ -134,7 +134,7 @@ function logger_fatal {
 }
 
 # This function indicates this file has been sourced.
-function _loaded_log {
+__loaded_log() {
     echo "_loaded_log BASH_SOURCE ${BASH_SOURCE[0]}" >&2
     return 0
 }

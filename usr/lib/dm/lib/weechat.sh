@@ -25,7 +25,7 @@
 #   they are not provided, they will be acquired from the system
 #   (recommended). Normally they are used just for testing.
 #
-function weechat_log_path {
+__weechat_log_path() {
 
     weechat_version=$1
     conf_log_path=$2
@@ -77,7 +77,7 @@ function weechat_log_path {
 #
 #   The file name includes the absolute path.
 #
-function weechat_events_file {
+__weechat_events_file() {
 
     path=$(weechat_log_path)
     [[ ! $path ]] && return
@@ -88,7 +88,7 @@ function weechat_events_file {
 }
 
 # This function indicates this file has been sourced.
-function _loaded_weechat {
+__loaded_weechat() {
     return 0
 }
 

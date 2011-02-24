@@ -1,12 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 #
 # Test script for lib/files.sh functions.
 #
 
 source $DM_ROOT/test/test.sh
-_loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
+__loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
 
 
 #

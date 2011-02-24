@@ -7,7 +7,7 @@
 # id, name, email address, etc)
 #
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 #
 # person_attribute
@@ -24,7 +24,7 @@ _loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 #
 #   value=$(person_attribute attribute key value)
 #
-function person_attribute {
+__person_attribute() {
 
     attribute=$1
     key=$2
@@ -93,7 +93,7 @@ function person_attribute {
 #   If who is all uppercase, it is assumed to be a person's initials.
 #   Otherwise, it is assumed to be a person's username.
 #
-function person_translate_who {
+__person_translate_who() {
 
     local who=$1
     [[ ! $who ]] && return
@@ -121,7 +121,7 @@ function person_translate_who {
 
 
 # This function indicates this file has been sourced.
-function _loaded_person {
+__loaded_person() {
     return 0
 }
 

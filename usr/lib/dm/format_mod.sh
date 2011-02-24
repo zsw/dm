@@ -1,22 +1,16 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
-_loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 
 script=${0##*/}
-_u() {
+_u() { cat << EOF
 
-    cat << EOF
-
-usage: echo mod_id | $0  [format]
-or     echo /path/to/mod/directory | $0 [format]
+usage: echo mod_id | $script  [format]
+or     echo /path/to/mod/directory | $script [format]
 
 This script formats attributes of a mod suitable for printing.
-
-OPTIONS:
-
     -t  Tree format. full=complete path,      eg /root/dm/trees/jimk/reminders
                      sub=include subdirectory,eg jimk/reminders
                      name=tree name only,     eg reminders (default)
@@ -24,17 +18,15 @@ OPTIONS:
     -h  Print this help message.
 
 EXAMPLES:
-
-    echo 12345 | $0
-    echo \$DM_ROOT/mods/12345 | $0
-    find \$DM_ROOT/ | filter_mods.pl | sort | $0
+    echo 12345 | $script
+    echo \$DM_ROOT/mods/12345 | $script
+    find \$DM_ROOT/ | filter_mods.pl | sort | $script
 
     # Example output
 
     12345  JK ---------- --:--:-- main  Do the thing whereby the problem is fixed.
 
 NOTES:
-
     The format string controls the output.  Interpreted sequences are:
 
     %%   A literal %.
@@ -70,7 +62,7 @@ EOF
 }
 
 #
-# tree_name
+# _tree_name
 #
 # Sent: tree file name
 # Return: tree name
@@ -78,7 +70,8 @@ EOF
 #
 #   Return the name of the tree for the given tree file name.
 #
-function tree_name {
+_tree_name() {
+    local file name sub_name subdir
 
     file=$1
     name=${file##*/}
@@ -86,132 +79,102 @@ function tree_name {
     subdir=${sub_name%%/*}
 
     ## Add a prefix to distinguish trees in the archive directory
-    if [[ "$subdir" == "archive" ]]; then
-        name="x_$name"
-    fi
+    [[ $subdir == archive ]] && name=x_$name
 
-    echo $name
+    echo "$name"
 }
 
-tree_format='name'
+_options() {
+    # set defaults
+    args=()
+    tree_format=name
 
-while getopts "ht:" options; do
-  case $options in
+    while [[ $1 ]]; do
+        case "$1" in
+            -t) shift; tree_format=$1 ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-    t ) tree_format=$OPTARG;;
+    (( ${#args[@]} > 1 )) && { _u; exit 1; }
+    (( ${#args[@]} == 0 )) && args[0]="%i %w %h %t %l %d"
+    format=${args[0]}
+}
 
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
+_options "$@"
 
-  esac
-done
 
-shift $(($OPTIND - 1))
-
-if [[ "$#" -gt "1" ]]; then
-    _u
-    exit 1
-fi
-
-# Prevent this script from creating noise from logging. Check the log
-# file LOG_TO_FILE for logs.
-LOG_TO_STDOUT=
-LOG_TO_STDERR=
-
-format="%i %w %h %t %l %d"
-
-[[ $1 ]] && format=$1
-
-logger_debug "Format: $format"
-
-oldIFS=$IFS
-IFS=""  # Preserve spacing in printf output
-
-while read mod
-do
-    if [[ ${mod:0:1} == '/' ]]; then
+while IFS="" read -r mod; do
+    if [[ ${mod:0:1} == / ]]; then
         mod_dir=$mod
     else
-        mod_dir=$(mod_dir $mod)
+        mod_dir=$(mod_dir "$mod")
     fi
 
-    if [[ ! "$mod_dir" ]]; then
-        echo "Unable to locate directory for mod $mod" >&2
-        continue
-    fi
+    [[ ! $mod_dir ]] && __mi "Unable to locate directory for mod $mod" >&2
 
-    id=$(basename $mod)
-
+    id=${mod##*/}
     line=$format
 
-    esc=$(echo -e "\e")         # Insignicant except that it's uncommon
-    line=${line//\%\%/$esc}     # Hide %% so it's not interpreted
+    # Replace %% with an placeholder character, the "\x1b" (ESC) is used
+    # because it's not likely to be in the mod text, so the % symbols do not
+    # interfere with pattern matching. Later, the "\e" will be replaced with %%
+    # again to restore it.
+    line=${line//\%\%/$'\x1b'}
 
     line=${line//\%i/$id}
 
     if [[ $format == *%b* ]]; then
         box="[ ]"
-        [[ "$mod_dir" == "$DM_ARCHIVE/$id" ]] && box="[x]"
+        [[ $mod_dir == $DM_ARCHIVE/$id ]] && box="[x]"
         line=${line//\%b/$box}
     fi
 
     if [[ $format == *%d* ]]; then
-        line=${line//\%d/$(cat $mod_dir/description)}
+        line=${line//\%d/$(< "$mod_dir/description")}
     fi
 
     if [[ $format == *%h* ]]; then
-        hold='---------- --:--:--'
-        if [[ -e "$mod_dir/hold" ]]; then
-            hold=$(hold_timestamp $id)
-            [[ ! $hold ]] && hold='---------- --:--:--'
+        unset hold
+        if [[ -e $mod_dir/hold ]]; then
+            hold=$(hold_timestamp "$id")
         fi
+        [[ ! $hold ]] && hold='---------- --:--:--'
         line=${line//\%h/$hold}
     fi
 
     if [[ $format == *%l* ]]; then
         location='????'
-        [[ "$mod_dir" == "$DM_MODS/$id" ]]    && location='mods'
-        [[ "$mod_dir" == "$DM_ARCHIVE/$id" ]] && location='arch'
+        [[ $mod_dir == $DM_MODS/$id ]]    && location='mods'
+        [[ $mod_dir == $DM_ARCHIVE/$id ]] && location='arch'
         line=${line//\%l/$location}
     fi
 
     if [[ $format == *%t* ]]; then
-        tree=$(grep -lsr "\[.\] $id" $DM_TREES/* | head -1 ) ;
+        tree=$(grep -lsr "\[.\] $id" "$DM_TREES"/*)
+        [[ $tree =~ $'\n' ]] && __me "Mod $id found in multiple trees: $tree"
 
-        case $tree_format in
-
-            full) size=30
-                  ;;
-
-            name) tree=$(tree_name "$tree")
-                  size=9
-                  ;;
-
-            sub)  tree=${tree#$DM_TREES/}
-                  size=20
-                  ;;
-
-            * ) echo "Invalid tree format." >&2
-                _u
-                exit 1;;
+        case "$tree_format" in
+            full) size=30 ;;
+            name) tree=$(_tree_name "$tree") size=9 ;;
+             sub) tree=${tree#$DM_TREES/} size=20   ;;
+               *) __me "Invalid tree format: $tree_format" ;;
         esac
-
-        line=${line//\%t/$(printf "%${size}.${size}s" $tree)}
+        # The printf "%10.10s" format means print exactly 10 characters regardless
+        # if the string is more or less than 10 characters.
+        line=${line//\%t/$(printf "%${size}.${size}s" "$tree")}
     fi
 
     if [[ $format == *%w* ]]; then
-        who=$(cat $mod_dir/who)
-        line=${line//\%w/$(printf "%3s" $who)}
+        who=$(< "$mod_dir/who")
+        line=${line//\%w/$(printf "%3s" "$who")}
     fi
 
-    line=${line//$esc/%}       # Show literal %
+    line=${line//$'\x1b'/%}       # Restore literal %
 
-    echo $line
-
+    echo "$line"
 done
-
-IFS=$oldIFS

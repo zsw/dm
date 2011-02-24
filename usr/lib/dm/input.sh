@@ -1,32 +1,21 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0
+_u() { cat << EOF
+usage: $script
 
 This script permits the user to record input for the flat file dev
 system.
-
-OPTIONS:
-
-    -d  Dry run. Actions are not performed.
-    -v  Verbose.
-
     -h  Print this help message.
 
 EXAMPLES:
-
-    $0
+    $script
 
 NOTES:
-
     This script is a tool for the "Collect" phase of the Getting Things Done
     paradigm.
 EOF
@@ -34,7 +23,7 @@ EOF
 
 
 #
-# create_mod
+# _create_mod
 #
 # Sent: nothing
 # Return: id of mod
@@ -42,53 +31,23 @@ EOF
 #
 #   Create a mod and return its id.
 #
-function create_mod {
+_create_mod() {
+    local mod
 
-    [[ $dryrun ]] && echo "Dry run: create mod skipped" >&2
-    [[ $dryrun ]] && return
+    mod=$("$DM_BIN/create_mods.sh" -b | awk '{print $3}')
 
-    logger_debug "Checking for a reusable mod"
+    [[ ! $mod ]] && __me "Unable to get id of mod"
+    "$DM_BIN/assign_mod.sh" -m "$mod" "$DM_PERSON_INITIALS"
 
-    # Reuse a mod if possible
-    local mod=$($DM_BIN/reusable_mods.sh -u $DM_PERSON_USERNAME | head -1 | $DM_BIN/gut_mod.sh -)
-    if [[ $mod ]]; then
-        logger_debug "Reusing mod $mod"
-        $DM_BIN/undone_mod.sh $mod
-        logger_debug "Undoned mod $mod"
-    fi
-    logger_debug "Before create mod $mod"
-
-    # Otherwise create a blank mod
-    # create_mods.sh returns: [ ] 10028 Blank mod
-    if [[ ! $mod ]]; then
-        logger_debug "Creating a new mod"
-        mod=$("$DM_BIN/create_mods.sh" -b | awk '{print $3}')
-        "$DM_BIN/assign_mod.sh" -m "$mod" "$DM_PERSON_INITIALS"
-        logger_debug "Created mod $mod"
-    fi
-    logger_debug "After create mod $mod"
-
-    if [[ ! "$mod" ]]; then
-        echo "Error: Unable to get id of mod" >&2
-        exit 1
-    fi
-
-    logger_debug "Creating mod component files"
-    logger_debug "description: $DM_MODS/$mod/description"
-    logger_debug "notes: $DM_MODS/$mod/notes"
-    # Escape double quotes and dollar signs
     echo "$subject" > "$DM_MODS/$mod/description"
     echo "$description" > "$DM_MODS/$mod/notes"
 
-    logger_debug "Done mod component files"
     echo "$mod"
-    logger_debug "echoed mod"
-    return
 }
 
 
 #
-# confirm
+# _confirm
 #
 # Sent: nothing
 # Return: nothing
@@ -96,50 +55,30 @@ function create_mod {
 #
 #   Get confirmation from user.
 #
-function confirm {
-
+_confirm() {
     reply=
-    while [[ ! "$reply" ]]; do
-
+    while [[ ! $reply ]]; do
         echo -n "Process input? (Y/n/e) "
         read reply
 
         # Default reply to 'y'
-        [[ ! "$reply" ]] && reply='y'
+        [[ ! $reply ]] && reply='y'
 
         # Convert reply to lowercase
-        reply=$(echo $reply | tr "[:upper:]" "[:lower:]")
+        reply=$(tr "[:upper:]" "[:lower:]" <<< "$reply")
 
-        case $reply in
-            y) action='create';;
-            n) action='abort';;
-            e) action='edit';;
-            *) reply=;;         # Get another reply
+        case "$reply" in
+            y) action='create'  ;;
+            n) action='abort'   ;;
+            e) action='edit'    ;;
+            *) reply=           ;;         # Get another reply
         esac
-
     done
 }
 
 
 #
-# edit
-#
-# Sent: file - full path name of file to edit.
-# Return: nothing
-# Purpose:
-#
-#   Edit the file.
-#
-function edit {
-
-    file=$1
-
-    /usr/bin/vim -f -c "set ft=our_doc" $file
-}
-
-
-#
-# preview
+# _preview
 #
 # Sent: subject
 #       description
@@ -148,7 +87,7 @@ function edit {
 #
 #   Preview the mod created from the file.
 #
-function preview {
+_preview() {
 
     subject="$1"
     descripton="$2"
@@ -160,13 +99,11 @@ function preview {
     echo "$description"
     echo "#-----------------------------"
     echo
-
-    return;
 }
 
 
 #
-# section
+# _section
 #
 # Sent: file
 # Return: nothing
@@ -174,17 +111,25 @@ function preview {
 #
 #   Determine the sections from the file.
 #
-function section {
-
+_section() {
     file=$1
 
-    body=$(cat $file)
+    # Explanation of awk command
+    #  -F'[: ]+'    : Field separator on any number of semicolons or spaces.
+    #  /^Sbjct:/    : Match only subject lines, ignore everything else.
+    #  $1="";       : Remove the first column, ie 'Sbjct:'
+    #  sub(...)     : Remove trailing spaces.
+    subject=$(awk -F'[: ]+' '/^Sbjct:/ {$1=""; sub(/^ /,""); print}' "$file")
 
-    # Extract subject, remove leading and trailing whitespace
-    subject=$(echo "$body"     | grep '^Sbjct:'    | sed -e "s/Sbjct:\s*//" | sed 's/^[ \t]*//;s/[ \t]*$//')
-
-    # Extract description, remove trailing whitespace
-    description=$(echo "$body" | grep -v '^Sbjct:' | sed -e "s/Descr:\s*//" | sed 's/[ \t]*$//')
+    # Explanation of awk command
+    #  /^Sbjct:/... : Ignore subject lines
+    #  /^Descr:/... : Same as in previous awk call
+    #  {sub(...)}   : Remove trailing spaces.
+    # Note: Leading spaces should not be removed from lines without a 'Sbjct:'
+    # or 'Descr:' prefix. The spaces may be intended indentation.
+    description=$(awk -F'[: ]+' '/^Sbjct:/ {next;}
+         /^Descr:/ {$1=""; sub(/^ /,""); print; next}
+         {sub(/[ \t]+$/, ""); print};' "$file")
 
     #
     # Mods created from an input email work better if they
@@ -195,83 +140,61 @@ function section {
     # without a description.
     #
 
-    if [[ ! "$description" ]]; then
-
-        grocery=$( echo "$subject" | sed '/^\s*[gG]\s/!d')
-        [[ ! "$grocery" ]] && description=$subject
+    if [[ ! $description ]]; then
+        grocery=$(sed '/^\s*[gG]\s/!d' <<< "$subject")
+        [[ ! $grocery ]] && description=$subject
     fi
-
-    return;
 }
 
+_options() {
+    # set defaults
+    args=()
 
-dryrun=
-verbose=
+    while [[ $1 ]]; do
+        case "$1" in
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-while getopts "dhv" options; do
-  case $options in
-    d ) dryrun=1;;
-    v ) verbose=1;;
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
+    (( ${#args[@]} != 0 )) && { _u; exit 1; }
+}
 
-  esac
-done
-
-shift $(($OPTIND - 1))
-
-[[ $verbose ]] && LOG_LEVEL=debug
-[[ $verbose ]] && LOG_TO_STDERR=1
-
-v_flag=''
-[[ $verbose ]] && v_flag='-v'
-d_flag=''
-[[ $dryrun ]] && d_flag='-d'
-
-[[ $dryrun ]] && logger_debug 'Dry run: Actions will not be performed.'
+_options "$@"
 
 file=$(tmp_file)
-echo -e "Sbjct: \nDescr: " > $file
-cp $file ${file}.bak
+echo -e "Sbjct: \nDescr: " > "$file"
+cp "$file" "${file}".bak
 
 action='edit'
-subject=
-description=
+unset subject
+unset description
 
-while [[ $action == 'edit' ]]; do
-    edit $file
-    # If edit didn't add changes, assume user wants to abort
-    diff -q $file ${file}.bak > /dev/null
-    if (( $? == 0 )); then
+while [[ $action == edit ]]; do
+    vim -f -c 'set ft=our_doc' "$file"
+    # If _edit didn't add changes, assume user wants to abort
+    if diff -q "$file" "${file}".bak >/dev/null; then
         action='abort'
         continue
     fi
-    section $file
-    preview "$subject" "$description"
-    confirm
+    _section "$file"
+    _preview "$subject" "$description"
+    _confirm
 done
 
-if [[ "$action" == 'abort' ]]; then
-    echo "Aborting."
-    exit 1
+if [[ $action == abort ]]; then
+    __me "Aborting."
 fi
 
-logger_debug "Creating mod"
-mod=$(create_mod)
-logger_debug "Created mod $mod"
+mod=$(_create_mod)
 if [[ $mod ]]; then
-    logger_debug "Sorting mod"
-    echo "$mod" | $DM_BIN/sort_input.sh $v_flag $d_flag
-    if [[ "$?" != "0" ]]; then
-        echo "ERROR: sort_input.sh for mod $mod failed." >&2
-        echo "Retry with: echo $mod | sort_input.sh" >&2
-        exit 1
+    if ! "$DM_BIN/sort_input.sh" <<< "$mod"; then
+        __me "sort_input.sh for mod $mod failed.\n===> ERROR: Retry with: echo $mod | sort_input.sh"
     fi
 fi
 
-echo "Done."
+echo "Create mod: $mod"
 exit 0

@@ -1,11 +1,12 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-_loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
-_loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
-_loaded_alert 2>/dev/null || source $DM_ROOT/lib/alert.sh
+__loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
+__loaded_alert 2>/dev/null || source $DM_ROOT/lib/alert.sh
 
 script=${0##*/}
 _u() {
@@ -68,7 +69,7 @@ function process_mod {
 
     logger_debug "Processing mod id: $mod"
 
-    status=$($DM_BIN/hold_status.sh $mod | awk '{print $5}')
+    status=$(__hold_status $mod | awk '{print $5}')
 
     if [[ "$status" == 'off_hold' ]]; then
         logger_debug "Mod status: off_hold. Nothing to do"

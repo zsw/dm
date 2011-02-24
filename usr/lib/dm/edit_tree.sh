@@ -1,8 +1,8 @@
 #!/bin/bash
-_loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
 _u() { cat << EOF
@@ -150,7 +150,7 @@ for base_file in *; do
     [[ ! -s $file ]] && continue
     replace_file=$replace_dir/$base_file
     __mi "Creating mods."
-    $DM_BIN/create_mods.sh "$file" > "$replace_file"
+    "$DM_BIN/create_mods.sh" "$file" > "$replace_file"
     __mi "Replacing mod spec with checkbox in tree."
     __mi "$DM_BIN/block_substitute.py $file_new $file $replace_file"
     "$DM_BIN/block_substitute.py" "$file_new" "$file" "$replace_file" > "$tmp" && mv "$tmp" "$file_new"

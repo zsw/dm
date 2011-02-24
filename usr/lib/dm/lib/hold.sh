@@ -6,7 +6,7 @@
 # Library of functions related to putting mods on hold.
 #
 
-_loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 
 
 #
@@ -25,7 +25,7 @@ _loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 #
 #       hold_has_usage_comment $mod || hold_add_usage_comment $mod
 #
-function hold_add_usage_comment {
+__hold_add_usage_comment() {
 
     local mod=$1
     [[ ! $mod ]] && return 1
@@ -51,7 +51,7 @@ function hold_add_usage_comment {
 #
 #   The year and the seconds of the timestamp are ignored.
 #
-function hold_as_crontab {
+__hold_as_crontab() {
 
     date --date="$1" "+%M %H %d %m *"
     return
@@ -84,7 +84,7 @@ function hold_as_crontab {
 #   If the year is not available, the earliest year such that the
 #   timestamp is in the future is used.
 #
-function hold_as_yyyy_mm_dd_hh_mm_ss {
+__hold_as_yyyy_mm_dd_hh_mm_ss() {
 
     local cron_exp=$1
     local fields=$(echo "$cron_exp" | awk '{print NF}')
@@ -157,7 +157,7 @@ function hold_as_yyyy_mm_dd_hh_mm_ss {
 #   Return a crontab entry that will put the mod on hold until the given
 #   timestamp.
 #
-function hold_crontab {
+__hold_crontab() {
 
     local mod_id=$1
     local timestamp=$2
@@ -181,7 +181,7 @@ function hold_crontab {
 #   Determine if the hold file of the mod with the provided id has a
 #   usage comment in it.
 #
-function hold_has_usage_comment {
+__hold_has_usage_comment() {
 
     local mod=$1
     [[ ! $mod ]] && return 1
@@ -199,6 +199,42 @@ function hold_has_usage_comment {
     fi
 
     return 0
+}
+
+
+#
+# __hold_status
+#
+# Sent: mod
+# Return: nothing
+# Purpose:
+#
+#   Process hold_status for a mod.
+#
+__hold_status() {
+    local hold_file mod status timestamp who who_file
+
+    mod=$1
+
+    hold_file=$(attr_file "$mod" 'hold')
+
+    # Ignore files with git conflict markers. Processing them may cause
+    # foo. Eg, the user may be editing the file fixing the conflict or
+    # the hold time may get commented out.
+
+    has_conflict_markers "$hold_file" && return
+
+    timestamp=$(hold_timestamp "$mod")
+
+    status=$(hold_timestamp_status "$timestamp")
+
+    [[ ! $timestamp ]] && timestamp='---------- --:--:--'
+    [[ ! $status ]]    && status='off_hold'
+
+    who_file=$(attr_file "$mod" 'who')
+    who=$(tr -d -c 'A-Z' < "$who_file")
+
+    echo "$mod $who $timestamp $status"
 }
 
 
@@ -221,7 +257,7 @@ function hold_has_usage_comment {
 #   If a hold file does not exist or it does not have a hold timestamp,
 #   nothing is printed.
 #
-function hold_timestamp {
+__hold_timestamp() {
 
     local mod=$1
 
@@ -266,7 +302,7 @@ function hold_timestamp {
 #
 #   A null timestamp is assumed 'off_hold'.
 #
-function hold_timestamp_status {
+__hold_timestamp_status() {
 
     local timestamp=$1
 
@@ -298,7 +334,7 @@ function hold_timestamp_status {
 #
 #   Return a usage comment for the mod with the provided id.
 #
-function hold_usage_comment {
+__hold_usage_comment() {
 
     local mod=$1
     [[ ! $mod ]] && return
@@ -309,11 +345,11 @@ function hold_usage_comment {
 
 
 # This function indicates this file has been sourced.
-function _loaded_hold {
+__loaded_hold() {
     return 0
 }
 
 # Export all functions to any script sourcing this library file.
-for function in $(awk '/^function / { print $2}' $DM_ROOT/lib/hold.sh); do
-    export -f $function
+for function in $(awk '/^function / {print $2}' $DM_ROOT/lib/hold.sh); do
+    export -f "$function"
 done

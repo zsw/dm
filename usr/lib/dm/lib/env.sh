@@ -12,7 +12,7 @@ __mi() { __v && echo -e "===: $*" ;}
 __me() { echo -e "===> ERROR: $*" >&2; exit 1 ;}
 __v()  { ${verbose-false} ;}
 
-_loaded_env() {
+__loaded_env() {
     export -f _loaded_env
 }
 

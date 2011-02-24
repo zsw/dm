@@ -6,7 +6,7 @@
 # Library of functions related to dm system locks.
 #
 
-_loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 #
 # is_locked
@@ -17,7 +17,7 @@ _loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 #
 #   Determine if the dm system is locked.
 #
-function is_locked {
+__is_locked() {
 
     file=$1
     if [[ ! $file ]]; then
@@ -42,7 +42,7 @@ function is_locked {
 #
 #   Send alert message.
 #
-function lock_alert {
+__lock_alert() {
 
     to=$1
     file=$2
@@ -98,7 +98,7 @@ file for details on the script locking the system.
 #
 #   Create a lock file.
 #
-function lock_create {
+__lock_create() {
 
     file=$1
 
@@ -159,7 +159,7 @@ function lock_create {
 #
 #   Return the full name of the lock file.
 #
-function lock_file {
+__lock_file() {
 
     tmpdir=$(tmp_dir)
     echo "$tmpdir/LOCK"
@@ -194,7 +194,7 @@ function lock_file {
 #   lock_file_key_value created_on /tmp/tst_lock_sh.txt
 #   # returns: 2009-01-01 11:11:11
 #
-function lock_file_key_value {
+__lock_file_key_value() {
 
     key=$1
     file=$2
@@ -242,7 +242,7 @@ function lock_file_key_value {
 #   If no age is provided, and the lock file exists, the function will return
 #   true.
 #
-function lock_is_alertable {
+__lock_is_alertable() {
 
     age=$1
     file=$2
@@ -294,7 +294,7 @@ function lock_is_alertable {
 #
 #   Remove the lock file.
 #
-function lock_remove {
+__lock_remove() {
 
     file=$1
     if [[ ! $file ]]; then
@@ -310,7 +310,7 @@ function lock_remove {
     return
 }
 # This function indicates this file has been sourced.
-function _loaded_lock {
+__loaded_lock() {
     return 0
 }
 
