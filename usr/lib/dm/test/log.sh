@@ -10,7 +10,7 @@ source $DM_ROOT/test/test.sh
 __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 msg='This is a message'
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 mkdir -p $tmpdir
 tmp_file="${tmpdir}/test/to_file"
 SYSLOG_FACILITY='local7'
@@ -172,7 +172,7 @@ tst_logger_log() {
     value=$(__logger_log $level $msg)
 
     source $DM_ROOT/test/test.sh
-    tst "$value" "[$level]" "format level logs level"
+    tst "$value" "[${level}]" "format level logs level"
 
 
     clear_logger_settings
@@ -521,6 +521,7 @@ functions=$(awk '/^tst_/ {print $1}' $0)
 
 for function in  $functions; do
     function=${function%%(*}        # strip '()'
+
     if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue

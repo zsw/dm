@@ -107,12 +107,11 @@ _options() {
 
 _options "$@"
 
-
 while IFS="" read -r mod; do
     if [[ ${mod:0:1} == / ]]; then
         mod_dir=$mod
     else
-        mod_dir=$(mod_dir "$mod")
+        mod_dir=$(__mod_dir "$mod")
     fi
 
     [[ ! $mod_dir ]] && __mi "Unable to locate directory for mod $mod" >&2
@@ -140,10 +139,8 @@ while IFS="" read -r mod; do
 
     if [[ $format == *%h* ]]; then
         unset hold
-        if [[ -e $mod_dir/hold ]]; then
-            hold=$(__hold_timestamp "$id")
-        fi
-        [[ ! $hold ]] && hold='---------- --:--:--'
+        [[ -e $mod_dir/hold ]] && hold=$(__hold_timestamp "$id")
+        [[ ! $hold ]]          && hold='---------- --:--:--'
         line=${line//\%h/$hold}
     fi
 

@@ -165,7 +165,7 @@ _options() {
 
 _options "$@"
 
-file=$(tmp_file)
+file=$(__tmp_file)
 echo -e "Sbjct: \nDescr: " > "$file"
 cp "$file" "${file}".bak
 

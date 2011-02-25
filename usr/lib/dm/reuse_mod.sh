@@ -42,7 +42,7 @@ _process_mod() {
     local mod_id mod_dir mods dir
 
     mod_id=$1
-    mod_dir=$(mod_dir "$mod_id")
+    mod_dir=$(__mod_dir "$mod_id")
 
     [[ ! -d $mod_dir ]] && return
 

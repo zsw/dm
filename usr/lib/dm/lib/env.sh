@@ -13,7 +13,7 @@ __me() { echo -e "===> ERROR: $*" >&2; exit 1 ;}
 __v()  { ${verbose-false} ;}
 
 __loaded_env() {
-    export -f _loaded_env
+    export -f __loaded_env
 }
 
 [[ ! $DM_ROOT ]] && unset DM_ROOT

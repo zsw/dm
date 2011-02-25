@@ -21,19 +21,19 @@
 # Usage:
 #
 #   mod=12345
-#   file_name=$(attr_file $mod 'hold')
+#   file_name=$(__attr_file $mod 'hold')
 #
 # Note:
 #
 #   The routine does not attempt to determine if the file exists or not.
-#   Use attr_file for that.
+#   Use __attr_file for that.
 #
 __attr_file_name() {
 
     mod=$1
     attr=$2
 
-    dir=$(mod_dir $mod)
+    dir=$(__mod_dir $mod)
 
     [[ ! $dir ]] && return
 
@@ -44,7 +44,7 @@ __attr_file_name() {
 
 
 #
-# attr_file
+# __attr_file
 #
 # Sent: mod id ( eg 12345)
 #       attr   ( eg 'description', 'who', 'hold' )
@@ -58,7 +58,7 @@ __attr_file_name() {
 # Usage:
 #
 #   mod=12345
-#   file_name=$(attr_file $mod 'hold')
+#   file_name=$(__attr_file $mod 'hold')
 #
 __attr_file() {
 
@@ -91,7 +91,7 @@ __attr_file() {
 # Usage:
 #
 #   mod=12345
-#   who=$(attribute $mod 'who')
+#   who=$(__attribute $mod 'who')
 #
 # Notes:
 #
@@ -102,7 +102,7 @@ __attribute() {
     mod=$1
     attr=$2
 
-    file=$(attr_file "$mod" "$attr")
+    file=$(__attr_file "$mod" "$attr")
 
     [[ ! $file ]] && return
 
@@ -149,7 +149,7 @@ __has_conflict_markers() {
 # Usage:
 #
 #   mod=12345
-#   dir=$(mod_dir $mod)
+#   dir=$(__mod_dir $mod)
 #
 __mod_dir() {
 

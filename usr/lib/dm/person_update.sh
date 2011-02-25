@@ -72,8 +72,8 @@ fi
 
 new_line="$DM_PERSON_ID,$DM_PERSON_INITIALS,$DM_PERSON_USERNAME,$DM_PERSON_NAME,$DM_PERSON_EMAIL,$DM_PERSON_JABBER,$DM_PERSON_PAGER,$DM_PERSON_INPUT,$DM_PERSON_SERVER"
 
-tmpfile1=$(tmp_file)
-tmpfile2=$(tmp_file)
+tmpfile1=$(__tmp_file)
+tmpfile2=$(__tmp_file)
 
 # Copy all but header line to tmp file.
 tail -n +2 $DM_PEOPLE > $tmpfile1

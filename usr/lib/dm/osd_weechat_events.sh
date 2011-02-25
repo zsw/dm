@@ -116,9 +116,9 @@ whitelist=
 
 osd_file="${HOME}/.weechat/osd"         # File exists = logging
                                         # File does not exists = no logging
-tmpdir=$(tmp_dir)
-pipe_dir="${tmpdir}/pipes"
-osd_pipe="$pipe_dir/osd"
+tmpdir=$(__tmp_dir)
+pipe_dir=$tmpdir/pipes
+osd_pipe=$pipe_dir/osd
 
 log_file=$(__weechat_events_file)
 
@@ -127,7 +127,7 @@ __logger_debug "OSD pipe: $osd_pipe";
 __logger_debug "OSD file: $osd_file";
 
 
-tail=$(which inotail 2>/dev/null || which tail 2>/dev/null)
+tail=$(type -P inotail 2>/dev/null || type -P tail 2>/dev/null)
 
 __logger_debug "Tail using: $tail";
 

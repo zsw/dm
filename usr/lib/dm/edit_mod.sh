@@ -47,9 +47,9 @@ _options "$@"
 
 [[ ! $mod_id ]] && __me 'Unable to determine current mod id.'
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 mkdir -p "$tmpdir"
-description=$(attribute $mod_id 'description')      # Get raw mod description
+description=$(__attribute $mod_id 'description')      # Get raw mod description
 description=${description//[^a-zA-Z0-9 ]/}          # Sanitize mod description
 description=${description// /_}                     # Change spaces to _'s in mod description
 file=$tmpdir/${mod_id}-${description}.txt

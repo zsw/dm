@@ -113,7 +113,7 @@ if [[ $count != "0" ]]; then
     exit 1
 fi
 
-tmp=$(tmp_file)
+tmp=$(__tmp_file)
 
 while [[ ! "$#" -eq "0" ]]; do
     if [ "$1" == "-" ]; then

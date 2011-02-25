@@ -41,7 +41,7 @@ _options() {
 
 _options "$@"
 
-mod_dir=$(mod_dir $mod)
+mod_dir=$(__mod_dir $mod)
 [[ ! -d $mod_dir ]] && __me "assemble_mod.sh $mod: No such directory"
 
 # Set the sections indexes so sections are ordered properly and

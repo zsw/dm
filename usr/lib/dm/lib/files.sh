@@ -12,7 +12,7 @@ __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 # __is_text
 #
 # Sent: file
-# Return: echo file type if file is text
+# Return: exit status = 0 if text, 1 if not text
 # Purpose:
 #
 #   Ruturn 0 if file is text file.
@@ -20,7 +20,7 @@ __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 __is_text() {
 
     file=$1
-    [[ ! -r $file ]] && return
+    [[ ! -r $file ]] && return 1
 
     # Any file with a 'c' in the first column followed by a space or tab
     # in the first 100 lines file interprets as fortran, prints 'FORTRAN

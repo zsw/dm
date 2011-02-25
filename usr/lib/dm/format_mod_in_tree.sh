@@ -60,7 +60,7 @@ _options() {
 _options "$@"
 
 # Ensure mod is valid
-mod_dir=$(mod_dir "$mod_id")
+mod_dir=$(__mod_dir "$mod_id")
 
 [[ ! $mod_dir ]] && __me "Unable to find mod $mod_id in either $DM_MODS or $DM_ARCHIVE."
 
@@ -86,7 +86,7 @@ fi
 # Normally sed would be used to search and replace but since it doesn't
 # handle special characters well, awk is used.
 
-tmpfile=$(tmp_file)
+tmpfile=$(__tmp_file)
 line=$("$DM_BIN/format_mod.sh" "%b %i %d" <<< "$mod_id")
 pattern="[ ]*\\\[[ x]\\\] $mod_id "
 IFS=$'\n'

@@ -166,7 +166,7 @@ __hold_crontab() {
         return
     fi
     year=$(date --date="$timestamp" "+%Y")
-    echo "$mod_id" | $DM_BIN/format_mod.sh "$cron_exp  \$HOME/dm/bin/take_off_hold.sh %i # %d @$year"
+    $DM_BIN/format_mod.sh "$cron_exp  \$HOME/dm/bin/take_off_hold.sh %i # %d @$year" <<< "$mod_id"
     return
 }
 
@@ -216,7 +216,7 @@ __hold_status() {
 
     mod=$1
 
-    hold_file=$(attr_file "$mod" 'hold')
+    hold_file=$(__attr_file "$mod" 'hold')
 
     # Ignore files with git conflict markers. Processing them may cause
     # foo. Eg, the user may be editing the file fixing the conflict or
@@ -231,7 +231,7 @@ __hold_status() {
     [[ ! $timestamp ]] && timestamp='---------- --:--:--'
     [[ ! $status ]]    && status='off_hold'
 
-    who_file=$(attr_file "$mod" 'who')
+    who_file=$(__attr_file "$mod" 'who')
     who=$(tr -d -c 'A-Z' < "$who_file")
 
     echo "$mod $who $timestamp $status"
@@ -263,7 +263,7 @@ __hold_timestamp() {
 
     [[ ! $mod ]] && return
 
-    local hold_file=$(attr_file $mod 'hold')
+    local hold_file=$(__attr_file $mod 'hold')
 
     [[ ! $hold_file ]] && return
 
@@ -272,6 +272,8 @@ __hold_timestamp() {
     [[ ! "$crontab" ]] && return
 
     local timestamp=$(__hold_as_yyyy_mm_dd_hh_mm_ss "$crontab")
+
+    [[ ! $timestamp ]] && echo "Unable to get hold timestamp from crontab for mod $mod" >&2
 
     echo $timestamp
 }

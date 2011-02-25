@@ -74,7 +74,7 @@ export DM_PEOPLE="$dm_people"
 wget_flag='-q'
 [[ $verbose ]] && wget_flag='-v'
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 tmp_alert_dir="${tmpdir}/alerts"
 mkdir -p $tmp_alert_dir
 

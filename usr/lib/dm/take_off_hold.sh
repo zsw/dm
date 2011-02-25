@@ -76,7 +76,7 @@ function process_mod {
         return
     fi
 
-    who=$(attribute $mod 'who')
+    who=$(__attribute $mod 'who')
 
     for_another=
     if [[ "$who" != $DM_PERSON_INITIALS ]]; then
@@ -94,7 +94,7 @@ function process_mod {
     $dryrun && __logger_debug "Dry run, remind_mod.sh not called."
     $dryrun || $DM_BIN/remind_mod.sh $mod
 
-    hold_file=$(attr_file $mod 'hold')
+    hold_file=$(__attr_file $mod 'hold')
 
     __logger_debug "Hold file: $hold_file"
 
@@ -147,7 +147,7 @@ if [[ "$lock_obtained" == 'false' ]]; then
     if [[ $verbose ]]; then
         echo "Unable to run $0. The dm system is locked at the moment."
         echo "Try again in a few minutes."
-        lock_file=$(lock_file)
+        lock_file=$(__lock_file)
         echo "Run this command to see which script has the file locked."
         echo "cat $lock_file"
     fi

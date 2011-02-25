@@ -130,7 +130,7 @@ _options "$@"
 
 [[ ! $mod_id ]] && __me 'Unable to determine id of mod to assign.'
 
-mod_dir=$(mod_dir "$mod_id")
+mod_dir=$(__mod_dir "$mod_id")
 unset who_initials
 
 [[ $owner && $user ]] && __me 'Use one of the -o or -u options, not both.'

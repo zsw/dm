@@ -16,7 +16,7 @@ tmpdir=$(__tmp_dir)
 test_dir=$tmpdir/test
 
 [[ $test_dir =~ ^/tmp ]] && rm -r "$test_dir" 2>/dev/null
-mkdir -p "$test_dir"
+mkdir -p "$test_dir/users"
 
 export DM_ARCHIVE=$test_dir/archive
 export DM_IDS=$test_dir/users/ids
@@ -38,7 +38,8 @@ tst() {
     saveOut=$LOG_TO_STDOUT
     LOG_TO_STDOUT=1
 
-    if [[ $value == $expect ]]; then
+    # "$expect" requires quotes because we want it treated as a literal.
+    if [[ $value == "$expect" ]]; then
         __logger_info "$function - $label"
     else
         __logger_error "$function - $label"

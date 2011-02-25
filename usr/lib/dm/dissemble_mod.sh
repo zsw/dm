@@ -48,7 +48,7 @@ _filename_from_section() {
     [[ ! $mod ]] && return
     [[ ! $section ]] && return
 
-    mod_dir=$(mod_dir "$mod")
+    mod_dir=$(__mod_dir "$mod")
 
     echo "$mod_dir/$section"
 }
@@ -108,12 +108,12 @@ _options "$@"
 # directory. The test on mod_dir is a precaution since the next command
 # does a rm -r.
 
-mod_dir=$(mod_dir "$mod_id")
+mod_dir=$(__mod_dir "$mod_id")
 [[ ! $mod_dir ]] && __me "mod_dir not defined. Aborting."
 [[ $mod_dir =~ /(mods|archive)/ ]] && rm -r "$mod_dir" &>/dev/null
 mkdir -p "$mod_dir"
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 split_dir=$tmpdir/dissemble/csplit
 mkdir -p "$split_dir"
 rm -f "$split_dir"/*

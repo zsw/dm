@@ -63,8 +63,8 @@ else
     stale=$(find /tmp/list.txt -mtime +0)       # Stale if file is 24 hours old.
 fi
 [[ $stale ]] && find $DM_MODS $DM_ARCHIVE | $DM_BIN/filter_mod.pl | $DM_BIN/format_mod.sh | sort > "$list_file"
-work_file1=$(tmp_file)
-work_file2=$(tmp_file)
+work_file1=$(__tmp_file)
+work_file2=$(__tmp_file)
 
 
 declare -a mod_options=('all' 'mods' 'archive')

@@ -22,42 +22,10 @@ __ripmime_attachments() {
 
     local file=$1
 
-    local ripmime_cmd=$(__ripmime_command)
-    if [[ ! "$ripmime_cmd" ]]; then
-        echo "ripmime: command not found. Unable to parse $file"
-        return
-    fi
+    type -P ripmime &>/dev/null || { echo "ripmime: command not found. Unable to parse $file" >&2; exit 1; }
 
     ripmime_dir=$(__ripmime_run "$file")
     find $ripmime_dir -maxdepth 1 -mindepth 1 -type f | grep -v __rip__
-}
-
-
-#
-# __ripmime_command
-#
-# Sent: nothing
-# Return: full path ripmime command, nothin if not found
-# Purpose:
-#
-#   Determine the full path ripmime command in the enviroment.
-#
-# Usage:
-#   ripmime_cmd=$(__ripmime_command)
-#   if [[ ! ripmime_cmd ]]; then
-#       echo 'Ripmime not found'
-#   fi
-#
-__ripmime_command() {
-
-    local cmd=$(which ripmime 2>/dev/null)
-
-    if [[ "$?" != "0" ]]; then
-        echo ""
-        return
-    fi
-
-    echo $cmd
 }
 
 
@@ -74,11 +42,7 @@ __ripmime_files_cat() {
 
     local file=$1
 
-    local ripmime_cmd=$(__ripmime_command)
-    if [[ ! "$ripmime_cmd" ]]; then
-        echo "ripmime: command not found. Unable to parse $file"
-        return
-    fi
+    type -P ripmime &>/dev/null || { echo "ripmime: command not found. Unable to parse $file" >&2; exit 1; }
 
     ripmime_dir=$(__ripmime_run "$file")
 
@@ -132,7 +96,7 @@ __ripmime_run() {
 #
 __ripmime_tmpdir() {
 
-    tmpdir=$(tmp_dir)
+    tmpdir=$(__tmp_dir)
     echo "$tmpdir/ripmime"
 }
 

@@ -37,7 +37,7 @@ done
 
 shift $(($OPTIND - 1))
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 pipe_dir="${tmpdir}/pipes"
 osd_pipe="$pipe_dir/osd"
 

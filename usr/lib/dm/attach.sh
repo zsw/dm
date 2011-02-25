@@ -51,7 +51,7 @@ _options() {
 
 _options "$@"
 
-dir=$(mod_dir "$mod")
+dir=$(__mod_dir "$mod")
 [[ ! $dir ]] && __me 'Unable to locate mod $mod in mods or archive directories.'
 
 canonical_dm_root=$(readlink -f "$DM_ROOT")

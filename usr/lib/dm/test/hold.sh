@@ -158,6 +158,7 @@ tst_hold_crontab() {
     # Create mod for testing
     local mod_id="11111"
     local mod_dir="$DM_MODS/$mod_id"
+
     mkdir -p $mod_dir
     local description="Test mod."
     echo "$description" > $mod_dir/description

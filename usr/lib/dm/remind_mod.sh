@@ -40,7 +40,7 @@ _options() {
 
 _options "$@"
 
-mod_dir=$(mod_dir "$mod_id")
+mod_dir=$(__mod_dir "$mod_id")
 remind=$mod_dir/remind_by
 [[ ! -e $remind ]] && exit 0
 

@@ -10,7 +10,7 @@ __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 source $DM_ROOT/test/test.sh
 __loaded_ripmime 2>/dev/null || source $DM_ROOT/lib/ripmime.sh
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 test_dir="${tmpdir}/test"
 test_filename="test_ripmime.mime"
 test_file="${test_dir}/$test_filename"
@@ -86,22 +86,6 @@ EOT
     return
 }
 
-
-#
-# tst_ripmime_command
-#
-# Sent: nothing
-# Return: nothing
-# Purpose:
-#
-#   Run tests on __ripmime_command function.
-#
-tst_ripmime_command() {
-
-    got=$(__ripmime_command)
-    expect='/usr/bin/ripmime'
-    tst "$got" "$expect" 'ripmime command returned expected'
-}
 
 #
 # tst_ripmime_files_cat

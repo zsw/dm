@@ -65,7 +65,7 @@ __tmp_dir() {
 __tmp_file() {
 
     tmpdir=$1
-    [[ ! $tmpdir ]] && tmpdir=$(tmp_dir)
+    [[ ! $tmpdir ]] && tmpdir=$(__tmp_dir)
     [[ ! $tmpdir ]] && tmpdir='/tmp'
 
     mkdir -p $tmpdir

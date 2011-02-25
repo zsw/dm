@@ -137,7 +137,7 @@ function show_msg() {
 trap kill_osd_cat SIGHUP SIGTERM SIGKILL SIGQUIT
 
 # Create the OSD named pipe if it doesn't exist
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 pipe_dir="${tmpdir}/pipes"
 osd_pipe="$pipe_dir/osd"
 

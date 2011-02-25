@@ -78,7 +78,7 @@ if [[ $editing ]]; then
 fi
 
 if [[ $reloading ]]; then
-    tmpfile=$(tmp_file)
+    tmpfile=$(__tmp_file)
     cp "$HOME/.crontab" "$tmpfile"
     echo "$HOLD_HEADER" >> "$tmpfile"
     grep -h -v '^#' "$DM_USERS"/holds/* | sort -n -k 4 -k 3 -k 2 -k 1  >> "$tmpfile"

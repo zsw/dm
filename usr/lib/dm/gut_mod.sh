@@ -44,7 +44,7 @@ _options() {
 
 _options "$@"
 
-mod_dir=$(mod_dir "$mod_id")
+mod_dir=$(__mod_dir "$mod_id")
 
 [[ ! -d $mod_dir ]] && __me "Directory $mod_dir not found"
 

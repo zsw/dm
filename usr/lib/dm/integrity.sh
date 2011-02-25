@@ -115,7 +115,7 @@ _print_messages() {
         printing=1
         if [[ ! $indented ]]; then
             if [[ $who_initials && $type == mod ]]; then
-                who=$(attribute "$id" 'who')
+                who=$(__attribute "$id" 'who')
                 #if [[ $who && $who != $who_initials ]] && unset printing previous_printed
                 if [[ -n $who && $who != $who_initials ]]; then
                     __logger_debug "Not reporting mod $id, assigned to $who"
@@ -181,8 +181,8 @@ _run_checks() {
     local work_file msg_file
 
     # Create some temp files
-    work_file=$(tmp_file)
-    msg_file=$(tmp_file)
+    work_file=$(__tmp_file)
+    msg_file=$(__tmp_file)
 
 
     # Mods
@@ -449,8 +449,8 @@ __v && LOG_LEVEL=debug LOG_TO_STDERR=1
 
 cd "$DM_ROOT"
 
-message_file=$(tmp_file)
-out_file=$(tmp_file)
+message_file=$(__tmp_file)
+out_file=$(__tmp_file)
 
 unset who_initials
 if [[ $user ]]; then

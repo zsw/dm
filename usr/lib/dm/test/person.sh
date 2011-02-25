@@ -9,7 +9,7 @@ __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 source $DM_ROOT/test/test.sh
 __loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 test_dir="${tmpdir}/test"
 
 #

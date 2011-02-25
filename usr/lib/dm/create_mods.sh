@@ -206,10 +206,10 @@ _options() {
 
 _options "$@"
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 
 if [[ $blank ]]; then
-    args[0]=$(tmp_file)
+    args[0]=$(__tmp_file)
     echo "[$DM_PERSON_INITIALS] Blank mod" > "${args[0]}"
 fi
 

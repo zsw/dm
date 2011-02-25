@@ -58,7 +58,7 @@ if [[ ! -w $to_tree ]]; then
 fi
 
 # Ensure mod is valid
-mod_dir=$(mod_dir $mod_id)
+mod_dir=$(__mod_dir $mod_id)
 
 if [[ ! "$mod_dir" ]]; then
     echo "ERROR: Unable to mv mod $mod_id." >&2

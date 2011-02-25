@@ -76,7 +76,7 @@ function create_calendar {
         exit 1
     fi
 
-    local tmpfile=$(tmp_file)
+    local tmpfile=$(__tmp_file)
     local tmpfile_update="${tmpfile}.upd"
 
     local descr=$(cat $description | sed -e 's/^\s*c\s\+//')
@@ -198,7 +198,7 @@ d_flag=''
 grocery_url="http://www.dtjimk.internal/groceries"
 [[ $debug ]] && grocery_url="http://test.dtjimk.internal/groceries"
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 pipe_dir="${tmpdir}/pipes"
 osd_pipe="$pipe_dir/osd"
 

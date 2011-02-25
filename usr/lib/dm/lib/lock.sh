@@ -21,7 +21,7 @@ __is_locked() {
 
     file=$1
     if [[ ! $file ]]; then
-        file=$(lock_file)
+        file=$(__lock_file)
     fi
 
     if [[ -r "$file" ]]; then
@@ -53,7 +53,7 @@ __lock_alert() {
     fi
 
     if [[ ! $file ]]; then
-        file=$(lock_file)
+        file=$(__lock_file)
     fi
 
     if [[ ! -r $file ]]; then
@@ -103,7 +103,7 @@ __lock_create() {
     file=$1
 
     if [[ ! $file ]]; then
-        file=$(lock_file)
+        file=$(__lock_file)
     fi
 
     # Make sure the directory exists
@@ -161,7 +161,7 @@ __lock_create() {
 #
 __lock_file() {
 
-    tmpdir=$(tmp_dir)
+    tmpdir=$(__tmp_dir)
     echo "$tmpdir/LOCK"
 }
 
@@ -204,7 +204,7 @@ __lock_file_key_value() {
     fi
 
     if [[ ! $file ]]; then
-        file=$(lock_file)
+        file=$(__lock_file)
     fi
 
     if [[ ! -r $file ]]; then
@@ -252,7 +252,7 @@ __lock_is_alertable() {
     fi
 
     if [[ ! $file ]]; then
-        file=$(lock_file)
+        file=$(__lock_file)
     fi
 
     if [[ ! -r $file ]]; then
@@ -298,7 +298,7 @@ __lock_remove() {
 
     file=$1
     if [[ ! $file ]]; then
-        file=$(lock_file)
+        file=$(__lock_file)
     fi
 
     if [[ ! -e $file ]]; then

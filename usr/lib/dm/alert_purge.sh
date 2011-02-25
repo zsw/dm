@@ -70,7 +70,7 @@ __logger_debug "Purging older than: $limit"
 
 alert_dir="$DM_USERS/alerts"
 
-tmpfile=$(tmp_file)
+tmpfile=$(__tmp_file)
 __logger_debug "Temp file: $tmpfile"
 for f in $(find $alert_dir -maxdepth 1 -mindepth 1 -type f); do
     __logger_debug "Purging: $f"

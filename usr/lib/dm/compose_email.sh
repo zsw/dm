@@ -73,7 +73,7 @@ if [ ! $mod_id ]; then
     exit 1
 fi
 
-file=$(tmp_file)
+file=$(__tmp_file)
 
 header > $file
 echo "X-DM-Mod-Id: $mod_id" >> $file

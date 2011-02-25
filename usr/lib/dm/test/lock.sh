@@ -152,7 +152,7 @@ tst_lock_file() {
 
     save_DM_TMP=DM_TMP
     DM_TMP=/tmp/dm_testing
-    got=$(lock_file)
+    got=$(__lock_file)
     expect="${DM_TMP}/LOCK"
     tst "$got" "$expect" 'returned expected'
     DM_TMP=$save_DM_TMP

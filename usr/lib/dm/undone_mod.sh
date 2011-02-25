@@ -64,7 +64,7 @@ fi
 
 mod_id=$1;
 
-mod_dir=$(mod_dir $mod_id)
+mod_dir=$(__mod_dir $mod_id)
 
 
 if [[ ! "$mod_dir" ]]; then

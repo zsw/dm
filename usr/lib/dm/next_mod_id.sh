@@ -60,7 +60,7 @@ _options "$@"
 # processing. This way the first instance will be completed before the
 # second instance starts.
 
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 mkdir -p $tmpdir
 lock_file=$tmpdir/next_mod_id.LOCK
 

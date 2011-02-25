@@ -125,22 +125,22 @@ __logger_debug "Root group id: $root_id"
 # It is much easier to extract the contents of a project if the ends are
 # tagged.
 __logger_debug "Tagging ends of the 'from' tree file"
-from_tagged=$(tmp_file)
+from_tagged=$(__tmp_file)
 $DM_BIN/tree_parse.py --tag-ends  $from_tree > $from_tagged
 if [[ "$?" != "0" ]]; then
     exit 1
 fi
 
 __logger_debug "Copying contents of the root group into a pattern file"
-group_contents_file=$(tmp_file)
+group_contents_file=$(__tmp_file)
 cat $from_tagged | awk "/group $root_id/,/end $root_id/" > $group_contents_file
 
-replace_file=$(tmp_file)
+replace_file=$(__tmp_file)
 cp /dev/null $replace_file
 echo "" > $replace_file
 
 __logger_debug "Removing group from the 'from' tree"
-from_new=$(tmp_file)
+from_new=$(__tmp_file)
 $DM_BIN/block_substitute.py $from_tagged $group_contents_file $replace_file > $from_new
 if [[ "$?" != "0" ]]; then
     exit 1
@@ -151,7 +151,7 @@ fi
 # of the groups just prior to the non-grouped mods.
 
 __logger_debug "Tagging ends of the 'to' tree file"
-to_tagged=$(tmp_file)
+to_tagged=$(__tmp_file)
 $DM_BIN/tree_parse.py --tag-ends  $to_tree > $to_tagged
 if [[ "$?" != "0" ]]; then
     exit 1
@@ -159,9 +159,9 @@ fi
 
 # Get the end tag of the last group in the to_tree, it becomes the
 # anchor indicating where the group will be inserted.
-to_new=$(tmp_file)
-pattern_file=$(tmp_file)
-replace_file=$(tmp_file)
+to_new=$(__tmp_file)
+pattern_file=$(__tmp_file)
+replace_file=$(__tmp_file)
 final_end=$(cat $to_tagged | grep '^[ ]*end' | tail -1)
 if [[ "$final_end" ]]; then
     __logger_debug "Adding group to the 'to' tree"

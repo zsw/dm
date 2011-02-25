@@ -48,12 +48,12 @@ tree=$("$DM_BIN/tree.sh" "$tree_name")
 __mi "Editing tree: $tree"
 
 # The tmpfile is use to store new mod specs
-tmpfile=$(tmp_file)
+tmpfile=$(__tmp_file)
 
 # Create temporary tree files within a directory structure similar to
 # that used in the dm system. Replace the base $DM_ROOT directory with
 # the tmpdir.
-tmpdir=$(tmp_dir)
+tmpdir=$(__tmp_dir)
 file=${tree/$DM_ROOT/$tmpdir}
 file_dir=${file%/*}
 mkdir -p "$file_dir"
@@ -99,7 +99,7 @@ while read -r line; do
     # Example line='12345 This is the mod description'
     mod_id=${line%% *}
     description=${line#* }
-    mod_dir=$(mod_dir "$mod_id")
+    mod_dir=$(__mod_dir "$mod_id")
     descr_file=$mod_dir/description
     [[ ! -w $descr_file ]] && continue
     __mi "Updating mod description: $mod_id $description"
@@ -140,7 +140,7 @@ __mi "New entries split out here: $split_dir"
 
 file_new=${file}.new
 cp -p "$file" "$file_new"
-tmp=$(tmp_file)
+tmp=$(__tmp_file)
 cd "$split_dir"
 for base_file in *; do
     file=$split_dir/$base_file

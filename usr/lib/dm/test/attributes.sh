@@ -44,28 +44,28 @@ tst_attr_file_name() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on attr_file function.
+#   Run tests on __attr_file function.
 #
 tst_attr_file() {
 
     mod=22222
     mod_dir="$DM_MODS/$mod"
 
-    yyy_file=$(attr_file $mod 'yyy')
+    yyy_file=$(__attr_file $mod 'yyy')
 
     tst "$yyy_file" '' 'mod directory does not exist - returns nothing'
 
 
     mkdir -p $mod_dir
 
-    yyy_file=$(attr_file $mod 'yyy')
+    yyy_file=$(__attr_file $mod 'yyy')
 
     tst "$yyy_file" '' 'yyy file does not exist - returns nothing'
 
 
     touch $mod_dir/yyy
 
-    yyy_file=$(attr_file $mod 'yyy')
+    yyy_file=$(__attr_file $mod 'yyy')
 
     tst "$yyy_file" "$mod_dir/yyy" 'yyy file name correct'
 }
@@ -85,28 +85,28 @@ tst_attribute() {
     mod=33333
     mod_dir="$DM_MODS/$mod"
 
-    xxx=$(attribute $mod 'xxx')
+    xxx=$(__attribute $mod 'xxx')
 
     tst "$xxx" '' 'mod directory does not exist - returns nothing'
 
 
     mkdir -p $mod_dir
 
-    xxx=$(attribute $mod 'xxx')
+    xxx=$(__attribute $mod 'xxx')
 
     tst "$xxx" '' 'xxx file does not exist - returns nothing'
 
 
     touch $mod_dir/xxx
 
-    xxx=$(attribute $mod 'xxx')
+    xxx=$(__attribute $mod 'xxx')
 
     tst "$xxx" '' 'empty xxx file - returns nothing'
 
 
     echo 'aaabbbccc' > $mod_dir/xxx
 
-    xxx=$(attribute $mod 'xxx')
+    xxx=$(__attribute $mod 'xxx')
 
     tst "$xxx" "aaabbbccc" 'attribute returns contents correctly'
 }
@@ -123,7 +123,7 @@ tst_attribute() {
 #
 tst_has_conflict_markers() {
 
-    file=$(tmp_file)
+    file=$(__tmp_file)
 
     __has_conflict_markers $file
     tst "$?" "1"  'file does not exist, returns false'
@@ -181,7 +181,7 @@ EOT
 #
 tst_mod_dir() {
 
-    dir=$(mod_dir)
+    dir=$(__mod_dir)
     tst "$dir" '' 'no mod provided - returns nothing'
 
     mod=44444
@@ -191,19 +191,19 @@ tst_mod_dir() {
     mkdir -p $DM_MODS
     mkdir -p $DM_ARCHIVE
 
-    dir=$(mod_dir $mod)
+    dir=$(__mod_dir $mod)
     tst "$dir" '' 'mod directory does not exist - returns nothing'
 
 
     mkdir -p $mod_dir
 
-    dir=$(mod_dir $mod)
+    dir=$(__mod_dir $mod)
     tst "$dir" "$mod_dir" 'returns correct mod directory'
 
 
     mv $mod_dir $DM_ARCHIVE
 
-    dir=$(mod_dir $mod)
+    dir=$(__mod_dir $mod)
     tst "$dir" "$archive_dir" 'returns correct archive directory'
 }
 

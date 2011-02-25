@@ -24,27 +24,27 @@ tst_tmp_dir() {
     DM_TMP=/tmp/dm_testing
 
     # Should use DM_TMP
-    value=$(tmp_dir)
+    value=$(__tmp_dir)
     expect="/tmp/dm_testing"
     tst "$value" "$expect" "provided username returned expected"
 
     unset DM_TMP
 
     # Provide username
-    value=$(tmp_dir test_user_1)
+    value=$(__tmp_dir test_user_1)
     expect="/tmp/dm_test_user_1"
     tst "$value" "$expect" "provided username returned expected"
 
     save_USERNAME=$USERNAME
     # Set USERNAME
     USERNAME='test_user_2'
-    value=$(tmp_dir)
+    value=$(__tmp_dir)
     expect="/tmp/dm_test_user_2"
     tst "$value" "$expect" "no args, set USERNAME, returned expected"
 
     # Unset USERNAME
     unset USERNAME
-    value=$(tmp_dir)
+    value=$(__tmp_dir)
     # Expect /tmp/dm_Cz3LTel7FVhH
     expect=$(echo $value | grep "/tmp/dm_[a-zA-Z0-9]\{10\}")
     tst "$value" "$expect" "no args, unset USERNAME, returned expected"
@@ -71,7 +71,7 @@ tst_tmp_file() {
     DM_TMP=/tmp/dm_username
     subdir='dm_username'
     [[ -d /tmp/$subdir ]] && rm -r "/tmp/$subdir"
-    value=$(tmp_file "/tmp/$subdir")
+    value=$(__tmp_file "/tmp/$subdir")
     # Expect eg: /tmp/dm_username/tmp.Cz3LTel7FVhH
     expect=$(echo $value | grep '/tmp/dm_username/tmp.[a-zA-Z0-9]\{10\}')
     tst "$value" "$expect" "provided directory returned expected"
@@ -90,7 +90,7 @@ tst_tmp_file() {
     USERNAME='test_user_3'
     subdir="dm_${USERNAME}"
     [[ -d /tmp/$subdir ]] && rm -r "/tmp/$subdir"
-    value=$(tmp_file)
+    value=$(__tmp_file)
     expect=$(echo $value | grep '/tmp/dm_test_user_3/tmp.[a-zA-Z0-9]\{10\}')
     tst "$value" "$expect" "no args, set USERNAME, returned expected"
 
@@ -99,7 +99,7 @@ tst_tmp_file() {
 
     # No directory unset username
     unset USERNAME
-    value=$(tmp_file)
+    value=$(__tmp_file)
     expect=$(echo $value | grep '/tmp/dm_[a-zA-Z0-9]\{12\}/tmp.[a-zA-Z0-9]\{10\}')
     tst "$value" "$expect" "no args, unset USERNAME, returned expected"
 

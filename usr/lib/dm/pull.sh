@@ -109,7 +109,7 @@ lock_obtained=$(__lock_create)
 if [[ "$lock_obtained" == 'false' ]]; then
     echo "Unable to pull. The dm system is locked at the moment."
     echo "Try again in a few minutes."
-    lock_file=$(lock_file)
+    lock_file=$(__lock_file)
     echo "Run this command to see which script has the file locked."
     echo "cat $lock_file"
     exit 1

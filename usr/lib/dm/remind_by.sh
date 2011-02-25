@@ -85,7 +85,7 @@ function clean_remind {
     # Remove dupes and sort remind file
 
     file=$1
-    tmpfile=$(tmp_file)
+    tmpfile=$(__tmp_file)
 
     res=$(cat $file | sort | uniq > $tmpfile)
     res=$(cp $tmpfile $file)

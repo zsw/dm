@@ -94,6 +94,9 @@ cd $DM_ROOT
 git add -u && git add .
 $DM_BIN/set_alerts.sh
 git status -s
-git commit --dry-run > /dev/null && git commit -a -m "Re-prioritize" && git push public
+git commit --dry-run > /dev/null &&
+    git commit -a -m "Re-prioritize" &&
+    { git remote | grep -q public; } &&
+    git push public
 
 exit 0
