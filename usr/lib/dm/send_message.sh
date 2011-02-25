@@ -42,7 +42,7 @@ _by_weechat() {
 
     msg=$(< $mod_dir/description)
 
-    echo "$account */jabber_echo_message $msg" > "$fifo"
+    echo "python.jabber.server.$account */jabber_echo_message $account $msg" > "$fifo"
 }
 
 
