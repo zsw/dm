@@ -44,7 +44,9 @@ _process_mod() {
     mod_id=$1
     mod_dir=$(__mod_dir "$mod_id")
 
-    [[ ! -d $mod_dir ]] && return
+    [[ ! -d $mod_dir ]] && __me "Unable to determine original creator of mod.
+        Mod not found: $mod_id.
+        Add to reusable_ids manually."
 
     # Add to reusable_ids
 
