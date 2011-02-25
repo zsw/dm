@@ -55,7 +55,7 @@ _clean_hold() {
     # foo. Eg, the user may be editing the file fixing the conflict or
     # the hold time may get commented out.
 
-    has_conflict_markers "$hold_file" && return
+    __has_conflict_markers "$hold_file" && return
 
     # Remove leading and trailing whitespace from each line
     sed -i -e 's/^[ \t]*//;s/[ \t]*$//' "$hold_file"
@@ -70,7 +70,7 @@ _clean_hold() {
     crontab=$(tail -1 "$hold_file" | grep -v '^#')
     [[ ! $crontab ]] && return
 
-    timestamp=$(hold_as_yyyy_mm_dd_hh_mm_ss "$crontab")
+    timestamp=$(__hold_as_yyyy_mm_dd_hh_mm_ss "$crontab")
 
     if ! date -d "$timestamp" &>/dev/null; then
         __me "Invalid hold time $timestamp in hold file $hold_file"
@@ -118,7 +118,7 @@ _print_messages() {
                 who=$(attribute "$id" 'who')
                 #if [[ $who && $who != $who_initials ]] && unset printing previous_printed
                 if [[ -n $who && $who != $who_initials ]]; then
-                    logger_debug "Not reporting mod $id, assigned to $who"
+                    __logger_debug "Not reporting mod $id, assigned to $who"
                     unset printing previous_printed
                 fi
             fi
@@ -188,7 +188,7 @@ _run_checks() {
     # Mods
     # ----
 
-    logger_debug "Looking for mods not in dependency tree or flagged improperly."
+    __logger_debug "Looking for mods not in dependency tree or flagged improperly."
     invalids=$(for i in "$DM_MODS"/*; do i=${i##*/}; grep -rqP "\s*\[ \] $i\b" "$DM_TREES"/* || echo "$i"; done)
     for invalid in $invalids; do
         if grep -rqP "\s*\[x\] 0*${invalid}\b" "$DM_TREES"/*; then
@@ -199,7 +199,7 @@ _run_checks() {
         fi
     done
 
-    logger_debug "Looking for archived mods not in dependency tree or flagged improperly."
+    __logger_debug "Looking for archived mods not in dependency tree or flagged improperly."
     invalids=$(for i in "$DM_ARCHIVE"/*; do i=${i##*/}; grep -rqP "\s*\[x\] $i\b" "$DM_TREES"/* || echo "$i"; done)
     for invalid in $invalids; do
         if grep -rqP "\s*\[ \] 0*${invalid}\b" "$DM_TREES"/*; then
@@ -210,13 +210,13 @@ _run_checks() {
         fi
     done
 
-    logger_debug "Looking for mods found in both the mods and archive directory."
+    __logger_debug "Looking for mods found in both the mods and archive directory."
     dupes=$(for i in "$DM_MODS"/* "$DM_ARCHIVE"/*; do echo "${i##*/}"; done | sort | uniq -d)
     for dupe in $dupes; do
         echo "mod|$dupe|ERROR: Mod found in both mods and archive subdirectories." >> $message_file
     done
 
-    logger_debug "Syntax checking dependency tree."
+    __logger_debug "Syntax checking dependency tree."
     while read -r -d ' ' tree ; do
         tree_file=$("$DM_BIN/tree.sh" "$tree")
         msg=$(cat "$tree_file" | "$DM_BIN/dependency_schema.pl" "$DM_ROOT" 2>&1)
@@ -224,7 +224,7 @@ _run_checks() {
     done < "$DM_USERS/current_trees"
 
 
-    logger_debug "Looking for mods found in more than one tree."
+    __logger_debug "Looking for mods found in more than one tree."
     cp /dev/null "$work_file"
     # Get a list of all mod ids found in all trees
     cut -c 5-10 <(grep -hrE '^[ ]*\[( |x)\] [0-9]{5}' "$DM_TREES"/* | sed -e 's/^[ \t]\+//') >> "$work_file"
@@ -235,7 +235,7 @@ _run_checks() {
         grep -sr  "\[.\] $d" "$DM_TREES"/* | sed "s/^/   /" >> "$message_file"
     done < <(sort "$work_file" | uniq -d)
 
-    logger_debug "Searching for phantom sed files"
+    __logger_debug "Searching for phantom sed files"
 
     shopt -s globstar
     for file in "$DM_ROOT"/**/sed*; do
@@ -243,7 +243,7 @@ _run_checks() {
     done
     shopt -u globstar
 
-    logger_debug "Looking for mods in personal trees assigned to another."
+    __logger_debug "Looking for mods in personal trees assigned to another."
     # Ensure every mod in a personal tree is assigned to that person.
     saveIFS=$IFS
     IFS=$'\n'
@@ -273,7 +273,7 @@ _run_checks() {
         username_from_initials=$prev_username
 
         if [[ $prev_initials != ${fields[0]} ]]; then
-            username_from_initials=$(person_attribute username initials "${fields[0]}")
+            username_from_initials=$(__person_attribute username initials "${fields[0]}")
         fi
 
         if [[ $username_from_path != $username_from_initials ]]; then
@@ -293,7 +293,7 @@ _run_checks() {
     #   cat: /root/dm/mods/10703/who: No such file or directory
     #
 
-    logger_debug "Looking for mods with missing component files."
+    __logger_debug "Looking for mods with missing component files."
     for mod in "$DM_MODS"/* "$DM_ARCHIVE"/*; do
         mod_id=${mod##*/}
         for file in description notes who; do
@@ -305,7 +305,7 @@ _run_checks() {
     # Reusable Mods
     # -------------
 
-    logger_debug "Looking for ids not found in mods/archive or reusable mods."
+    __logger_debug "Looking for ids not found in mods/archive or reusable mods."
 
     # For each person, get a sequence of ids from the first id in their range
     # to their next_mod_id. For each id in the list there should exist a mod
@@ -319,7 +319,7 @@ _run_checks() {
     unset compare_list
     while read -r start_id end_id person_id; do
         person_id=${person_id/x/}
-        username=$(person_attribute username id $person_id)
+        username=$(__person_attribute username id $person_id)
         [[ ! -e $DM_ROOT/users/$username/mod_counter ]] && continue
         touch $DM_ROOT/users/$username/reusable_ids
         mod_counter=$(< "$DM_ROOT/users/$username/mod_counter")
@@ -345,7 +345,7 @@ _run_checks() {
     done < <(comm -2 -3 <(echo -e "$compare_list" | sort) <(sort <<< "$mod_id_list"))
 
 
-    logger_debug "Looking for ids of reusable mods found in mods/archive or in trees."
+    __logger_debug "Looking for ids of reusable mods found in mods/archive or in trees."
 
     # Create space delimited string of ids
     mod_ids=$(for i in "$DM_MODS"/* "$DM_ARCHIVE"/*; do echo -n "${i##*/} "; done)
@@ -357,7 +357,7 @@ _run_checks() {
     done < <(cat "$DM_ROOT"/users/*/reusable_ids)
 
 
-    logger_debug "Looking for duplicate reusable ids."
+    __logger_debug "Looking for duplicate reusable ids."
 
     while read -r reusable_id; do
         echo "mod|$reusable_id|ERROR: Id found multiple times in $DM_ROOT/users/USERNAME/reusable_ids" >> "$message_file"
@@ -367,7 +367,7 @@ _run_checks() {
     # Groups
     # ------
 
-    logger_debug "Looking for groups found in more than one tree."
+    __logger_debug "Looking for groups found in more than one tree."
     cp /dev/null "$work_file"
     # Get a list of all group ids found in all trees
     shopt -s globstar
@@ -386,7 +386,7 @@ _run_checks() {
     # Hold files
     # ----------
 
-    logger_debug "Looking for expired or invalid hold files."
+    __logger_debug "Looking for expired or invalid hold files."
 
     # Only check hold files of active mods. The hold status of an
     # archived mod is irrelevant. If the mod were to be undoned, it
@@ -401,8 +401,8 @@ _run_checks() {
         stripped=${hold%/*}
         mod_id=${stripped##*/}
         clean_msg=$(_clean_hold "$hold" 2>&1)
-        timestamp=$(hold_timestamp "$mod_id" 2>/dev/null)
-        status=$(hold_timestamp_status "$timestamp")
+        timestamp=$(__hold_timestamp "$mod_id" 2>/dev/null)
+        status=$(__hold_timestamp_status "$timestamp")
         if [[ $clean_msg || $status != on_hold ]]; then
             echo "mod|$mod_id|ERROR: Mod hold file $hold"  >> "$message_file"
             if [[ $clean_msg ]]; then
@@ -418,7 +418,7 @@ _run_checks() {
     rm "$msg_file"
     rm "$work_file"
 
-    logger_debug "Run checks complete."
+    __logger_debug "Run checks complete."
 }
 
 
@@ -454,12 +454,12 @@ out_file=$(tmp_file)
 
 unset who_initials
 if [[ $user ]]; then
-    who_initials=$(person_translate_who "$user")
+    who_initials=$(__person_translate_who "$user")
     [[ ! $who_initials ]] && __me "Invalid user: $user"
 fi
 
 # Update the people file regardless
-logger_debug "Updating people file from dmrc."
+__logger_debug "Updating people file from dmrc."
 "$DM_BIN/person_update.sh"
 
 _run_checks 2>&1  >> "$out_file"

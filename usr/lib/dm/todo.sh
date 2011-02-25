@@ -62,10 +62,10 @@ initials=$(cat $DM_PEOPLE | awk -v username=$username 'BEGIN { FS = ",[ \t]*" } 
 
 sm=$(< $DM_USERS/current_mod)
 
-logger_debug "username: $username"
-logger_debug "limit: $limit"
-logger_debug "initials: $initials"
-logger_debug "current mod: $sm"
+__logger_debug "username: $username"
+__logger_debug "limit: $limit"
+__logger_debug "initials: $initials"
+__logger_debug "current mod: $sm"
 
 awk -v initials=$initials '$2 ~ initials {print $0}' $DM_USERS/todo | \
     head -$limit | \

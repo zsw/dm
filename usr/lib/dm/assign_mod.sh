@@ -94,7 +94,7 @@ _original_owner() {
 
     [[ ! $person_id ]] && return
 
-    initials=$(person_attribute initials id "$person_id")
+    initials=$(__person_attribute initials id "$person_id")
     [[ ! $initials ]] && return
 
     echo $initials
@@ -141,7 +141,7 @@ if [[ $owner ]]; then
 elif [[ $user ]]; then
     who_initials=$DM_PERSON_INITIALS
 else
-    who_initials=$(person_translate_who "$person")
+    who_initials=$(__person_translate_who "$person")
 fi
 
 [[ ! $who_initials ]] && __me 'Unable to determine who to assign the mod to.'

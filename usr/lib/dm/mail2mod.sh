@@ -116,9 +116,9 @@ descr=$DM_MODS/$mod/description
 
 cat $file | grep '^Subject: ' | head -1 | sed -e "s/Subject: //g" > $descr
 
-ripmime_files_cat "$file" >> $notes
+__ripmime_files_cat "$file" >> $notes
 
-for attachment in $(ripmime_attachments "$file"); do
+for attachment in $(__ripmime_attachments "$file"); do
     do_attachment "$attachment"
 done
 

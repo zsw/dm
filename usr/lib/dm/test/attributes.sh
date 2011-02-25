@@ -17,21 +17,21 @@ __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 # Return: nothing
 # Purpose:
 #
-#   Run tests on attr_file_name function.
+#   Run tests on __attr_file_name function.
 #
 tst_attr_file_name() {
 
     mod=11111
     mod_dir="$DM_MODS/$mod"
 
-    zzz_file_name=$(attr_file_name $mod 'zzz')
+    zzz_file_name=$(__attr_file_name $mod 'zzz')
 
     tst "$zzz_file_name" '' 'mod directory does not exist - returns nothing'
 
 
     mkdir -p $mod_dir
 
-    zzz_file_name=$(attr_file_name $mod 'zzz')
+    zzz_file_name=$(__attr_file_name $mod 'zzz')
 
     tst "$zzz_file_name" "$mod_dir/zzz" 'zzz file name correct'
 }
@@ -119,19 +119,19 @@ tst_attribute() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on has_conflict_markers function.
+#   Run tests on __has_conflict_markers function.
 #
 tst_has_conflict_markers() {
 
     file=$(tmp_file)
 
-    has_conflict_markers $file
+    __has_conflict_markers $file
     tst "$?" "1"  'file does not exist, returns false'
 
 
     touch $file
 
-    has_conflict_markers $file
+    __has_conflict_markers $file
     tst "$?" "1"  'empty file, returns false'
 
     while read line
@@ -146,14 +146,14 @@ tst_has_conflict_markers() {
 
         eval echo ${arr[0]} > $file
 
-        has_conflict_markers $file
+        __has_conflict_markers $file
         tst "$?" "${arr[1]}" "single line ${arr[2]}"
 
         echo 'some line of text' > $file
         eval echo ${arr[0]} >> $file
         echo 'another line of text' >> $file
 
-        has_conflict_markers $file
+        __has_conflict_markers $file
         tst "$?" "${arr[1]}" "multi  line ${arr[2]}"
 
     done <<EOT

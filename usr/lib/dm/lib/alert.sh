@@ -9,7 +9,7 @@
 __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 #
-# create_alert
+# __create_alert
 #
 # Sent: who - initials of person alert is for, eg JK
 #       mod_id - id of the mod the alert relates to
@@ -24,16 +24,16 @@ __create_alert() {
     local mod_id=$2
 
     if [[ ! $who ]]; then
-        logger_error "Unable to create alert. No initials provided."
+        __logger_error "Unable to create alert. No initials provided."
         return
     fi
 
     if [[ ! $mod_id ]]; then
-        logger_error "Unable to create alert. No mod id provided."
+        __logger_error "Unable to create alert. No mod id provided."
         return
     fi
 
-    local username=$(person_attribute username initials $who)
+    local username=$(__person_attribute username initials $who)
     local alert_dir="$DM_USERS/alerts"
     mkdir -p "$alert_dir"
     local alert_file="$alert_dir/$username"

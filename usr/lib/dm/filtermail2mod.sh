@@ -60,6 +60,6 @@ fi
 
 for mod in $(grep '^X-DM-Mod-Id' $file | awk '{ print $2}')
 do
-    logger_debug "Mod: $mod"
+    __logger_debug "Mod: $mod"
     $DM_BIN/take_off_hold.sh -f $mod
 done

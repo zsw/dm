@@ -55,10 +55,10 @@ path=
 for fifo in $(find $HOME/.weechat/ -type p -name 'weechat_fifo_*'); do
     count=$(( $count + 1 ))
 
-    logger_debug "Pipe: $fifo"
+    __logger_debug "Pipe: $fifo"
 
     pid=$(basename $fifo | sed -e "s/weechat_fifo_//g")
-    logger_debug "PID: $pid"
+    __logger_debug "PID: $pid"
 
     if [[ ! "$pid" ]]; then
         echo "Unable to determine weechat pipe pid for $fifo" >&2
@@ -66,10 +66,10 @@ for fifo in $(find $HOME/.weechat/ -type p -name 'weechat_fifo_*'); do
     fi
 
     euser=$(ps -p $pid -o euser --no-headers)
-    logger_debug "Euser: $euser"
+    __logger_debug "Euser: $euser"
 
     comm=$(ps -p $pid -o comm --no-headers)
-    logger_debug "Command: $comm"
+    __logger_debug "Command: $comm"
 
     if [[ ! "$euser" ]] || [[ ! "$comm" ]]; then
         echo -n "Unable to determine effective user or command of pid $pid. " >&2
@@ -79,7 +79,7 @@ for fifo in $(find $HOME/.weechat/ -type p -name 'weechat_fifo_*'); do
     fi
 
     if [[ "$euser" != "$user" ]]; then
-        logger_debug "Ignoring $fifo. Not run under user: $user."
+        __logger_debug "Ignoring $fifo. Not run under user: $user."
         continue
     fi
 

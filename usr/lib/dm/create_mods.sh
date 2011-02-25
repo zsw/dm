@@ -177,7 +177,7 @@ _scrub_who() {
     who=$(tr "[:lower:]" "[:upper:]" <<< "$who")
 
     # Check if a user exists with those initials
-    [[ ! $(person_attribute username initials "$who") ]] && return
+    [[ ! $(__person_attribute username initials "$who") ]] && return
 
     echo "$who"
 }

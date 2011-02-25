@@ -16,7 +16,7 @@ __loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 # Return: nothing
 # Purpose:
 #
-#   Run tests on create_alert function.
+#   Run tests on __create_alert function.
 #
 tst_create_alert() {
 
@@ -60,18 +60,18 @@ id,initials,username, name
 3, FGH, ffgghh, Fffff Gggggggggg
 EOT
 
-    local username=$(person_attribute username initials $WHO_INITIALS)
+    local username=$(__person_attribute username initials $WHO_INITIALS)
     tst "$username" "$WHO_USERNAME" "correct username from initials"
 
-    create_alert
+    __create_alert
     find $ALERT_FILE 2>/dev/null
     tst "$?" "1" "no who provided, fails"
 
-    create_alert $WHO_INITIALS
+    __create_alert $WHO_INITIALS
     find $ALERT_FILE 2>/dev/null
     tst "$?" "1" "no mod_id provided, fails"
 
-    create_alert $WHO_INITIALS $MOD_ID_1
+    __create_alert $WHO_INITIALS $MOD_ID_1
     local timestamp=$(awk '{print $1}' $ALERT_FILE 2>/dev/null)
     local digits_only=$(echo $timestamp | tr -d -c '[:digit:]')
     tst "$digits_only" "$timestamp" "alert has all digit timestamp"
@@ -80,7 +80,7 @@ EOT
     local records=$(cat $ALERT_FILE | wc -l)
     tst "$records" "1" "alert file has one record"
 
-    create_alert $WHO_INITIALS $MOD_ID_2
+    __create_alert $WHO_INITIALS $MOD_ID_2
     records=$(cat $ALERT_FILE | wc -l)
     tst "$records" "2" "alert file has two records"
 

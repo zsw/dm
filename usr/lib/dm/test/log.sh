@@ -73,7 +73,7 @@ date() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on logger_level function.
+#   Run tests on __logger_level function.
 #
 tst_logger_level() {
 
@@ -96,7 +96,7 @@ tst_logger_level() {
 
         LOG_LEVEL=${arr[0]}
 
-        ll=$(logger_level)
+        ll=$(__logger_level)
         LOG_LEVEL=INFO              # So reporting works
         tst "$ll" "${arr[1]}" "${arr[2]}, returns correct level"
 
@@ -126,11 +126,11 @@ EOT
 # Return: nothing
 # Purpose:
 #
-#   Run tests on logger_log function.
+#   Run tests on __logger_log function.
 #
 tst_logger_log() {
 
-    # The code in tst uses logger_log to report test results.
+    # The code in tst uses __logger_log to report test results.
     # Restore logger settings using source test.sh before calling tst.
 
     saveDM_LOG=$DM_LOG
@@ -145,7 +145,7 @@ tst_logger_log() {
     LOG_TO_STDOUT=1
     override_date='2009-01-31 12:34:56'     # see function date()
 
-    value=$(logger_log $level $msg)
+    value=$(__logger_log $level $msg)
     expect="$override_date"
 
     source $DM_ROOT/test/test.sh
@@ -158,7 +158,7 @@ tst_logger_log() {
     LOG_FORMAT_FILE=1
     LOG_TO_STDOUT=1
 
-    value=$(logger_log $level $msg)
+    value=$(__logger_log $level $msg)
 
     source $DM_ROOT/test/test.sh
     tst "$value" ", $0" "format file logs file"
@@ -169,7 +169,7 @@ tst_logger_log() {
     LOG_FORMAT_LEVEL=1
     LOG_TO_STDOUT=1
 
-    value=$(logger_log $level $msg)
+    value=$(__logger_log $level $msg)
 
     source $DM_ROOT/test/test.sh
     tst "$value" "[$level]" "format level logs level"
@@ -181,7 +181,7 @@ tst_logger_log() {
     LOG_TO_STDOUT=1
 
 
-    value=$(logger_log $level $msg)
+    value=$(__logger_log $level $msg)
 
     source $DM_ROOT/test/test.sh
     tst "$value" "$msg" "format message logs message"
@@ -198,7 +198,7 @@ tst_logger_log() {
 
     override_date='2009-01-31 12:34:56'
 
-    value=$(logger_log $level $msg)
+    value=$(__logger_log $level $msg)
 
     expect="$override_date [$level] $msg, $0"
 
@@ -217,7 +217,7 @@ tst_logger_log() {
 
     [[ -e $tmp_file ]] && rm $tmp_file
 
-    ll=$(logger_log $level $msg)
+    ll=$(__logger_log $level $msg)
     value=$(cat $tmp_file)
 
     source $DM_ROOT/test/test.sh
@@ -232,7 +232,7 @@ tst_logger_log() {
         LOG_FORMAT_MESSAGE=1
         DM_LOG="syslog:$SYSLOG_FACILITY"
 
-        ll=$(logger_log $level $msg)
+        ll=$(__logger_log $level $msg)
         value=$(tail $SYSLOG_FILE | grep -o "$msg" | tail -1)
 
         source $DM_ROOT/test/test.sh
@@ -245,7 +245,7 @@ tst_logger_log() {
     LOG_FORMAT_MESSAGE=1
     LOG_TO_STDERR=1
 
-    ll=$(logger_log $level $msg 2>$tmp_file)
+    ll=$(__logger_log $level $msg 2>$tmp_file)
     value=$(cat $tmp_file)
 
     source $DM_ROOT/test/test.sh
@@ -263,7 +263,7 @@ tst_logger_log() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on logger_debug function.
+#   Run tests on __logger_debug function.
 #
 tst_logger_debug() {
 
@@ -290,7 +290,7 @@ tst_logger_debug() {
 
         LOG_LEVEL=${arr[0]}
 
-        ll=$(logger_debug $msg)
+        ll=$(__logger_debug $msg)
         value=$(cat $tmp_file 2>/dev/null)
 
         source $DM_ROOT/test/test.sh
@@ -314,7 +314,7 @@ EOT
 # Return: nothing
 # Purpose:
 #
-#   Run tests on logger_info function.
+#   Run tests on __logger_info function.
 #
 tst_logger_info() {
 
@@ -341,7 +341,7 @@ tst_logger_info() {
 
         LOG_LEVEL=${arr[0]}
 
-        ll=$(logger_info $msg)
+        ll=$(__logger_info $msg)
         value=$(cat $tmp_file 2>/dev/null)
 
         source $DM_ROOT/test/test.sh
@@ -366,7 +366,7 @@ EOT
 # Return: nothing
 # Purpose:
 #
-#   Run tests on logger_warn function.
+#   Run tests on __logger_warn function.
 #
 tst_logger_warn() {
 
@@ -393,7 +393,7 @@ tst_logger_warn() {
 
         LOG_LEVEL=${arr[0]}
 
-        ll=$(logger_warn $msg)
+        ll=$(__logger_warn $msg)
         value=$(cat $tmp_file 2>/dev/null)
 
         source $DM_ROOT/test/test.sh
@@ -418,7 +418,7 @@ EOT
 # Return: nothing
 # Purpose:
 #
-#   Run tests on logger_error function.
+#   Run tests on __logger_error function.
 #
 tst_logger_error() {
 
@@ -445,7 +445,7 @@ tst_logger_error() {
 
         LOG_LEVEL=${arr[0]}
 
-        ll=$(logger_error $msg)
+        ll=$(__logger_error $msg)
         value=$(cat $tmp_file 2>/dev/null)
 
         source $DM_ROOT/test/test.sh
@@ -470,7 +470,7 @@ EOT
 # Return: nothing
 # Purpose:
 #
-#   Run tests on logger_fatal function.
+#   Run tests on __logger_fatal function.
 #
 tst_logger_fatal() {
 
@@ -497,7 +497,7 @@ tst_logger_fatal() {
 
         LOG_LEVEL=${arr[0]}
 
-        ll=$(logger_fatal $msg)
+        ll=$(__logger_fatal $msg)
         value=$(cat $tmp_file 2>/dev/null)
 
         source $DM_ROOT/test/test.sh

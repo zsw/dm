@@ -78,14 +78,14 @@ done
 
 shift $(($OPTIND - 1))
 
-lock_status=$(is_locked)
+lock_status=$(__is_locked)
 [[ "$verbose" ]] && echo "lock status: $lock_status"
 if [[ "$lock_status" != 'true' ]]; then
     [[ "$verbose" ]] && echo "dm system is not locked, no alerts sent"
     exit 0
 fi
 
-alert_status=$(lock_is_alertable "$age")
+alert_status=$(__lock_is_alertable "$age")
 [[ "$verbose" ]] && echo "alert status: $alert_status"
 if [[ "$alert_status" != 'true' ]]; then
     [[ "$verbose" ]] && echo "dm system is locked but no alertable, no alerts sent"
@@ -94,14 +94,14 @@ fi
 
 if [[ "$#" == "0" ]]; then
     [[ "$verbose" ]] && echo "alerting email: $DM_PERSON_EMAIL"
-    result=$(lock_alert $DM_PERSON_EMAIL)
+    result=$(__lock_alert $DM_PERSON_EMAIL)
     if [[ "$result" != 'true' ]]; then
         echo "Alert email for $DM_PERSON_EMAIL failed." >&2
     fi
 else
     while (( "$#" )); do
         [[ "$verbose" ]] && echo "alerting email: $1"
-        result=$(lock_alert $1)
+        result=$(__lock_alert $1)
         if [[ "$result" != 'true' ]]; then
             echo "Alert email for $1 failed." >&2
         fi

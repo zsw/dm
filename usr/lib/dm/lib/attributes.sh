@@ -9,7 +9,7 @@
 #
 
 #
-# attr_file_name
+# __attr_file_name
 #
 # Sent: mod id ( eg 12345)
 #       attr   ( eg 'description', 'who', 'hold' )
@@ -65,7 +65,7 @@ __attr_file() {
     mod=$1
     attr=$2
 
-    file_name=$(attr_file_name "$mod" "$attr")
+    file_name=$(__attr_file_name "$mod" "$attr")
 
     [[ ! $file_name ]] && return
 
@@ -113,7 +113,7 @@ __attribute() {
 
 
 #
-# has_conflict_markers
+# __has_conflict_markers
 #
 # Sent: file_name (Eg /path/to/file)
 # Return: 0 = has, 1 = does not have, conflict markers

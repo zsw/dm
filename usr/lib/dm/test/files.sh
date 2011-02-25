@@ -53,23 +53,23 @@ tst_filename_from_section() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on is_text function.
+#   Run tests on __is_text function.
 #
 tst_is_text() {
 
-    type=$(is_text)
+    type=$(__is_text)
     tst "$type" '' 'no file - returns nothing'
 
-    type=$(is_text '')
+    type=$(__is_text '')
     tst "$type" '' 'blank file - returns nothing'
 
-    type=$(is_text '/fake/file/dot.txt')
+    type=$(__is_text '/fake/file/dot.txt')
     tst "$type" '' 'non-existent file - returns nothing'
 
-    type=$(is_text $0)
+    type=$(__is_text $0)
     tst "$type" 'text' 'this script - returns text'
 
-    type=$(is_text '/bin/true')
+    type=$(__is_text '/bin/true')
     tst "$type" '' '/bin/true - returns non-text'
 }
 

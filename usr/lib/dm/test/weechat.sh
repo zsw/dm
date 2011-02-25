@@ -16,7 +16,7 @@ __loaded_weechat 2>/dev/null || source $DM_ROOT/lib/weechat.sh
 # Return: nothing
 # Purpose:
 #
-#   Run tests on weechat_log_path function.
+#   Run tests on __weechat_log_path function.
 #
 tst_weechat_log_path() {
 
@@ -24,41 +24,41 @@ tst_weechat_log_path() {
     # most tests will fail. Do only mininal testing in that case.
     log_path="$HOME/.weechat/logs/"
     if [[ ! -d $log_path ]]; then
-        value=$(weechat_log_path 2>/dev/null)
+        value=$(__weechat_log_path 2>/dev/null)
         expect=""
         tst "$value" "$expect" "default log path"
         return
     fi
 
-    value=$(weechat_log_path)
+    value=$(__weechat_log_path)
     expect="/var/log/weechat"
     tst "$value" "$expect" "default log path"
 
-    value=$(weechat_log_path 'aaaa' )
+    value=$(__weechat_log_path 'aaaa' )
     expect=""
     tst "$value" "$expect" "Invalid weechat version."
 
-    value=$(weechat_log_path '0.2.6' )
+    value=$(__weechat_log_path '0.2.6' )
     expect="/var/log/weechat"
     tst "$value" "$expect" "Handles version 0.2.6"
 
-    value=$(weechat_log_path '0.2.7' )
+    value=$(__weechat_log_path '0.2.7' )
     expect="/var/log/weechat"
     tst "$value" "$expect" "Handles version 0.2.7"
 
-    value=$(weechat_log_path '0.3.0' )
+    value=$(__weechat_log_path '0.3.0' )
     expect="/var/log/weechat"
     tst "$value" "$expect" "Handles version 0.3.0"
 
-    value=$(weechat_log_path '0.3.1' )
+    value=$(__weechat_log_path '0.3.1' )
     expect="/var/log/weechat"
     tst "$value" "$expect" "Handles version 0.3.1"
 
-    value=$(weechat_log_path '' '%h/logs' )
+    value=$(__weechat_log_path '' '%h/logs' )
     expect="$HOME/.weechat/logs"
     tst "$value" "$expect" "Handles %h placeholder"
 
-    value=$(weechat_log_path '' '/path/to/logs/' )
+    value=$(__weechat_log_path '' '/path/to/logs/' )
     expect="/path/to/logs"
     tst "$value" "$expect" "Handles trailing slash"
 
@@ -73,7 +73,7 @@ tst_weechat_log_path() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on weechat_events_file function.
+#   Run tests on __weechat_events_file function.
 #
 tst_weechat_events_file() {
 
@@ -81,13 +81,13 @@ tst_weechat_events_file() {
     # most tests will fail. Do only mininal testing in that case.
     log_path="$HOME/.weechat/logs/"
     if [[ ! -d $log_path ]]; then
-        value=$(weechat_events_file 2>/dev/null)
+        value=$(__weechat_events_file 2>/dev/null)
         expect=""
         tst "$value" "$expect" "default events file"
         return
     fi
 
-    value=$(weechat_events_file)
+    value=$(__weechat_events_file)
     expect="/var/log/weechat/events"
     tst "$value" "$expect" "default events file"
 

@@ -65,7 +65,7 @@ function fork {
 
     cmd=$( echo "$0 $args" | sed -e "s/ -f//" )          # Remove fork option.
 
-    logger_debug "Forking... $cmd"
+    __logger_debug "Forking... $cmd"
 
     /usr/bin/setsid $cmd <&- >&- &                      # Close stdin/stdout and run in background.
 
@@ -120,16 +120,16 @@ tmpdir=$(tmp_dir)
 pipe_dir="${tmpdir}/pipes"
 osd_pipe="$pipe_dir/osd"
 
-log_file=$(weechat_events_file)
+log_file=$(__weechat_events_file)
 
-logger_debug "Monitoring events file: $log_file";
-logger_debug "OSD pipe: $osd_pipe";
-logger_debug "OSD file: $osd_file";
+__logger_debug "Monitoring events file: $log_file";
+__logger_debug "OSD pipe: $osd_pipe";
+__logger_debug "OSD file: $osd_file";
 
 
 tail=$(which inotail 2>/dev/null || which tail 2>/dev/null)
 
-logger_debug "Tail using: $tail";
+__logger_debug "Tail using: $tail";
 
 set -f      # Disable parameter expansion, prevents * in message from expanding
 
@@ -140,10 +140,10 @@ while read -r line; do
     # Typical line
     # Tue Nov 18 20:20:55 EST 2008|private|jimk|hi there again
 
-    logger_debug "msg: $line"
+    __logger_debug "msg: $line"
 
     if  [[ ! -e $osd_file ]]; then
-        logger_debug "No osd file. Messages not printed to osd pipe."
+        __logger_debug "No osd file. Messages not printed to osd pipe."
         continue
     fi
 
@@ -151,21 +151,21 @@ while read -r line; do
     from=$(echo $line | awk -F'|' '{ print $3}')
     msg=$( echo $line | awk -F'|' '{ print $4}')
 
-    logger_debug "Type: $type"
-    logger_debug "From: $from"
-    logger_debug "Msg: $msg"
+    __logger_debug "Type: $type"
+    __logger_debug "From: $from"
+    __logger_debug "Msg: $msg"
 
     username=$from
     [[ $whitelist ]] && username=$(awk /^$from$/ $whitelist_file)
 
     if [[ ! $username ]]; then
-        logger_debug "Username not whitelisted. Message not printed to osd pipe."
+        __logger_debug "Username not whitelisted. Message not printed to osd pipe."
         continue
     fi
 
     osd=$(printf "%s: %s" "$from" "$msg");
 
-    logger_debug "Printing message to osd pipe."
+    __logger_debug "Printing message to osd pipe."
 
     echo "$osd" > $osd_pipe
 done

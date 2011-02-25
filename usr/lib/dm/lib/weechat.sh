@@ -7,7 +7,7 @@
 #
 
 #
-# weechat_log_path
+# __weechat_log_path
 #
 # Sent: weechat_version - optional, string representing weechat version
 #                         Eg '0.3.0'
@@ -65,7 +65,7 @@ __weechat_log_path() {
 
 
 #
-# weechat_events_file
+# __weechat_events_file
 #
 # Sent: nothing
 # Return: nothing
@@ -79,7 +79,7 @@ __weechat_log_path() {
 #
 __weechat_events_file() {
 
-    path=$(weechat_log_path)
+    path=$(__weechat_log_path)
     [[ ! $path ]] && return
 
     echo "$path/events"

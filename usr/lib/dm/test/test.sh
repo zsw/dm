@@ -39,9 +39,9 @@ tst() {
     LOG_TO_STDOUT=1
 
     if [[ $value == $expect ]]; then
-        logger_info "$function - $label"
+        __logger_info "$function - $label"
     else
-        logger_error "$function - $label"
+        __logger_error "$function - $label"
         echo "Expected: $expect"
         echo "Got     : $value"
     fi
@@ -60,11 +60,11 @@ tst_is_not_empty() {
     LOG_TO_STDOUT=1
 
     if [[ ! ${!var} && ${!var-_} ]]; then
-        logger_error "$function - $label"
+        __logger_error "$function - $label"
     elif [[ ! ${!var} ]]; then
-        logger_error "$function - $label"
+        __logger_error "$function - $label"
     else
-        logger_info "$function - $label"
+        __logger_info "$function - $label"
     fi
 
     LOG_TO_STDOUT=$saveOut
@@ -80,9 +80,9 @@ tst_is_set() {
     LOG_TO_STDOUT=1
 
     if [[ ! ${!var} && ${!var-_} ]]; then
-        logger_error "$function - $label"
+        __logger_error "$function - $label"
     else
-        logger_info "$function - $label"
+        __logger_info "$function - $label"
     fi
 
     LOG_TO_STDOUT=$saveOut

@@ -83,9 +83,9 @@ fi
 $DM_BIN/take_off_hold.sh -f $mod
 
 # Add a FIXME:Usage comment to hold file if not already done
-hold_has_usage_comment $mod || hold_add_usage_comment $mod
+__hold_has_usage_comment $mod || __hold_add_usage_comment $mod
 
-hold_crontab "$mod" "$date" >> $DM_MODS/$mod/hold
+__hold_crontab "$mod" "$date" >> $DM_MODS/$mod/hold
 
 holds_dir="$DM_USERS/holds"
 mkdir -p $holds_dir

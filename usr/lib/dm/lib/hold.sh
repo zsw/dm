@@ -10,7 +10,7 @@ __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 
 
 #
-# hold_add_usage_comment
+# __hold_add_usage_comment
 #
 # Sent: mod_id - id of mod
 # Return: nothing
@@ -23,7 +23,7 @@ __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 #   This routine doesn't check if the hold file already has a usage
 #   comment. Suggested usage:
 #
-#       hold_has_usage_comment $mod || hold_add_usage_comment $mod
+#       __hold_has_usage_comment $mod || __hold_add_usage_comment $mod
 #
 __hold_add_usage_comment() {
 
@@ -31,14 +31,14 @@ __hold_add_usage_comment() {
     [[ ! $mod ]] && return 1
 
     hold_file="$DM_MODS/$mod/hold"
-    hold_usage_comment $mod >> $hold_file
+    __hold_usage_comment $mod >> $hold_file
 
     return
 }
 
 
 #
-# hold_as_crontab TIMESTAMP
+# __hold_as_crontab TIMESTAMP
 #
 # Sent: timestamp
 # Return: echo cron expression to stdout
@@ -59,7 +59,7 @@ __hold_as_crontab() {
 
 
 #
-# hold_as_yyyy_mm_dd_hh_mm_ss CRON_EXPRESSION
+# __hold_as_yyyy_mm_dd_hh_mm_ss CRON_EXPRESSION
 #
 # Sent: crontab - string, see notes
 # Return: echo timestamp in yyyy-mm-dd hh:mm:ss format
@@ -147,7 +147,7 @@ __hold_as_yyyy_mm_dd_hh_mm_ss() {
 
 
 #
-# hold_crontab MOD_ID TIMESTAMP
+# __hold_crontab MOD_ID TIMESTAMP
 #
 # Sent: mod id - id of the mod the crontab entry is for
 #       timestamp - hold time, format: yyyy-mm-ss hh:mm:ss
@@ -161,7 +161,7 @@ __hold_crontab() {
 
     local mod_id=$1
     local timestamp=$2
-    local cron_exp=$(hold_as_crontab "$timestamp")
+    local cron_exp=$(__hold_as_crontab "$timestamp")
     if [[ ! "$cron_exp" ]]; then
         return
     fi
@@ -172,7 +172,7 @@ __hold_crontab() {
 
 
 #
-# hold_has_usage_comment
+# __hold_has_usage_comment
 #
 # Sent: mod_id - id of mod
 # Return: nothing
@@ -190,7 +190,7 @@ __hold_has_usage_comment() {
 
     [[ ! -e "$hold_file" ]] && return 1
 
-    comment=$(hold_usage_comment $mod)
+    comment=$(__hold_usage_comment $mod)
     [[ ! "$comment" ]] && return 1
 
     found=$(grep "$comment" $hold_file)
@@ -209,7 +209,7 @@ __hold_has_usage_comment() {
 # Return: nothing
 # Purpose:
 #
-#   Process hold_status for a mod.
+#   Process __hold_status for a mod.
 #
 __hold_status() {
     local hold_file mod status timestamp who who_file
@@ -222,11 +222,11 @@ __hold_status() {
     # foo. Eg, the user may be editing the file fixing the conflict or
     # the hold time may get commented out.
 
-    has_conflict_markers "$hold_file" && return
+    __has_conflict_markers "$hold_file" && return
 
-    timestamp=$(hold_timestamp "$mod")
+    timestamp=$(__hold_timestamp "$mod")
 
-    status=$(hold_timestamp_status "$timestamp")
+    status=$(__hold_timestamp_status "$timestamp")
 
     [[ ! $timestamp ]] && timestamp='---------- --:--:--'
     [[ ! $status ]]    && status='off_hold'
@@ -239,7 +239,7 @@ __hold_status() {
 
 
 #
-# hold_timestamp
+# __hold_timestamp
 #
 # Sent: mod id ( eg 12345)
 # Return: nothing (echo's timestamp to stdout)
@@ -250,7 +250,7 @@ __hold_status() {
 # Usage:
 #
 #   mod=12345
-#   time=$(hold_timestamp $mod)
+#   time=$(__hold_timestamp $mod)
 #
 # Notes:
 #
@@ -271,14 +271,14 @@ __hold_timestamp() {
 
     [[ ! "$crontab" ]] && return
 
-    local timestamp=$(hold_as_yyyy_mm_dd_hh_mm_ss "$crontab")
+    local timestamp=$(__hold_as_yyyy_mm_dd_hh_mm_ss "$crontab")
 
     echo $timestamp
 }
 
 
 #
-# hold_timestamp_status
+# __hold_timestamp_status
 #
 # Sent: timestamp ( "yyyy-mm-dd hh:mm:ss" )
 # Return: nothing (echo's status to stdout)
@@ -289,8 +289,8 @@ __hold_timestamp() {
 # Usage:
 #
 #   mod=12345
-#   timestamp=$(hold_timestamp $mod)
-#   status=$(hold_timestamp_status "$timestamp")
+#   timestamp=$(__hold_timestamp $mod)
+#   status=$(__hold_timestamp_status "$timestamp")
 #
 # Notes:
 #
@@ -326,7 +326,7 @@ __hold_timestamp_status() {
 
 
 #
-# hold_usage_comment
+# __hold_usage_comment
 #
 # Sent: mod_id - id of mod
 # Return: string - usage comment

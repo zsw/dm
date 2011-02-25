@@ -62,13 +62,13 @@ for email in $(find $DM_USERS/input/ -maxdepth 1 -type f); do
     # to $DM_USERS/input/fail. If there are no errors, delete the email.
 
     errors=
-    logger_debug "Processing email: $email"
+    __logger_debug "Processing email: $email"
     mod_id=$($DM_BIN/mail2mod.sh "$email")
     if [[ "$?" != "0" ]] || [[ ! $mod_id ]];then
         echo "ERROR: Unable to convert email to mod: $email" >&2
         errors=1
     else
-        logger_debug "Sorting mod: $mod_id"
+        __logger_debug "Sorting mod: $mod_id"
         echo $mod_id | $DM_BIN/sort_input.sh
         if [[ "$?" != "0" ]]; then
             echo "ERROR: sort_input.sh for mod $mod_id failed." >&2
@@ -78,13 +78,13 @@ for email in $(find $DM_USERS/input/ -maxdepth 1 -type f); do
     fi
 
     if [[ $errors ]]; then
-        logger_debug "Moving email $email to email_fail."
+        __logger_debug "Moving email $email to email_fail."
         mkdir -p $fail_dir
         mv $email $fail_dir/
         base=$(basename $email)
         echo "Email archived: $fail_dir/$base" >&2
     else
-        logger_debug "Removing email $email"
+        __logger_debug "Removing email $email"
         rm "$email"
     fi
 done

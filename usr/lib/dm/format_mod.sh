@@ -141,7 +141,7 @@ while IFS="" read -r mod; do
     if [[ $format == *%h* ]]; then
         unset hold
         if [[ -e $mod_dir/hold ]]; then
-            hold=$(hold_timestamp "$id")
+            hold=$(__hold_timestamp "$id")
         fi
         [[ ! $hold ]] && hold='---------- --:--:--'
         line=${line//\%h/$hold}

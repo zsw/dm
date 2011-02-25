@@ -121,7 +121,7 @@ pipe=$($DM_BIN/weechat_fifo_pipe.sh)
                                 # weechat_fifo_pipe.sh provides error messages
 
 
-events_file=$(weechat_events_file)
+events_file=$(__weechat_events_file)
 
 
 IFS=$'\n'

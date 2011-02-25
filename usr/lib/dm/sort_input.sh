@@ -66,7 +66,7 @@ function create_calendar {
 
     local mod_id=$1
 
-    logger_debug "Creating calendar, mod id: $mod_id"
+    __logger_debug "Creating calendar, mod id: $mod_id"
 
     local mod_dir="$DM_MODS/$mod_id"
     local description="${mod_dir}/description"
@@ -114,7 +114,7 @@ function create_grocery {
 
     local mod_id=$1
 
-    logger_debug "Creating grocery, mod id: $mod_id"
+    __logger_debug "Creating grocery, mod id: $mod_id"
 
     local mod_dir="$DM_MODS/$mod_id"
     local description="${mod_dir}/description"
@@ -132,7 +132,7 @@ function create_grocery {
     post_data="${post_data}&description=${descr}"
     post_data="${post_data}&status=a"
 
-    logger_debug "Calling wget: wget -q -O - --post-data=\"$post_data\" $url."
+    __logger_debug "Calling wget: wget -q -O - --post-data=\"$post_data\" $url."
 
     wget -q -O - --post-data="$post_data" $url > /dev/null
     local exit_status=$?
@@ -153,8 +153,8 @@ function create_grocery {
             ;;
     esac
 
-    logger_debug "wget exit status: $exit_status"
-    logger_debug "wget error message: $error_msg"
+    __logger_debug "wget exit status: $exit_status"
+    __logger_debug "wget error message: $error_msg"
 
     if [[ "$error_msg" ]]; then
         echo "ERROR: wget returned exit status $exit_status, $error_msg" >&2
@@ -162,7 +162,7 @@ function create_grocery {
         exit 1
     fi
 
-    logger_debug "Creating grocery: complete"
+    __logger_debug "Creating grocery: complete"
 
     return
 }
@@ -219,7 +219,7 @@ while read mod; do
     descr=$(cat $description)
 
     init=$(echo "$descr" | awk '{print $1}' | tr "[:upper:]" "[:lower:]")
-    logger_debug "init: $init"
+    __logger_debug "init: $init"
 
     tree=
     reuse=
@@ -287,7 +287,7 @@ while read mod; do
     echo "$mod_dir" | $DM_BIN/format_mod.sh "[ ] %i %d" >> $DM_TREES/$tree
 
     if [[ $reuse ]]; then
-        logger_debug "Flagging for reuse, mod $mod"
+        __logger_debug "Flagging for reuse, mod $mod"
         "$DM_BIN/reuse_mod.sh" "$mod"
     fi
 

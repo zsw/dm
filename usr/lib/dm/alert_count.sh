@@ -56,7 +56,7 @@ shift $(($OPTIND - 1))
 [[ $verbose ]] && LOG_LEVEL=debug
 [[ $verbose ]] && LOG_TO_STDERR=1
 
-logger_debug "dm_people: $dm_people"
+__logger_debug "dm_people: $dm_people"
 
 # Validate people file
 if [[ ! -e $dm_people ]]; then
@@ -82,7 +82,7 @@ total=0
 for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     # Skip the header record
     [[ "$id" == "id" ]] && continue
-    username=$(person_attribute username id $id)
+    username=$(__person_attribute username id $id)
     if [[ ! "$username" ]]; then
         echo "ERROR: Unable to get username for person id=$id" >&2
         continue
@@ -90,20 +90,20 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     # No need to alert yourself
     [[ "$username" == "$USERNAME" ]] && continue
 
-    server=$(person_attribute server id $id)
+    server=$(__person_attribute server id $id)
     if [[ ! "$server" ]]; then
-        logger_warn "WARNING: Unable to get server for person username: $username"
-        logger_warn "Unable to get alert count for person username: $username"
+        __logger_warn "WARNING: Unable to get server for person username: $username"
+        __logger_warn "Unable to get alert count for person username: $username"
         continue
     fi
 
-    logger_debug "$username Checking id:$id username:$username server:$server"
+    __logger_debug "$username Checking id:$id username:$username server:$server"
 
     remote_file="${tmp_alert_dir}/$username"
 
     url="http://$server/alerts/$username/$USERNAME"
-    logger_debug "$username remote url: $url"
-    logger_debug "$username wget: wget $wget_flag -O $remote_file $url"
+    __logger_debug "$username remote url: $url"
+    __logger_debug "$username wget: wget $wget_flag -O $remote_file $url"
     wget $wget_flag -O $remote_file $url
     exit_status=$?
 
@@ -124,8 +124,8 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     esac
 
     if [[ "$error_msg" ]]; then
-        logger_debug "$username wget exit status: $exit_status"
-        logger_debug "$username wget error message: $error_msg"
+        __logger_debug "$username wget exit status: $exit_status"
+        __logger_debug "$username wget error message: $error_msg"
         echo "ERROR: wget failed, url $url" >&2
         echo "wget returned exit status $exit_status, $error_msg" >&2
         echo "Unable to get remote mod list for username: $username." >&2
@@ -133,15 +133,15 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     fi
 
     pull_file="$DM_USERS/pulls/$username"
-    logger_debug "$username pull file: $pull_file"
+    __logger_debug "$username pull file: $pull_file"
     last_pull_secs=$(cat $pull_file)
     if [[ ! $last_pull_secs ]]; then
         # If the user has never pulled from the remote, all alerts
         # should be included in the count. Set to 0.
         last_pull_secs=0
     fi
-    logger_debug "$username last pull: $last_pull_secs"
-    logger_debug "$username alerts file: $remote_file"
+    __logger_debug "$username last pull: $last_pull_secs"
+    __logger_debug "$username alerts file: $remote_file"
 
     # Instead of a loop, the following could have be simplified by
     # piping output into "wc -l" but then it wouldn't be possible to
@@ -150,12 +150,12 @@ for id in $(cat $DM_PEOPLE | awk 'BEGIN { FS = ",[ \t]*"} { print $1}'); do
     saveIFS=$IFS
     IFS=$'\n'
     for line in $(cat $remote_file | awk -v limit=$last_pull_secs '{if ($1 > limit ) {print}}'); do
-        logger_debug "$username alertable: $line"
+        __logger_debug "$username alertable: $line"
         let count++
     done
     IFS=$saveIFS
 
-    logger_debug "$username alert count: $count"
+    __logger_debug "$username alert count: $count"
 
     total=$(( $total + $count ))
 done

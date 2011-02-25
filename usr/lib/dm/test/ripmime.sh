@@ -33,7 +33,7 @@ _setup_test_mime_file() {
     text_html=$2
     attachment=$3
 
-    rip_tmpdir=$(ripmime_tmpdir)
+    rip_tmpdir=$(__ripmime_tmpdir)
     ripmime_dir="${rip_tmpdir}/$test_filename"
 
     [[ -d "$ripmime_dir" ]] && rm -r "$ripmime_dir"
@@ -94,11 +94,11 @@ EOT
 # Return: nothing
 # Purpose:
 #
-#   Run tests on ripmime_command function.
+#   Run tests on __ripmime_command function.
 #
 tst_ripmime_command() {
 
-    got=$(ripmime_command)
+    got=$(__ripmime_command)
     expect='/usr/bin/ripmime'
     tst "$got" "$expect" 'ripmime command returned expected'
 }
@@ -110,7 +110,7 @@ tst_ripmime_command() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on ripmime_files_cat function.
+#   Run tests on __ripmime_files_cat function.
 #
 tst_ripmime_files_cat() {
 
@@ -119,7 +119,7 @@ tst_ripmime_files_cat() {
     attachment=
     _setup_test_mime_file "$text_plain" "$text_html" "$attachment"
 
-    value=$(ripmime_files_cat $test_file)
+    value=$(__ripmime_files_cat $test_file)
     expect=$(echo -e "This is a mime body.\n")
     tst "$value" "$expect" "typical email returned expected"
 
@@ -128,7 +128,7 @@ tst_ripmime_files_cat() {
     attachment=
     _setup_test_mime_file "$text_plain" "$text_html" "$attachment"
 
-    value=$(ripmime_files_cat $test_file)
+    value=$(__ripmime_files_cat $test_file)
     expect=$(echo -e "This is a mime body.<br>\n")
     tst "$value" "$expect" "typical email returned expected"
 
@@ -137,7 +137,7 @@ tst_ripmime_files_cat() {
     attachment=1
     _setup_test_mime_file "$text_plain" "$text_html" "$attachment"
 
-    value=$(ripmime_files_cat $test_file)
+    value=$(__ripmime_files_cat $test_file)
     expect=$(echo -e "This is a mime body.\n")
     tst "$value" "$expect" "typical email returned expected"
 
@@ -152,7 +152,7 @@ tst_ripmime_files_cat() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on ripmime_run function.
+#   Run tests on __ripmime_run function.
 #
 tst_ripmime_run() {
 
@@ -161,10 +161,10 @@ tst_ripmime_run() {
     attachment=1
     _setup_test_mime_file "$text_plain" "$text_html" "$attachment"
 
-    rip_tmpdir=$(ripmime_tmpdir)
+    rip_tmpdir=$(__ripmime_tmpdir)
     ripmime_dir="${rip_tmpdir}/$test_filename"
 
-    value=$(ripmime_run $test_file)
+    value=$(__ripmime_run $test_file)
     expect=$ripmime_dir
 
     tst "$value" "$expect" "returned expected"
@@ -194,14 +194,14 @@ tst_ripmime_run() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on ripmime_tmpdir function.
+#   Run tests on __ripmime_tmpdir function.
 #
 tst_ripmime_tmpdir() {
 
     save_DM_TMP=DM_TMP
     DM_TMP=/tmp/dm_testing
 
-    value=$(ripmime_tmpdir)
+    value=$(__ripmime_tmpdir)
     expect="$DM_TMP/ripmime"
     tst "$value" "$expect" "returned expected"
 

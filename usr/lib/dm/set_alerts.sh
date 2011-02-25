@@ -53,7 +53,7 @@ EOF
 function old_contents {
 
     local who_file=$1
-    logger_debug "Getting contents of old who file: $who_file"
+    __logger_debug "Getting contents of old who file: $who_file"
 
     # Sample output
     # $ git commit --dry-run  --verbose -- mods/10829/who
@@ -77,10 +77,10 @@ function old_contents {
         awk '{print $2}')
 
     if [[ ! $object ]]; then
-        logger_debug "Unable to get object of old who file."
+        __logger_debug "Unable to get object of old who file."
         return
     fi
-    logger_debug "Object: $object"
+    __logger_debug "Object: $object"
 
     git cat-file -p $object
     return
@@ -99,15 +99,15 @@ function old_contents {
 function parse_line {
 
     local line=$1
-    logger_debug "Parsing line: $line"
+    __logger_debug "Parsing line: $line"
 
     local init=$(echo $line | awk '{print $1}' | grep -E '[A|D|M]')
     if [[ ! $init ]]; then
-        logger_debug "Line is not A,D or M. Ignoring."
+        __logger_debug "Line is not A,D or M. Ignoring."
         return
     fi
     local who_file=$(echo $line | awk '{print $2}')
-    logger_debug "Who file: $who_file"
+    __logger_debug "Who file: $who_file"
     local alert=
     case $init in
         A)  who=$(cat $who_file | tr -d -c 'A-Z')
@@ -133,11 +133,11 @@ function parse_line {
     esac
 
     if [[ ! $alert ]]; then
-        logger_debug "No alert."
+        __logger_debug "No alert."
         return
     fi
 
-    logger_debug "Alert $alert"
+    __logger_debug "Alert $alert"
     local mod_id=$(echo $who_file | awk -F'/' '{print $2}')
 
     # If mod is on hold do not create an alert. The take_off_hold.sh
@@ -145,7 +145,7 @@ function parse_line {
     local status=$(__hold_status $mod_id | awk '{print $5}')
     [[ "$status" == 'on_hold' ]] && return
 
-    create_alert $alert $mod_id
+    __create_alert $alert $mod_id
     return
 }
 
@@ -177,7 +177,7 @@ shift $(($OPTIND - 1))
 cd $DM_ROOT
 
 if [[ $input_file ]]; then
-    logger_debug "Parsing file: $input_file"
+    __logger_debug "Parsing file: $input_file"
     who_lines=$(cat "$input_file")
 else
     who_lines=$(git status -s | grep '/who$')

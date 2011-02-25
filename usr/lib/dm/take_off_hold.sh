@@ -67,12 +67,12 @@ function process_mod {
 
     mod=$1
 
-    logger_debug "Processing mod id: $mod"
+    __logger_debug "Processing mod id: $mod"
 
     status=$(__hold_status $mod | awk '{print $5}')
 
     if [[ "$status" == 'off_hold' ]]; then
-        logger_debug "Mod status: off_hold. Nothing to do"
+        __logger_debug "Mod status: off_hold. Nothing to do"
         return
     fi
 
@@ -81,35 +81,35 @@ function process_mod {
     for_another=
     if [[ "$who" != $DM_PERSON_INITIALS ]]; then
         if [[ ! $force ]]; then
-            logger_debug "Mod is not assigned to $DM_PERSON_INITIALS. No force option. Skipping."
+            __logger_debug "Mod is not assigned to $DM_PERSON_INITIALS. No force option. Skipping."
             return
         fi
         for_another=1
     fi
 
-    logger_debug "Mod status: $status. Mod $mod will be taken off hold"
+    __logger_debug "Mod status: $status. Mod $mod will be taken off hold"
 
-    logger_debug "Calling remind_mod.sh $mod"
+    __logger_debug "Calling remind_mod.sh $mod"
 
-    $dryrun && logger_debug "Dry run, remind_mod.sh not called."
+    $dryrun && __logger_debug "Dry run, remind_mod.sh not called."
     $dryrun || $DM_BIN/remind_mod.sh $mod
 
     hold_file=$(attr_file $mod 'hold')
 
-    logger_debug "Hold file: $hold_file"
+    __logger_debug "Hold file: $hold_file"
 
     [[ ! $hold_file ]] && return
 
-    logger_debug "Commenting out all lines in $hold_file"
+    __logger_debug "Commenting out all lines in $hold_file"
 
     # Comment all uncommented lines
     $dryrun || { sed -i -e 's/^\([^#]\)/#\1/' $hold_file && rm $DM_USERS/holds/$mod 2>/dev/null ; }
 
-    $dryrun && logger_debug "Dry run, mod $mod left unchanged."
+    $dryrun && __logger_debug "Dry run, mod $mod left unchanged."
 
     # Create an alert if taking a mod off hold for someone else
     if [[ $for_another ]]; then
-        create_alert $who $mod_id
+        __create_alert $who $mod_id
     fi
     return
 }
@@ -140,9 +140,9 @@ shift $(($OPTIND - 1))
 [[ $verbose ]] && LOG_LEVEL=debug
 [[ $verbose ]] && LOG_TO_STDOUT=1
 
-$dryrun && logger_debug "Dry run. Mods not changed."
+$dryrun && __logger_debug "Dry run. Mods not changed."
 
-lock_obtained=$(lock_create)
+lock_obtained=$(__lock_create)
 if [[ "$lock_obtained" == 'false' ]]; then
     if [[ $verbose ]]; then
         echo "Unable to run $0. The dm system is locked at the moment."
@@ -154,7 +154,7 @@ if [[ "$lock_obtained" == 'false' ]]; then
     exit 1
 fi
 
-trap 'lock_remove; exit $?' INT TERM EXIT
+trap '__lock_remove; exit $?' INT TERM EXIT
 while [[ ! "$#" -eq "0" ]]; do
     if [ "$1" == "-" ]; then
         # eg echo 12345 | take_off_hold.sh -
@@ -167,5 +167,5 @@ while [[ ! "$#" -eq "0" ]]; do
     shift
 done
 
-lock_remove
+__lock_remove
 trap - INT TERM EXIT

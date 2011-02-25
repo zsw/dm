@@ -183,45 +183,45 @@ remind=$DM_MODS/$mod/remind
 remind_by=$DM_MODS/$mod/remind_by
 
 if [[ $empty ]]; then
-    logger_debug "Clearing $remind"
+    __logger_debug "Clearing $remind"
     echo -n '' > $remind
     echo -n '' > $remind_by
 fi
 
 if [[ $email || -n $email_plus ]]; then
-    logger_debug "Adding email $DM_PERSON_EMAIL to remind_by options for mod $mod"
+    __logger_debug "Adding email $DM_PERSON_EMAIL to remind_by options for mod $mod"
     echo $DM_PERSON_EMAIL >> $remind
     echo 'email' >> $remind_by
 fi
 
 if [[ $email_minus ]]; then
-    logger_debug "Removing email $DM_PERSON_EMAIL from remind_by options for mod $mod"
+    __logger_debug "Removing email $DM_PERSON_EMAIL from remind_by options for mod $mod"
     sed -i "/$DM_PERSON_EMAIL/d" $remind
     sed -i "/email/d" $remind_by
 fi
 
 
 if [[ $jabber || -n $jabber_plus ]]; then
-    logger_debug "Adding jabber $DM_PERSON_JABBER to remind_by options for mod $mod"
+    __logger_debug "Adding jabber $DM_PERSON_JABBER to remind_by options for mod $mod"
     echo $DM_PERSON_JABBER >> $remind
     echo 'jabber' >> $remind_by
 fi
 
 if [[ $jabber_minus ]]; then
-    logger_debug "Removing jabber $DM_PERSON_JABBER from remind_by options for mod $mod"
+    __logger_debug "Removing jabber $DM_PERSON_JABBER from remind_by options for mod $mod"
     sed -i "/$DM_PERSON_JABBER/d" $remind
     sed -i "/jabber/d" $remind_by
 fi
 
 
 if [[ $pager || -n $pager_plus ]]; then
-    logger_debug "Adding pager $DM_PERSON_PAGER to remind_by options for mod $mod"
+    __logger_debug "Adding pager $DM_PERSON_PAGER to remind_by options for mod $mod"
     echo $DM_PERSON_PAGER >> $remind
     echo 'pager' >> $remind_by
 fi
 
 if [[ $pager_minus ]]; then
-    logger_debug "Removing pager $DM_PERSON_PAGER from remind_by options for mod $mod"
+    __logger_debug "Removing pager $DM_PERSON_PAGER from remind_by options for mod $mod"
     sed -i "/$DM_PERSON_PAGER/d" $remind
     sed -i "/pager/d" $remind_by
 fi
@@ -229,5 +229,5 @@ fi
 clean_remind $remind
 clean_remind $remind_by
 
-logger_debug "cat $remind"
-logger_debug $(cat $remind)
+__logger_debug "cat $remind"
+__logger_debug $(cat $remind)

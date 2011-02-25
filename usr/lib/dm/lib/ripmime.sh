@@ -10,7 +10,7 @@
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 #
-# ripmime_attachments
+# __ripmime_attachments
 #
 # Sent: mime file to get attachments from
 # Return: name of attachment files
@@ -22,19 +22,19 @@ __ripmime_attachments() {
 
     local file=$1
 
-    local ripmime_cmd=$(ripmime_command)
+    local ripmime_cmd=$(__ripmime_command)
     if [[ ! "$ripmime_cmd" ]]; then
         echo "ripmime: command not found. Unable to parse $file"
         return
     fi
 
-    ripmime_dir=$(ripmime_run "$file")
+    ripmime_dir=$(__ripmime_run "$file")
     find $ripmime_dir -maxdepth 1 -mindepth 1 -type f | grep -v __rip__
 }
 
 
 #
-# ripmime_command
+# __ripmime_command
 #
 # Sent: nothing
 # Return: full path ripmime command, nothin if not found
@@ -43,7 +43,7 @@ __ripmime_attachments() {
 #   Determine the full path ripmime command in the enviroment.
 #
 # Usage:
-#   ripmime_cmd=$(ripmime_command)
+#   ripmime_cmd=$(__ripmime_command)
 #   if [[ ! ripmime_cmd ]]; then
 #       echo 'Ripmime not found'
 #   fi
@@ -62,7 +62,7 @@ __ripmime_command() {
 
 
 #
-# ripmime_files_cat
+# __ripmime_files_cat
 #
 # Sent: mime file to rip
 # Return: concatenated ripmime files
@@ -74,13 +74,13 @@ __ripmime_files_cat() {
 
     local file=$1
 
-    local ripmime_cmd=$(ripmime_command)
+    local ripmime_cmd=$(__ripmime_command)
     if [[ ! "$ripmime_cmd" ]]; then
         echo "ripmime: command not found. Unable to parse $file"
         return
     fi
 
-    ripmime_dir=$(ripmime_run "$file")
+    ripmime_dir=$(__ripmime_run "$file")
 
     # Default to plain text files. If none, cat others.
     file_list=$(find $ripmime_dir -name '__rip__text-plain*')
@@ -95,7 +95,7 @@ __ripmime_files_cat() {
 
 
 #
-# ripmime_run
+# __ripmime_run
 #
 # Sent: file - name of mime file to rip, full path
 # Return: path to directory of ripped files
@@ -108,7 +108,7 @@ __ripmime_run() {
     local file=$1
 
     local base=$(basename $file);
-    local working_dir=$(ripmime_tmpdir)
+    local working_dir=$(__ripmime_tmpdir)
     local tmpdir="$working_dir/$base"
     mkdir -p $tmpdir
 
@@ -122,7 +122,7 @@ __ripmime_run() {
 
 
 #
-# ripmime_tmpdir
+# __ripmime_tmpdir
 #
 # Sent: nothing
 # Return: path to directory mime files are ripped into

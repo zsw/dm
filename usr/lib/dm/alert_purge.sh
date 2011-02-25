@@ -58,7 +58,7 @@ shift $(($OPTIND - 1))
 [[ $verbose ]] && LOG_LEVEL=debug
 [[ $verbose ]] && LOG_TO_STDERR=1
 
-logger_debug "Age: $age"
+__logger_debug "Age: $age"
 
 limit=$(date --date="-${age}" "+%s")
 if [[ ! $limit ]]; then
@@ -66,14 +66,14 @@ if [[ ! $limit ]]; then
     exit 1
 fi
 
-logger_debug "Purging older than: $limit"
+__logger_debug "Purging older than: $limit"
 
 alert_dir="$DM_USERS/alerts"
 
 tmpfile=$(tmp_file)
-logger_debug "Temp file: $tmpfile"
+__logger_debug "Temp file: $tmpfile"
 for f in $(find $alert_dir -maxdepth 1 -mindepth 1 -type f); do
-    logger_debug "Purging: $f"
+    __logger_debug "Purging: $f"
 
     cat $f | sort | awk -v limit=$limit '{if ($1 > limit) {print}}' > $tmpfile
     cp $tmpfile $f

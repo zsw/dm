@@ -105,33 +105,33 @@ fi
 
 if [[ "$from_tree" == "$to_tree" ]]; then
     # Nothing to do
-    logger_debug "Group $group_id is already in tree $to_tree."
+    __logger_debug "Group $group_id is already in tree $to_tree."
     exit 0
 fi
 
-logger_debug "From tree: $from_tree"
+__logger_debug "From tree: $from_tree"
 
 # If the group is contained in another group, then we have to move the
 # root parent group.
 
-logger_debug "Getting root group of group $group_id"
+__logger_debug "Getting root group of group $group_id"
 root_id=$($DM_BIN/tree_parse.py --root-id $group_id $from_tree)
 if [[ "$?" != "0" ]]; then
     exit 1
 fi
 
-logger_debug "Root group id: $root_id"
+__logger_debug "Root group id: $root_id"
 
 # It is much easier to extract the contents of a project if the ends are
 # tagged.
-logger_debug "Tagging ends of the 'from' tree file"
+__logger_debug "Tagging ends of the 'from' tree file"
 from_tagged=$(tmp_file)
 $DM_BIN/tree_parse.py --tag-ends  $from_tree > $from_tagged
 if [[ "$?" != "0" ]]; then
     exit 1
 fi
 
-logger_debug "Copying contents of the root group into a pattern file"
+__logger_debug "Copying contents of the root group into a pattern file"
 group_contents_file=$(tmp_file)
 cat $from_tagged | awk "/group $root_id/,/end $root_id/" > $group_contents_file
 
@@ -139,7 +139,7 @@ replace_file=$(tmp_file)
 cp /dev/null $replace_file
 echo "" > $replace_file
 
-logger_debug "Removing group from the 'from' tree"
+__logger_debug "Removing group from the 'from' tree"
 from_new=$(tmp_file)
 $DM_BIN/block_substitute.py $from_tagged $group_contents_file $replace_file > $from_new
 if [[ "$?" != "0" ]]; then
@@ -150,7 +150,7 @@ fi
 # mods at the bottom. When moving a group, it gets inserted at the end
 # of the groups just prior to the non-grouped mods.
 
-logger_debug "Tagging ends of the 'to' tree file"
+__logger_debug "Tagging ends of the 'to' tree file"
 to_tagged=$(tmp_file)
 $DM_BIN/tree_parse.py --tag-ends  $to_tree > $to_tagged
 if [[ "$?" != "0" ]]; then
@@ -164,7 +164,7 @@ pattern_file=$(tmp_file)
 replace_file=$(tmp_file)
 final_end=$(cat $to_tagged | grep '^[ ]*end' | tail -1)
 if [[ "$final_end" ]]; then
-    logger_debug "Adding group to the 'to' tree"
+    __logger_debug "Adding group to the 'to' tree"
     echo "$final_end" > $pattern_file
     echo "$final_end" > $replace_file           # We don't want the end tag removed
     echo "" >> $replace_file                    # Add blank line separator
@@ -175,7 +175,7 @@ if [[ "$final_end" ]]; then
     fi
 else
     # If the 'to' tree has no groups, then just prepend new group at top
-    logger_debug "Prepending group to the 'to' tree"
+    __logger_debug "Prepending group to the 'to' tree"
     cat $group_contents_file > $replace_file
     echo "" >> $replace_file                    # Add blank line separator
     cat $to_tagged >> $replace_file
@@ -186,19 +186,19 @@ fi
 sed -i -e 's/^\([ ]*end\) [0-9]\+/\1/' $from_new
 sed -i -e 's/^\([ ]*end\) [0-9]\+/\1/' $to_new
 
-logger_debug "group_contents_file: $group_contents_file"
-logger_debug "pattern_file: $pattern_file"
-logger_debug "replace_file: $replace_file"
-logger_debug "from_tagged: $from_tagged"
-logger_debug "from_new: $from_new"
-logger_debug "to_tagged: $to_tagged"
-logger_debug "to_new: $to_new"
+__logger_debug "group_contents_file: $group_contents_file"
+__logger_debug "pattern_file: $pattern_file"
+__logger_debug "replace_file: $replace_file"
+__logger_debug "from_tagged: $from_tagged"
+__logger_debug "from_new: $from_new"
+__logger_debug "to_tagged: $to_tagged"
+__logger_debug "to_new: $to_new"
 
 # Nothing yet has affected live data. Time to update live trees.
 if [[ ! $dryrun ]]; then
-    logger_debug "Copying new trees to live."
+    __logger_debug "Copying new trees to live."
     cp $from_new $from_tree && cp $to_new $to_tree
 else
-    logger_debug "### Dry run - Live data not changed ###"
+    __logger_debug "### Dry run - Live data not changed ###"
 fi
 

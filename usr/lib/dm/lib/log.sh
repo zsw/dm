@@ -9,7 +9,7 @@
 # Log levels
 #
 # NOTE: Although these values are integers, the LOG_LEVEL variable is a string,
-# eg 'error', 'warn', etc. The logger_level function converts the string to an
+# eg 'error', 'warn', etc. The __logger_level function converts the string to an
 # integer.
 
 LOG_LEVEL_DEBUG=1
@@ -84,52 +84,52 @@ __logger_log() {
 
 __logger_debug() {
 
-    log_level=$(logger_level)
+    log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_DEBUG ]] && return
 
-    logger_log 'DEBUG' "$*"
+    __logger_log 'DEBUG' "$*"
 }
 
 __logger_info() {
 
-    log_level=$(logger_level)
+    log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_INFO ]] && return
 
-    logger_log 'INFO' "$*"
+    __logger_log 'INFO' "$*"
 }
 
 __logger_warn() {
 
-    log_level=$(logger_level)
+    log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_WARN ]] && return
 
-    logger_log 'WARN' "$*"
+    __logger_log 'WARN' "$*"
 }
 
 __logger_error() {
 
-    log_level=$(logger_level)
+    log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_ERROR ]] && return
 
-    logger_log 'ERROR' "$*"
+    __logger_log 'ERROR' "$*"
 }
 
 __logger_fatal() {
 
-    log_level=$(logger_level)
+    log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
     [[ $log_level -gt $LOG_LEVEL_FATAL ]] && return
 
-    logger_log 'FATAL' "$*"
+    __logger_log 'FATAL' "$*"
     exit 1
 }
 

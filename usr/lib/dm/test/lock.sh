@@ -16,11 +16,11 @@ __loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
 # Return: nothing
 # Purpose:
 #
-#   Run tests on is_locked function.
+#   Run tests on __is_locked function.
 #
 tst_is_locked() {
 
-    value=$(is_locked)
+    value=$(__is_locked)
     expect="false"
     # Note: this assumes the dm system hasn't created a lock file
     tst "$value" "$expect" "no file, not locked"
@@ -28,12 +28,12 @@ tst_is_locked() {
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
 
-    value=$(is_locked $file)
+    value=$(__is_locked $file)
     expect="false"
     tst "$value" "$expect" "custom file, not exist, not locked"
 
     touch $file
-    value=$(is_locked $file)
+    value=$(__is_locked $file)
     expect="true"
     tst "$value" "$expect" "custom file, exists, locked"
 
@@ -49,7 +49,7 @@ tst_is_locked() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on lock_alert function.
+#   Run tests on __lock_alert function.
 #
 tst_lock_alert() {
 
@@ -58,21 +58,21 @@ tst_lock_alert() {
     rm $file 2>/dev/null
 
 
-    value=$(lock_alert)
+    value=$(__lock_alert)
     expect='false'
     tst "$value" "$expect" "no to email, returned false"
 
-    value=$(lock_alert $to)
+    value=$(__lock_alert $to)
     expect='false'
     tst "$value" "$expect" "no lock file, returned false"
 
-    value=$(lock_alert $to $file)
+    value=$(__lock_alert $to $file)
     expect='false'
     tst "$value" "$expect" "lock file does not exist, returned false"
 
-    lock_create $file
+    __lock_create $file
 
-    value=$(lock_alert $to $file)
+    value=$(__lock_alert $to $file)
     expect='true'
     tst "$value" "$expect" "lock file exists, returned true"
 
@@ -89,14 +89,14 @@ tst_lock_alert() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on lock_create function.
+#   Run tests on __lock_create function.
 #
 tst_lock_create() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
 
-    result=$(lock_create $file)
+    result=$(__lock_create $file)
     expect='true'
     tst "$result" "$expect" "lock success"
 
@@ -113,7 +113,7 @@ tst_lock_create() {
     expect=1
     tst "$value" "$expect" "one created_on line found"
 
-    result=$(lock_create $file)
+    result=$(__lock_create $file)
     expect='false'
     tst "$result" "$expect" "second lock fails"
 
@@ -124,7 +124,7 @@ tst_lock_create() {
     file='/tmp/_tst_lock/tst_lock_sh.txt'
     [[ -d /tmp/_tst_lock ]] && rm -r /tmp/_tst_lock
 
-    result=$(lock_create $file)
+    result=$(__lock_create $file)
     expect='true'
     tst "$result" "$expect" "subdirectory test, lock succeeds"
 
@@ -166,18 +166,18 @@ tst_lock_file() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on lock_file_key_value function.
+#   Run tests on __lock_file_key_value function.
 #
 tst_lock_file_key_value() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
 
-    value=$(lock_file_key_value)
+    value=$(__lock_file_key_value)
     expect=''
     tst "$value" "$expect" "no key, returned nothing"
 
-    value=$(lock_file_key_value script $file)
+    value=$(__lock_file_key_value script $file)
     expect=''
     tst "$value" "$expect" "no lock file, returned nothing"
 
@@ -186,26 +186,26 @@ tst_lock_file_key_value() {
 
     echo "script: $script_file" >> $file
 
-    value=$(lock_file_key_value script $file)
+    value=$(__lock_file_key_value script $file)
     expect=$script_file
     tst "$value" "$expect" "script attribute returned"
 
     fake_attr='fake_attr'
     fake_val='some value'
     fake_val2='another value'
-    value=$(lock_file_key_value $fake_attr $file)
+    value=$(__lock_file_key_value $fake_attr $file)
     expect=''
     tst "$value" "$expect" "no fake_attr, returned nothing"
 
     echo "$fake_attr: $fake_val" >> $file
 
-    value=$(lock_file_key_value $fake_attr $file)
+    value=$(__lock_file_key_value $fake_attr $file)
     expect=$fake_val
     tst "$value" "$expect" "fake attribute returned"
 
     echo "$fake_attr: $fake_val2" >> $file
 
-    value=$(lock_file_key_value $fake_attr $file)
+    value=$(__lock_file_key_value $fake_attr $file)
     expect=$fake_val2
     tst "$value" "$expect" "multiple fake attributes, returns last"
 
@@ -222,31 +222,31 @@ tst_lock_file_key_value() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on lock_is_alertable function.
+#   Run tests on __lock_is_alertable function.
 #
 tst_lock_is_alertable() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
 
-    value=$(lock_is_alertable '' $file)
+    value=$(__lock_is_alertable '' $file)
     expect='false'
     tst "$value" "$expect" "lock file not exist, returns false"
 
-    lock_create $file
+    __lock_create $file
 
-    value=$(lock_is_alertable '' $file)
+    value=$(__lock_is_alertable '' $file)
     expect='true'
     tst "$value" "$expect" "file exist, no age, returns true"
 
     created_on=$(date --date="now - 20 minutes" "+%F %T")
     echo "created_on: $created_on" >> $file
 
-    value=$(lock_is_alertable '30 minutes' $file)
+    value=$(__lock_is_alertable '30 minutes' $file)
     expect='false'
     tst "$value" "$expect" "not past age, returns false"
 
-    value=$(lock_is_alertable '10 minutes' $file)
+    value=$(__lock_is_alertable '10 minutes' $file)
     expect='true'
     tst "$value" "$expect" "past age, returns true"
 
@@ -263,22 +263,22 @@ tst_lock_is_alertable() {
 # Return: nothing
 # Purpose:
 #
-#   Run tests on lock_remove function.
+#   Run tests on __lock_remove function.
 #
 tst_lock_remove() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
 
-    lock_create $file
+    __lock_create $file
 
-    value=$(is_locked $file)
+    value=$(__is_locked $file)
     expect='true'
     tst "$value" "$expect" "Control - lock file exists"
 
-    lock_remove $file
+    __lock_remove $file
 
-    value=$(is_locked $file)
+    value=$(__is_locked $file)
     expect='false'
     tst "$value" "$expect" "lock file no longer exists"
 

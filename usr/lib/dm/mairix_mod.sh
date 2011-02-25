@@ -49,7 +49,7 @@ function process_mod {
 
     mod=$1
 
-    logger_debug "Mod: $mod"
+    __logger_debug "Mod: $mod"
 
     count=0
 
@@ -64,7 +64,7 @@ function process_mod {
         # Convert the name of a mail file to a Message-ID.
         message_id=$(grep '^Message-ID' $mail | awk '{ print $2}' | tr -d '<>')
 
-        logger_debug "mail: $mail, message_id: $message_id"
+        __logger_debug "mail: $mail, message_id: $message_id"
 
         # Use the -a augment option to append results
         a=

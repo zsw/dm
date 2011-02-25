@@ -52,7 +52,7 @@ _process_mod() {
     # is.
     "$DM_BIN/assign_mod.sh" -m "$mod_id" -o
     initials=$(< "$mod_dir/who")
-    username=$(person_attribute username initials "$initials")
+    username=$(__person_attribute username initials "$initials")
     ids=$DM_ROOT/users/$username/reusable_ids
     echo "$mod_id" >> "$ids"
     sort "$ids" -o "$ids"

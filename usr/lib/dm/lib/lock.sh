@@ -9,7 +9,7 @@
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 #
-# is_locked
+# __is_locked
 #
 # Sent: file - lock file name, absolute path, optional
 # Return: string simulating boolean, "true" or "false"
@@ -33,7 +33,7 @@ __is_locked() {
 
 
 #
-# lock_alert
+# __lock_alert
 #
 # Sent: to - email address to send alert to
 #       file - lock file name, absolute path, optional
@@ -61,7 +61,7 @@ __lock_alert() {
         return
     fi
 
-    script=$(lock_file_key_value script $file)
+    script=$(__lock_file_key_value script $file)
     subject="dm system is locked"
     body="Script: $script
 
@@ -90,7 +90,7 @@ file for details on the script locking the system.
 
 
 #
-# lock_create
+# __lock_create
 #
 # Sent: file - lock file name, absolute path, optional
 # Return: true = lock obtained, false = lock failed
@@ -167,7 +167,7 @@ __lock_file() {
 
 
 #
-# lock_file_key_value
+# __lock_file_key_value
 #
 # Sent: key
 #       file - lock file name, absolute path, optional
@@ -188,10 +188,10 @@ __lock_file() {
 #   created_on: 2009-01-01 01:01:01
 #   created_on: 2009-01-01 11:11:11
 #
-#   lock_file_key_value script /tmp/tst_lock_sh.txt
+#   __lock_file_key_value script /tmp/tst_lock_sh.txt
 #   # returns: /path/to/script.sh
 #
-#   lock_file_key_value created_on /tmp/tst_lock_sh.txt
+#   __lock_file_key_value created_on /tmp/tst_lock_sh.txt
 #   # returns: 2009-01-01 11:11:11
 #
 __lock_file_key_value() {
@@ -221,7 +221,7 @@ __lock_file_key_value() {
 
 
 #
-# lock_is_alertable
+# __lock_is_alertable
 #
 # Sent: age - required age
 #       file - lock file name, absolute path, optional
@@ -260,7 +260,7 @@ __lock_is_alertable() {
         return
     fi
 
-    created_on=$(lock_file_key_value created_on $file)
+    created_on=$(__lock_file_key_value created_on $file)
     if [[ ! $created_on ]]; then
         echo 'false'
         return
@@ -286,7 +286,7 @@ __lock_is_alertable() {
 
 
 #
-# lock_remove
+# __lock_remove
 #
 # Sent: file - lock file name, absolute path, optional
 # Return: nothing

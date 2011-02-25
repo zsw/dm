@@ -72,7 +72,7 @@ if [[ "$current_branch" != "master" ]]; then
     fi
 fi
 
-logger_debug "Expanding tree file names"
+__logger_debug "Expanding tree file names"
 trees="$@"
 
 [[ ! $trees ]] && trees=$(< $DM_USERS/current_trees)
@@ -86,10 +86,10 @@ if [[ ! "$tree_files" ]]; then
     exit 0
 fi
 
-logger_debug "Prioritizing mods using dependency tree."
+__logger_debug "Prioritizing mods using dependency tree."
 cat $tree_files | $DM_BIN/dependency_schema.pl --available $DM_ROOT | awk -v root=$DM_ROOT '{print root"/mods/"$1}' | $DM_BIN/format_mod.sh "%i %w %t %d" > $DM_USERS/todo
 
-logger_debug "Committing changes if necessary."
+__logger_debug "Committing changes if necessary."
 cd $DM_ROOT
 git add -u && git add .
 $DM_BIN/set_alerts.sh

@@ -98,14 +98,14 @@ if [[ ! -d $git_dir || ! -f $git_dir/.git/config ]]; then
     exit 1
 fi
 
-logger_debug "Git repo path: $git_dir"
+__logger_debug "Git repo path: $git_dir"
 
-logger_debug "Git server: $server"
+__logger_debug "Git server: $server"
 
 $dryrun && echo "Dry run. Pull not executed"
 $dryrun && exit 0
 
-lock_obtained=$(lock_create)
+lock_obtained=$(__lock_create)
 if [[ "$lock_obtained" == 'false' ]]; then
     echo "Unable to pull. The dm system is locked at the moment."
     echo "Try again in a few minutes."
@@ -115,27 +115,27 @@ if [[ "$lock_obtained" == 'false' ]]; then
     exit 1
 fi
 
-trap 'lock_remove; exit $?' INT TERM EXIT
+trap '__lock_remove; exit $?' INT TERM EXIT
 
-logger_debug "git checkout $server"
+__logger_debug "git checkout $server"
 git checkout $server || exit 1
 
-logger_debug "git pull"
+__logger_debug "git pull"
 git_pull_failed=
 git pull || git_pull_failed=1
 
 if [[ $git_pull_failed ]]; then
     pull_fail_message
-    logger_debug "git checkout master"
+    __logger_debug "git checkout master"
     git checkout master || exit 1
-    lock_remove
+    __lock_remove
     exit 1
 fi
 
-logger_debug "git checkout master"
+__logger_debug "git checkout master"
 git checkout master || exit 1
 
-logger_debug "git diff --stat $server master"
+__logger_debug "git diff --stat $server master"
 git diff --stat $server master || exit 1
 
 diff=$(git diff $server master)
@@ -159,13 +159,13 @@ done
 
 [[ "$reply" == "n" ]] && exit 0
 
-logger_debug "git merge $server"
+__logger_debug "git merge $server"
 git merge $server || exit 1
 
-logger_debug "Log pull."
+__logger_debug "Log pull."
 pull_dir="$DM_USERS/pulls"
 mkdir -p "$pull_dir"
 date "+%s" > "$pull_dir/$server"
 
-lock_remove
+__lock_remove
 trap - INT TERM EXIT

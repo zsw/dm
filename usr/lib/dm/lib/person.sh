@@ -10,7 +10,7 @@
 __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 #
-# person_attribute
+# __person_attribute
 #
 # Sent: attribute (eg name)
 #       key       (eg id)
@@ -22,7 +22,7 @@ __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 #
 # Usage:
 #
-#   value=$(person_attribute attribute key value)
+#   value=$(__person_attribute attribute key value)
 #
 __person_attribute() {
 
@@ -34,7 +34,7 @@ __person_attribute() {
     [[ ! $key ]]       && return
     [[ ! $value ]]     && return
 
-    logger_debug "attribute: $attribute, key: $key, value: $value"
+    __logger_debug "attribute: $attribute, key: $key, value: $value"
 
     if [[ ! -e $DM_PEOPLE ]]; then
         echo "ERROR: Invalid people file $DM_PEOPLE: No such file or directory." >&2
@@ -51,7 +51,7 @@ __person_attribute() {
 
     if [ "$key_index" == "" ]; then
 
-        logger_error "Key $key is not an people attribute."
+        __logger_error "Key $key is not an people attribute."
         return;
     fi
 
@@ -60,7 +60,7 @@ __person_attribute() {
 
     if [ "$attr_index" == "" ]; then
 
-        logger_error "Attribute $attribute is not a people attribute."
+        __logger_error "Attribute $attribute is not a people attribute."
         return;
     fi
 
@@ -76,7 +76,7 @@ __person_attribute() {
 }
 
 #
-# person_translate_who
+# __person_translate_who
 #
 # Sent: who   - can be number or string representing person's id, initials or
 #               username
@@ -110,9 +110,9 @@ __person_translate_who() {
         attribute='initials'
     fi
 
-    logger_debug "Who: $who is translated as attribute: $attribute"
+    __logger_debug "Who: $who is translated as attribute: $attribute"
 
-    local initials=$(person_attribute initials "$attribute" "$who")
+    local initials=$(__person_attribute initials "$attribute" "$who")
 
     echo $initials
     return

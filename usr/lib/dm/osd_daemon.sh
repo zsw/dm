@@ -70,7 +70,7 @@ function fork {
 
     cmd=$( echo "$0 $args" | sed -e "s/ -f//" )         # Remove fork option.
 
-    logger_debug "Forking... $cmd"
+    __logger_debug "Forking... $cmd"
 
     /usr/bin/setsid $cmd <&- >&- &                      # Close stdin/stdout and run in background.
 
@@ -113,21 +113,21 @@ function pop {
 
 function kill_osd_cat() {
 
-    logger_debug "kill_osd_cat"
+    __logger_debug "kill_osd_cat"
 
     pid=$(/usr/bin/pgrep -P $$ osd_cat);
     if [[ ! "$pid" ]]; then
         return;
     fi
 
-    logger_debug "osd_cat pid: $pid"
+    __logger_debug "osd_cat pid: $pid"
 
     res=$(/usr/bin/pkill -P $$ osd_cat > /dev/null)
 }
 
 function show_msg() {
 
-    logger_debug "show_msg"
+    __logger_debug "show_msg"
 
     export DISPLAY=:0
     echo "$1" | /usr/bin/osd_cat $options 2>/dev/nill &
@@ -211,32 +211,32 @@ while true; do
     case "$event" in
 
         __HIDE__)
-                logger_debug "Hide event processed"
+                __logger_debug "Hide event processed"
                 kill_osd_cat
                 status='hide'
                 ;;
 
         __SHOW__)
-                logger_debug "Show event processed"
+                __logger_debug "Show event processed"
                 kill_osd_cat
                 status='show'
                 ;;
 
         __FORK__)
-                logger_debug "Fork event processed"
+                __logger_debug "Fork event processed"
                 kill_osd_cat
                 fork
                 ;;
 
         __STOP__)
-                logger_debug "Stop event processed"
+                __logger_debug "Stop event processed"
                 kill_osd_cat
                 status='show'
                 pop
                 ;;
 
         __KILL__)
-                logger_debug "Kill event processed"
+                __logger_debug "Kill event processed"
                 kill_osd_cat
                 exit 0
                 ;;
