@@ -25,7 +25,7 @@ SYSLOG_FILE='/var/log/local7.log'
 #
 #   Clear logging settings
 #
-function clear_logger_settings {
+clear_logger_settings() {
 
     LOG_FORMAT_DATE=
     LOG_FORMAT_FILE=
@@ -53,7 +53,7 @@ function clear_logger_settings {
 #   If the $override_date variable is set, a date command returns its
 #   instead of the output of the 'date' command.
 #
-function date {
+date() {
 
     if [[ $override_date ]]; then
         echo $override_date
@@ -75,7 +75,7 @@ function date {
 #
 #   Run tests on logger_level function.
 #
-function tst_logger_level {
+tst_logger_level() {
 
     LOG_LEVEL_DEBUG=1
     LOG_LEVEL_INFO=2
@@ -128,7 +128,7 @@ EOT
 #
 #   Run tests on logger_log function.
 #
-function tst_logger_log {
+tst_logger_log() {
 
     # The code in tst uses logger_log to report test results.
     # Restore logger settings using source test.sh before calling tst.
@@ -265,7 +265,7 @@ function tst_logger_log {
 #
 #   Run tests on logger_debug function.
 #
-function tst_logger_debug {
+tst_logger_debug() {
 
     saveDM_LOG=$DM_LOG
     DM_LOG=
@@ -316,7 +316,7 @@ EOT
 #
 #   Run tests on logger_info function.
 #
-function tst_logger_info {
+tst_logger_info() {
 
     saveDM_LOG=$DM_LOG
     DM_LOG=
@@ -368,7 +368,7 @@ EOT
 #
 #   Run tests on logger_warn function.
 #
-function tst_logger_warn {
+tst_logger_warn() {
 
     saveDM_LOG=$DM_LOG
     DM_LOG=
@@ -420,7 +420,7 @@ EOT
 #
 #   Run tests on logger_error function.
 #
-function tst_logger_error {
+tst_logger_error() {
 
     saveDM_LOG=$DM_LOG
     DM_LOG=
@@ -472,7 +472,7 @@ EOT
 #
 #   Run tests on logger_fatal function.
 #
-function tst_logger_fatal {
+tst_logger_fatal() {
 
     saveDM_LOG=$DM_LOG
     DM_LOG=
@@ -515,15 +515,16 @@ EOT
 }
 
 
-functions=$(cat $0 | grep '^function tst_' | awk '{ print $2}')
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

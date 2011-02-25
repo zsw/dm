@@ -17,7 +17,7 @@ source $DM_ROOT/test/test.sh
 #
 #   Run tests on environment.
 #
-function tst_env {
+tst_env() {
 
     tst_is_not_empty USERNAME "USERNAME is not empty"
     tst_is_set USERNAME "USERNAME is set"
@@ -28,15 +28,16 @@ function tst_env {
 }
 
 
-functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

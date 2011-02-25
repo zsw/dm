@@ -350,6 +350,7 @@ __loaded_hold() {
 }
 
 # Export all functions to any script sourcing this library file.
-for function in $(awk '/^function / {print $2}' $DM_ROOT/lib/hold.sh); do
-    export -f "$function"
-done
+while read -r function; do
+    export -f "${function%%(*}"         # strip '()'
+done < <(awk '/^__*()/ {print $1}' "$DM_ROOT"/lib/hold.sh)
+

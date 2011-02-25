@@ -9,13 +9,13 @@
 # Run all tests.
 #
 
-test_dir=$(dirname $0)
+test_dir=${0%/*}           # Strip all.sh
 
-for script in $test_dir/*.sh; do
+for script in "$test_dir"/*.sh; do
 
-    [[ $(basename $script) == 'all.sh' ]]  && continue
-    [[ $(basename $script) == 'test.sh' ]]  && continue
+    [[ ${script##*/} == all.sh ]]  && continue
+    [[ ${script##*/} == test.sh ]]  && continue
 
     echo "Running: $script"
-    $script
+    "$script"
 done

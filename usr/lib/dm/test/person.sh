@@ -21,7 +21,7 @@ test_dir="${tmpdir}/test"
 #
 #   Run tests on person_attribute function.
 #
-function tst_person_attribute {
+tst_person_attribute() {
 
     DM_PEOPLE="${test_dir}/people"
 
@@ -101,7 +101,7 @@ EOT
 #
 #   Run tests on person_translate_who function.
 #
-function tst_person_translate_who {
+tst_person_translate_who() {
 
     DM_PEOPLE="${test_dir}/people"
 
@@ -137,15 +137,16 @@ EOT
 }
 
 
-functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

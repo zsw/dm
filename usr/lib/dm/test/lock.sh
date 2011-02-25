@@ -18,7 +18,7 @@ __loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
 #
 #   Run tests on is_locked function.
 #
-function tst_is_locked {
+tst_is_locked() {
 
     value=$(is_locked)
     expect="false"
@@ -51,7 +51,7 @@ function tst_is_locked {
 #
 #   Run tests on lock_alert function.
 #
-function tst_lock_alert {
+tst_lock_alert() {
 
     to='iiijjjiii@gmail.com'
     file='/tmp/tst_lock_sh.txt'
@@ -91,7 +91,7 @@ function tst_lock_alert {
 #
 #   Run tests on lock_create function.
 #
-function tst_lock_create {
+tst_lock_create() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
@@ -148,7 +148,7 @@ function tst_lock_create {
 #
 #   Run tests on lock_file function.
 #
-function tst_lock_file {
+tst_lock_file() {
 
     save_DM_TMP=DM_TMP
     DM_TMP=/tmp/dm_testing
@@ -168,7 +168,7 @@ function tst_lock_file {
 #
 #   Run tests on lock_file_key_value function.
 #
-function tst_lock_file_key_value {
+tst_lock_file_key_value() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
@@ -224,7 +224,7 @@ function tst_lock_file_key_value {
 #
 #   Run tests on lock_is_alertable function.
 #
-function tst_lock_is_alertable {
+tst_lock_is_alertable() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
@@ -265,7 +265,7 @@ function tst_lock_is_alertable {
 #
 #   Run tests on lock_remove function.
 #
-function tst_lock_remove {
+tst_lock_remove() {
 
     file='/tmp/tst_lock_sh.txt'
     rm $file 2>/dev/null
@@ -286,16 +286,16 @@ function tst_lock_remove {
 }
 
 
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
-
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

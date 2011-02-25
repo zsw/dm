@@ -19,7 +19,7 @@ __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 #
 #   Run tests on attr_file_name function.
 #
-function tst_attr_file_name {
+tst_attr_file_name() {
 
     mod=11111
     mod_dir="$DM_MODS/$mod"
@@ -46,7 +46,7 @@ function tst_attr_file_name {
 #
 #   Run tests on attr_file function.
 #
-function tst_attr_file {
+tst_attr_file() {
 
     mod=22222
     mod_dir="$DM_MODS/$mod"
@@ -80,7 +80,7 @@ function tst_attr_file {
 #
 #   Run tests on attribute function.
 #
-function tst_attribute {
+tst_attribute() {
 
     mod=33333
     mod_dir="$DM_MODS/$mod"
@@ -121,7 +121,7 @@ function tst_attribute {
 #
 #   Run tests on has_conflict_markers function.
 #
-function tst_has_conflict_markers {
+tst_has_conflict_markers() {
 
     file=$(tmp_file)
 
@@ -179,7 +179,7 @@ EOT
 #
 #   Run tests on mod_dir function.
 #
-function tst_mod_dir {
+tst_mod_dir() {
 
     dir=$(mod_dir)
     tst "$dir" '' 'no mod provided - returns nothing'
@@ -207,15 +207,16 @@ function tst_mod_dir {
     tst "$dir" "$archive_dir" 'returns correct archive directory'
 }
 
-functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

@@ -31,12 +31,12 @@ __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 __tmp_dir() {
 
     if [[ $DM_TMP ]]; then
-	    echo "$DM_TMP"
+        echo "$DM_TMP"
     else
-	    username=$1
-	    [[ ! $username ]] && username=$USERNAME
-	    [[ ! $username ]] && username=$(mktemp -d -u XXXXXXXXXXXX)
-	    echo "/tmp/dm_${username}"
+        username=$1
+        [[ ! $username ]] && username=$USERNAME
+        [[ ! $username ]] && username=$(mktemp -d -u XXXXXXXXXXXX)
+        echo "/tmp/dm_${username}"
     fi
     return
 }
@@ -86,6 +86,6 @@ __loaded_tmp() {
 }
 
 # Export all functions to any script sourcing this library file.
-for function in $(awk '/^function / { print $2}' $DM_ROOT/lib/tmp.sh); do
-    export -f $function
-done
+while read -r function; do
+    export -f "${function%%(*}"         # strip '()'
+done < <(awk '/^__*()/ {print $1}' "$DM_ROOT"/lib/tmp.sh)

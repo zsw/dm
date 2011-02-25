@@ -18,7 +18,7 @@ __loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 #
 #   Run tests on hold_add_usage_comment function
 #
-function tst_hold_add_usage_comment {
+tst_hold_add_usage_comment() {
 
     # Handles no mod gracefully
     hold_add_usage_comment ''
@@ -59,7 +59,7 @@ function tst_hold_add_usage_comment {
 #
 #   Run tests on hold_as_crontab function
 #
-function tst_hold_as_crontab {
+tst_hold_as_crontab() {
 
     local crontab=$(hold_as_crontab '2010-10-31 12:34:56')
     local expect="34 12 31 10 *"
@@ -81,7 +81,7 @@ function tst_hold_as_crontab {
 #
 #   Run tests on hold_as_yyyy_mm_dd_hh_mm_ss function
 #
-function tst_hold_as_yyyy_mm_dd_hh_mm_ss {
+tst_hold_as_yyyy_mm_dd_hh_mm_ss() {
 
     local cron_exp="59 23 31 12"
     local timestamp=$(hold_as_yyyy_mm_dd_hh_mm_ss "$cron_exp" 2>/dev/null)
@@ -149,7 +149,7 @@ function tst_hold_as_yyyy_mm_dd_hh_mm_ss {
 #
 #   Run tests on hold_crontab function
 #
-function tst_hold_crontab {
+tst_hold_crontab() {
 
     # FIXME
     # [ ] Test invalid mod_id
@@ -180,7 +180,7 @@ function tst_hold_crontab {
 #
 #   Run tests on hold_has_usage_comment function
 #
-function tst_hold_has_usage_comment {
+tst_hold_has_usage_comment() {
 
     hold_has_usage_comment ''
     tst "$?" "1" 'no mod provided returns false'
@@ -220,7 +220,7 @@ function tst_hold_has_usage_comment {
 #
 #   Run tests on hold_timestamp function.
 #
-function tst_hold_timestamp {
+tst_hold_timestamp() {
 
     local ht=$(hold_timestamp '')
     tst "$ht" '' 'no mod provided returns nothing'
@@ -270,7 +270,7 @@ function tst_hold_timestamp {
 #
 #   Run tests on hold_timestamp_status function.
 #
-function tst_hold_timestamp_status {
+tst_hold_timestamp_status() {
 
     status=$(hold_timestamp_status)
     tst "$status" "off_hold" 'no timestamp returns off hold'
@@ -296,7 +296,7 @@ function tst_hold_timestamp_status {
 #
 #   Run tests on hold_usage_comment function
 #
-function tst_hold_usage_comment {
+tst_hold_usage_comment() {
 
     local comment=$(hold_usage_comment '')
     tst "$comment" '' 'no mod provided returns nothing'
@@ -311,16 +311,16 @@ function tst_hold_usage_comment {
 }
 
 
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
-
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

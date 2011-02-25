@@ -18,7 +18,7 @@ __loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 #
 #   Run tests on create_alert function.
 #
-function tst_create_alert {
+tst_create_alert() {
 
     MOD_ID_1=11111
     MOD_ID_2=22222
@@ -88,15 +88,16 @@ EOT
 }
 
 
-functions=$(cat $0 | grep '^function tst_' | awk '{ print $2}')
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

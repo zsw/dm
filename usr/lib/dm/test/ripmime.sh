@@ -27,7 +27,7 @@ test_file="${test_dir}/$test_filename"
 #
 #   Setup test mime file.
 #
-function _setup_test_mime_file {
+_setup_test_mime_file() {
 
     text_plain=$1
     text_html=$2
@@ -96,7 +96,7 @@ EOT
 #
 #   Run tests on ripmime_command function.
 #
-function tst_ripmime_command {
+tst_ripmime_command() {
 
     got=$(ripmime_command)
     expect='/usr/bin/ripmime'
@@ -112,7 +112,7 @@ function tst_ripmime_command {
 #
 #   Run tests on ripmime_files_cat function.
 #
-function tst_ripmime_files_cat {
+tst_ripmime_files_cat() {
 
     text_plain=1
     text_html=
@@ -154,7 +154,7 @@ function tst_ripmime_files_cat {
 #
 #   Run tests on ripmime_run function.
 #
-function tst_ripmime_run {
+tst_ripmime_run() {
 
     text_plain=1
     text_html=1
@@ -196,7 +196,7 @@ function tst_ripmime_run {
 #
 #   Run tests on ripmime_tmpdir function.
 #
-function tst_ripmime_tmpdir {
+tst_ripmime_tmpdir() {
 
     save_DM_TMP=DM_TMP
     DM_TMP=/tmp/dm_testing
@@ -211,15 +211,16 @@ function tst_ripmime_tmpdir {
 }
 
 
-functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

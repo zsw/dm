@@ -12,11 +12,11 @@ source $DM_ROOT/lib/log.sh                          # Re-source this every time 
 LOG_LEVEL=info
 LOG_TO_STDOUT=              # Prevent logger calls in functions from affecting tests
 
-tmpdir=$(tmp_dir)
-test_dir="${tmpdir}/test"
+tmpdir=$(__tmp_dir)
+test_dir=$tmpdir/test
 
-rm -r $test_dir 2>/dev/null
-mkdir -p $test_dir
+[[ $test_dir =~ ^/tmp ]] && rm -r "$test_dir" 2>/dev/null
+mkdir -p "$test_dir"
 
 export DM_ARCHIVE=$test_dir/archive
 export DM_IDS=$test_dir/users/ids
@@ -25,21 +25,20 @@ export DM_PEOPLE=$test_dir/users/people
 export DM_TREES=$test_dir/trees
 export DM_USERS=$test_dir/users/$USERNAME
 
-function tst {
+tst() {
+    local value expect label saveOut
 
-    local value="$1"
-    local expect="$2"
-    local label="$3"
-
-    #echo "Value: $value, expect: $expect, label: $label"
+    value=$1
+    expect=$2
+    label=$3
 
     # Logging to stdout was turned off above. Restore so the user sees
     # output.
 
-    local saveOut=$LOG_TO_STDOUT
+    saveOut=$LOG_TO_STDOUT
     LOG_TO_STDOUT=1
 
-    if [[ "$value" == "$expect" ]]; then
+    if [[ $value == $expect ]]; then
         logger_info "$function - $label"
     else
         logger_error "$function - $label"
@@ -51,12 +50,13 @@ function tst {
 }
 
 
-function tst_is_not_empty {
+tst_is_not_empty() {
+    local var label saveOut
 
-    local var="$1"
-    local label="$2"
+    var=$1
+    label=$2
 
-    local saveOut=$LOG_TO_STDOUT
+    saveOut=$LOG_TO_STDOUT
     LOG_TO_STDOUT=1
 
     if [[ ! ${!var} && ${!var-_} ]]; then
@@ -70,12 +70,13 @@ function tst_is_not_empty {
     LOG_TO_STDOUT=$saveOut
 }
 
-function tst_is_set {
+tst_is_set() {
+    local var label saveOut
 
-    local var="$1"
-    local label="$2"
+    var=$1
+    label=$2
 
-    local saveOut=$LOG_TO_STDOUT
+    saveOut=$LOG_TO_STDOUT
     LOG_TO_STDOUT=1
 
     if [[ ! ${!var} && ${!var-_} ]]; then
@@ -86,6 +87,3 @@ function tst_is_set {
 
     LOG_TO_STDOUT=$saveOut
 }
-
-mkdir -p $test_dir
-

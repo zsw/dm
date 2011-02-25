@@ -18,7 +18,7 @@ __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 #
 #   Run tests on tmp_dir function.
 #
-function tst_tmp_dir {
+tst_tmp_dir() {
 
     save_DM_TMP=DM_TMP
     DM_TMP=/tmp/dm_testing
@@ -27,8 +27,8 @@ function tst_tmp_dir {
     value=$(tmp_dir)
     expect="/tmp/dm_testing"
     tst "$value" "$expect" "provided username returned expected"
-   
-    unset DM_TMP 
+
+    unset DM_TMP
 
     # Provide username
     value=$(tmp_dir test_user_1)
@@ -64,7 +64,7 @@ function tst_tmp_dir {
 #
 #   Run tests on tmp_file function.
 #
-function tst_tmp_file {
+tst_tmp_file() {
 
     # Provide directory
     save_DM_TMP=DM_TMP
@@ -113,16 +113,16 @@ function tst_tmp_file {
 }
 
 
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-functions=$(cat $0 | grep '^function tst_' | awk '{ print $2}')
-
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

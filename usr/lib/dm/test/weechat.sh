@@ -18,7 +18,7 @@ __loaded_weechat 2>/dev/null || source $DM_ROOT/lib/weechat.sh
 #
 #   Run tests on weechat_log_path function.
 #
-function tst_weechat_log_path {
+tst_weechat_log_path() {
 
     # In some environments, weechat may not be available. Without weechat
     # most tests will fail. Do only mininal testing in that case.
@@ -75,7 +75,7 @@ function tst_weechat_log_path {
 #
 #   Run tests on weechat_events_file function.
 #
-function tst_weechat_events_file {
+tst_weechat_events_file() {
 
     # In some environments, weechat may not be available. Without weechat
     # most tests will fail. Do only mininal testing in that case.
@@ -95,16 +95,16 @@ function tst_weechat_events_file {
 }
 
 
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-functions=$(cat $0 | grep '^function tst_' | awk '{ print $2}')
-
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done

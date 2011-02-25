@@ -18,7 +18,7 @@ __loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
 #
 #   Run tests on filename_from_section function.
 #
-function tst_filename_from_section {
+tst_filename_from_section() {
 
     mod=12345
     mod_dir="$DM_MODS/$mod"
@@ -55,7 +55,7 @@ function tst_filename_from_section {
 #
 #   Run tests on is_text function.
 #
-function tst_is_text {
+tst_is_text() {
 
     type=$(is_text)
     tst "$type" '' 'no file - returns nothing'
@@ -83,7 +83,7 @@ function tst_is_text {
 #
 #   Run tests on section_name function.
 #
-function tst_section_name {
+tst_section_name() {
 
 
     section=$(section_name)
@@ -114,7 +114,7 @@ function tst_section_name {
 #
 #   Run tests on section_name_from_filename function.
 #
-function tst_section_name_from_filename {
+tst_section_name_from_filename() {
 
     mod=12345
     mod_dir="$DM_MODS/$mod"
@@ -141,17 +141,16 @@ function tst_section_name_from_filename {
     return
 }
 
+functions=$(awk '/^tst_/ {print $1}' $0)
 
-functions=$(cat $0 | grep '^function ' | awk '{ print $2}')
-
-[[ "$1" ]] && functions="$*"
+[[ $1 ]] && functions="$*"
 
 for function in  $functions; do
-    if [[ ! $(declare -f $function) ]]; then
+    function=${function%%(*}        # strip '()'
+    if [[ ! $(declare -f "$function") ]]; then
         echo "Function not found: $function"
         continue
     fi
 
-    $function
+    "$function"
 done
-
