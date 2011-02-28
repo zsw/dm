@@ -58,7 +58,7 @@ _by_weechat() {
 _by_email() {
     subject=$(sed -e "s/\"/\\\\\"/" "$mod_dir/description")
     notes=$(sed -e "s/\"/\\\\\"/" "$mod_dir/notes")
-    res=$(echo -e "To: $account\nSubject: $subject\n\n$notes" | sendmail -v -- "$to_email")
+    res=$(echo -e "To: $account\nSubject: $subject\n\n$notes" | sendmail -v -- "$account")
 }
 
 _options() {
