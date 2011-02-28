@@ -84,4 +84,6 @@ _options() {
 
 _options "$@"
 
+[[ ! -d $mod_dir ]] && __me "No such file or directory: $mod_dir"
+
 [[ $jabber ]] && _by_weechat || _by_email

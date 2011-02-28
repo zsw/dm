@@ -51,6 +51,7 @@ while read -r method; do
     command_var=${account_var}_COMMAND
     command=${!command_var}
     script=${command%% *}
-    options=${command#* }
-    type "$script" >&/dev/null && "$script" "$options" "$account" "$mod_dir"
+    unset options
+    [[ $script != $command ]] && options=${command#* }
+    type "$script" >&/dev/null && "$script" $options "$account" "$mod_dir"
 done < "$remind"
