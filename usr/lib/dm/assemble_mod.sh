@@ -49,7 +49,8 @@ mod_dir=$(__mod_dir $mod)
 # of the array. The 'notes' section is not added to the sections array
 # until after the for loop to guarantee it will be the last section.
 sections=()
-notes=
+unset notes
+indx=6          # One more than index of last section hard coded below
 shopt -s globstar
 for file in "$mod_dir"/** ; do
     file=${file/$mod_dir\//}
@@ -60,8 +61,10 @@ for file in "$mod_dir"/** ; do
     [[ $file == specs ]]       && sections[4]=$file && continue
     [[ $file == spec ]]        && sections[5]=$file && continue
     [[ $file == notes ]]       && notes='notes'     && continue
-    sections+=($file)
+    ((indx += 1))
+    sections[$indx]=$file
 done
+
 [[ $notes ]] && sections+=($notes)
 shopt -u globstar
 
