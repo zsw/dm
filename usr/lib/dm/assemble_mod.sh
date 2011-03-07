@@ -53,16 +53,18 @@ unset notes
 indx=6          # One more than index of last section hard coded below
 shopt -s globstar
 for file in "$mod_dir"/** ; do
-    file=${file/$mod_dir\//}
-    [[ $file == description ]] && sections[0]=$file && continue
-    [[ $file == who ]]         && sections[1]=$file && continue
-    [[ $file == hold ]]        && sections[2]=$file && continue
-    [[ $file == remind ]]      && sections[3]=$file && continue
-    [[ $file == specs ]]       && sections[4]=$file && continue
-    [[ $file == spec ]]        && sections[5]=$file && continue
-    [[ $file == notes ]]       && notes='notes'     && continue
-    ((indx += 1))
-    sections[$indx]=$file
+    if [[ -f $file ]]; then
+        file=${file/$mod_dir\//}
+        [[ $file == description ]] && sections[0]=$file && continue
+        [[ $file == who ]]         && sections[1]=$file && continue
+        [[ $file == hold ]]        && sections[2]=$file && continue
+        [[ $file == remind ]]      && sections[3]=$file && continue
+        [[ $file == specs ]]       && sections[4]=$file && continue
+        [[ $file == spec ]]        && sections[5]=$file && continue
+        [[ $file == notes ]]       && notes='notes'     && continue
+        ((indx += 1))
+        sections[$indx]=$file
+    fi
 done
 
 [[ $notes ]] && sections+=($notes)
