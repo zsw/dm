@@ -1,23 +1,20 @@
 #!/bin/bash
 __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
 _u() { cat << EOF
-
-usage: $script [ -m mod_id ] <remind_by options> <email addresses>
+usage: $script [-m mod_id] <remind_by options>
 
 This script sets the methods (email, jabber, pager) for which alerts will be sent for a mod.
+    -m      Id of mod
 
-OPTIONS:
-   -m      Id of mod
-
-   -h      Print this help message.
+    -h      Print this help message.
 
 REMIND_BY OPTIONS
-
     These are the remind_by options, ie how the alerts for the mod are reminded by.
 
     e(mail)
@@ -42,26 +39,23 @@ REMIND_BY OPTIONS
     option from the mod's remind file, leaving any other entries in the remind
     file untouched.
 
-
 EXAMPLES:
-
     # Remind mod 12345 by jabber and pager
-    $0 -m 12345 jabber pager
+    $script -m 12345 jabber pager
 
     # Remind mod 12345 by email as well
-    $0 -m 12345 +email
+    $script -m 12345 +email
 
     # Remove the option for reminding mod 12345 by pager
-    $0 -m 12345 -pager
+    $script -m 12345 -pager
 
     # Remind the default mod by pager
-    $0 pager
+    $script pager
 
     # Use short forms to set mod 22222 to remind by email, jabber and pager
-    $0 -m 22222 e j p
+    $script -m 22222 e j p
 
 NOTES:
-
     If the -m options is not provided, the mod postponed is the current one,
     ie. one indicated in $DM_USERS/current_mod
 
@@ -74,160 +68,74 @@ NOTES:
 
     Alternatives for remind_by options can be created from the cli.
 
-    echo username@gmail.com > $DM_ROOT/mods/12345/remind
-    echo 5195552121@pcs.rogers.com > $DM_ROOT/mods/12345/remind
+    echo email > $DM_ROOT/mods/12345/remind_by
+    echo pager > $DM_ROOT/mods/12345/remind_by
 
 EOF
 }
 
-function clean_remind {
 
-    # Remove dupes and sort remind file
+_options() {
+    # set defaults
+    args=()
+    mod_id=$(< "$DM_USERS/current_mod")
+    unset empty
+    unset email
+    unset email_add
+    unset email_minus
+    unset jabber
+    unset jabber_add
+    unset jabber_minus
+    unset pager
+    unset pager_add
+    unset pager_minus
+    email_opts=0
+    jabber_opts=0
+    pager_opts=0
 
-    file=$1
-    tmpfile=$(__tmp_file)
+    while [[ $1 ]]; do
+        case "$1" in
+             -m) shift; mod_id=$1 ;;
+             e*) email=1;        ((email_opts++));  empty=1 ;;
+            +e*) email_plus=1;   ((email_opts++)) ;;
+            -e*) email_minus=1;  ((email_opts++)) ;;
+             j*) jabber=1;       ((jabber_opts++)); empty=1 ;;
+            +j*) jabber_plus=1;  ((jabber_opts++)) ;;
+            -j*) jabber_minus=1; ((jabber_opts++)) ;;
+             p*) pager=1;        ((pager_opts++));  empty=1 ;;
+            +p*) pager_plus=1;   ((pager_opts++)) ;;
+            -p*) pager_minus=1;  ((pager_opts++)) ;;
+             -h) _u; exit 0      ;;
+             --) shift; [[ $* ]] && args+=( "$@" ); break;;
+             -*) _u; exit 0      ;;
+              *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-    res=$(cat $file | sort | uniq > $tmpfile)
-    res=$(cp $tmpfile $file)
+    (( ${#args[@]} != 0 )) && { _u; exit 1; }
+    (( $email_opts  > 1 )) && { _u; exit 1; }
+    (( $jabber_opts > 1 )) && { _u; exit 1; }
+    (( $pager_opts  > 1 )) && { _u; exit 1; }
+    (( $email_opts + $jabber_opts + $pager_opts == 0 )) && { _u; exit 1; }
 }
 
-mod=$(< $DM_USERS/current_mod);
 
-email=
-email_add=
-email_minus=
-email_opts=0
-jabber=
-jabber_add=
-jabber_minus=
-jabber_opts=0
-pager=
-pager_add=
-pager_minus=
-pager_opts=0
-empty=
-
-while [ "$1" != "" ]; do
-    case $1 in
-
-        -m ) shift
-             mod=$1
-             ;;
-
-         e*) email=1
-             let "email_opts++"
-             empty=1
-             ;;
-        +e*) email_plus=1
-             let "email_opts++"
-             ;;
-        -e*) email_minus=1
-             let "email_opts++"
-             ;;
-
-         j*) jabber=1
-             let "jabber_opts++"
-             empty=1
-             ;;
-        +j*) jabber_plus=1
-             let "jabber_opts++"
-             ;;
-        -j*) jabber_minus=1
-             let "jabber_opts++"
-             ;;
-
-         p*) pager=1
-             let "pager_opts++"
-             empty=1
-             ;;
-        +p*) pager_plus=1
-             let "pager_opts++"
-             ;;
-        -p*) pager_minus=1
-             let "pager_opts++"
-             ;;
-
-        -h ) _u
-             exit 0;;
-         * ) _u
-             exit 1;;
-
-    esac
-    shift
-done
+_options "$@"
 
 
-if [ ! $mod ]; then
+[[ ! $mod_id ]] && __me 'Unable to determine mod id.'
 
-    echo 'ERROR: Unable to determine mod id.' >&2
-    exit 1
-fi
+mod_dir=$(__mod_dir "$mod_id")
+remind_by=$mod_dir/remind_by
 
-if [[ "$email_opts" -gt "1" ]]; then
-    _u
-    exit 1
-fi
+[[ $empty ]]                    && echo -n '' > $remind_by
+[[ $email  || $email_plus ]]    && echo 'email'  >> $remind_by
+[[ $jabber || $jabber_plus ]]   && echo 'jabber' >> $remind_by
+[[ $pager  || $pager_plus ]]    && echo 'pager'  >> $remind_by
+[[ $email_minus ]]              && sed -i "/email/d"  $remind_by
+[[ $jabber_minus ]]             && sed -i "/jabber/d" $remind_by
+[[ $pager_minus ]]              && sed -i "/pager/d"  $remind_by
 
-if [[ "$jabber_opts" -gt "1" ]]; then
-    _u
-    exit 1
-fi
-
-if [[ "$pager_opts" -gt "1" ]]; then
-    _u
-    exit 1
-fi
-
-
-remind=$DM_MODS/$mod/remind
-remind_by=$DM_MODS/$mod/remind_by
-
-if [[ $empty ]]; then
-    __logger_debug "Clearing $remind"
-    echo -n '' > $remind
-    echo -n '' > $remind_by
-fi
-
-if [[ $email || -n $email_plus ]]; then
-    __logger_debug "Adding email $DM_PERSON_EMAIL to remind_by options for mod $mod"
-    echo $DM_PERSON_EMAIL >> $remind
-    echo 'email' >> $remind_by
-fi
-
-if [[ $email_minus ]]; then
-    __logger_debug "Removing email $DM_PERSON_EMAIL from remind_by options for mod $mod"
-    sed -i "/$DM_PERSON_EMAIL/d" $remind
-    sed -i "/email/d" $remind_by
-fi
-
-
-if [[ $jabber || -n $jabber_plus ]]; then
-    __logger_debug "Adding jabber $DM_PERSON_JABBER to remind_by options for mod $mod"
-    echo $DM_PERSON_JABBER >> $remind
-    echo 'jabber' >> $remind_by
-fi
-
-if [[ $jabber_minus ]]; then
-    __logger_debug "Removing jabber $DM_PERSON_JABBER from remind_by options for mod $mod"
-    sed -i "/$DM_PERSON_JABBER/d" $remind
-    sed -i "/jabber/d" $remind_by
-fi
-
-
-if [[ $pager || -n $pager_plus ]]; then
-    __logger_debug "Adding pager $DM_PERSON_PAGER to remind_by options for mod $mod"
-    echo $DM_PERSON_PAGER >> $remind
-    echo 'pager' >> $remind_by
-fi
-
-if [[ $pager_minus ]]; then
-    __logger_debug "Removing pager $DM_PERSON_PAGER from remind_by options for mod $mod"
-    sed -i "/$DM_PERSON_PAGER/d" $remind
-    sed -i "/pager/d" $remind_by
-fi
-
-clean_remind $remind
-clean_remind $remind_by
-
-__logger_debug "cat $remind"
-__logger_debug $(cat $remind)
+# Sort and remove duplicates
+sort -u -o "$remind_by" "$remind_by"
