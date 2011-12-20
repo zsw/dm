@@ -4,21 +4,14 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0 mod_id /path/to/tree/file
+_u() { cat << EOF
+usage: $script mod_id /path/to/tree/file
 
 This script moves a mod from one tree to another.
-
-OPTIONS:
-
    -h      Print this help message.
 
 EXAMPLE:
-
-    $0 12345 $DM_ROOT/trees/main
+    $script 12345 $DM_ROOT/trees/main
 EOF
 }
 
@@ -47,53 +40,37 @@ fi
 mod_id=$1
 to_tree=$2
 
-if [[ ! -e $to_tree ]]; then
-    echo "Unable to find tree file: $to_tree" >&2
-    exit 1
-fi
-
-if [[ ! -w $to_tree ]]; then
-    echo "Permission denied. Unable to write tree file: $to_tree" >&2
-    exit 1
-fi
+[[ ! -e $to_tree ]] && __me "Unable to find tree file: $to_tree"
+[[ ! -w $to_tree ]] && __me "Permission denied. Unable to write tree file: $to_tree"
 
 # Ensure mod is valid
 mod_dir=$(__mod_dir $mod_id)
 
-if [[ ! "$mod_dir" ]]; then
-    echo "ERROR: Unable to mv mod $mod_id." >&2
-    echo "Unable to find mod in either $DM_MODS or $DM_ARCHIVE." >&2
-    exit 1
-fi
+[[ ! "$mod_dir" ]] && __me "Unable to mv mod $mod_id.\n===> ERROR: Unable to find mod in either $DM_MODS or $DM_ARCHIVE."
+
 # Find the tree file the mod is currently in.
 # The integrity script will report issues if a mod is in more than one
 # tree. This script will only look at the first tree the mod is found
 # in.
-from_tree=$( grep -srl  "\[.\] $mod_id" $DM_TREES | head -1)
+from_tree=$(grep -rlE  "^\s*\[.\]\s*$mod_id" $DM_TREES | head -1)
 
-if [[ "$from_tree" == "$to_tree" ]]; then
-    # Nothing to do
-    exit 0
-fi
+[[ $from_tree == $to_tree ]] && exit 0
 
+# If the mod is in a group (project) then we need to move the whole
+# group to prevent the group from being disorganized.
 group_id=
-if [[ $from_tree ]]; then
-    # If the mod is in a group (project) then we need to move the whole
-    # group to prevent the group from being disorganized.
-    group_id=$($DM_BIN/tree_parse.py --mods $from_tree | grep "^$mod_id " | awk '{print $2}')
-fi
+[[ $from_tree ]] && group_id=$("$DM_BIN/tree_parse.py" --mods "$from_tree" | awk -v v="^$mod_id" '$0 ~ v {print $2}')
 
 if [[ $group_id ]]; then
-    $DM_BIN/mv_group_to_tree.sh "$group_id" "$to_tree"
+    "$DM_BIN/mv_group_to_tree.sh" "$group_id" "$to_tree"
+
 else
-    if [[ $from_tree ]]; then
-        # Remove from original tree
-        sed -i "/\[.\] $mod_id /d" $from_tree
-    fi
+    # Remove from original tree
+    [[ $from_tree ]] && sed -i "/\[.\] $mod_id /d" "$from_tree"
 
     # Add to new tree
-    $DM_BIN/format_mod_in_tree.sh "$mod_id" "$to_tree"
+    "$DM_BIN/format_mod_in_tree.sh" "$mod_id" "$to_tree"
 fi
 
 # Print the mod id to stdout so script pipes nicely.
-echo $mod_id
+echo "$mod_id"

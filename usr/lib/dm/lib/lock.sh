@@ -20,15 +20,8 @@ __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 __is_locked() {
 
     file=$1
-    if [[ ! $file ]]; then
-        file=$(__lock_file)
-    fi
-
-    if [[ -r "$file" ]]; then
-        echo "true"
-    else
-        echo "false"
-    fi
+    [[ ! $file ]] && file=$(__lock_file)
+    [[ -r $file ]] && return 0 || return 1
 }
 
 
@@ -47,21 +40,11 @@ __lock_alert() {
     to=$1
     file=$2
 
-    if [[ ! $to ]]; then
-        echo "false"
-        return
-    fi
+    [[ ! $to ]] && return 1
+    [[ ! $file ]] && file=$(__lock_file)
+    [[ ! -r $file ]] && return 1
 
-    if [[ ! $file ]]; then
-        file=$(__lock_file)
-    fi
-
-    if [[ ! -r $file ]]; then
-        echo "false"
-        return
-    fi
-
-    script=$(__lock_file_key_value script $file)
+    script=$(__lock_file_key_value script "$file")
     subject="dm system is locked"
     body="Script: $script
 
@@ -77,15 +60,7 @@ exists, the system has been unlocked and all is good. Cat the
 file for details on the script locking the system.
 "
     # send email
-    res=$(echo -e "To: $to\nSubject: $subject\n\n$body" | sendmail -v -- $to)
-    if [[ "$?" != "0" ]]; then
-        echo "false"
-        return
-    fi
-
-    echo "true"
-
-    return
+    echo -e "To: $to\nSubject: $subject\n\n$body" | sendmail -v -- "$to" &>/dev/null
 }
 
 
@@ -247,24 +222,12 @@ __lock_is_alertable() {
     age=$1
     file=$2
 
-    if [[ ! $age ]]; then
-        age="0 minutes"
-    fi
-
-    if [[ ! $file ]]; then
-        file=$(__lock_file)
-    fi
-
-    if [[ ! -r $file ]]; then
-        echo 'false'
-        return
-    fi
+    [[ ! $age ]] && age="0 minutes"
+    [[ ! $file ]] && file=$(__lock_file)
+    [[ ! -r $file ]] && return 1
 
     created_on=$(__lock_file_key_value created_on $file)
-    if [[ ! $created_on ]]; then
-        echo 'false'
-        return
-    fi
+    [[ ! $created_on ]] && return 1
 
     now_seconds=$(date "+%s")
 
@@ -274,14 +237,7 @@ __lock_is_alertable() {
 
     created_on_limit=$(date "+%s" --date="$created_on $tz + $age")
 
-    if [[ "$now_seconds" -lt "$created_on_limit" ]]; then
-        echo 'false'
-        return
-    fi
-
-    echo 'true'
-
-    return
+    (( $now_seconds > $created_on_limit )) && return 0 || return 1
 }
 
 
