@@ -74,5 +74,5 @@ __is_locked || exit 0
 __lock_is_alertable "$age" || exit 0
 
 for i in "${args[@]}"; do
-    __lock_alert $i || __mi "Alert email for $i failed."
+    __lock_alert "$i" || __mi "Alert email for $i failed." >&2
 done

@@ -4,28 +4,21 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 __loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0 [ -m mod_id ] <date option>
+_u() { cat << EOF
+usage: $script [ -m mod_id ] <date option>
 
 This script postpones a mod.
-
-OPTIONS:
    -f      Force postpone. Ignore checks.
    -m      Id of mod
    -h      Print this help message.
 
 EXAMPLES:
-
-    $0 -m 12345 tomorrow
-    $0 -m 23456 2008-09-12 11:30
-    $0 next thursday
-    $0 2 days
+    $script -m 12345 tomorrow
+    $script -m 23456 2008-09-12 11:30
+    $script next thursday
+    $script 2 days
 
 NOTES:
-
    If the -m options is not provided, the mod postponed is the current one,
    ie. one indicated in $DM_USERS/current_mod
 
@@ -37,59 +30,52 @@ NOTES:
 EOF
 }
 
-mod=$(< $DM_USERS/current_mod);
-force=
+_options() {
+    # set defaults
+    args=()
+    mod=$(< "$DM_USERS/current_mod");
+    unset force
 
-while getopts "fhm:" options; do
-  case $options in
-    f ) force=1;;
-    m ) mod=$OPTARG;;
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
-  esac
-done
+    while [[ $1 ]]; do
+        case "$1" in
+            -f) force=1         ;;
+            -m) shift; mod=$1   ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-shift $(($OPTIND - 1))
+    (( ${#args[@]} < 1 )) && { _u; exit 1; }
+}
 
-if [[ ! "$*" ]]; then
-    _u
-    exit 1
-fi
+_options "$@"
 
-if [ ! $mod ]; then
-    echo 'ERROR: Unable to determine mod id.' >&2
-    exit 1
-fi
 
-date=$(date "+%Y-%m-%d %H:%M:%S" --date="$*")
-if [[ ! $date ]]; then
-    exit 1
-fi
+[[ ! $mod ]] && __me 'Unable to determine mod id.'
+
+date=$(date "+%Y-%m-%d %H:%M:%S" --date="${args[@]}")
+[[ ! $date ]] && __me "Invalid date: ${args[@]}"
 
 if [[ ! $force ]]; then
-    date_as_sec=$(date "+%s" --date="$*")
+    date_as_sec=$(date "+%s" --date="${args[@]}")
     now_as_sec=$(date "+%s")
-    if [[ $date_as_sec -lt $now_as_sec ]]; then
-        echo 'ERROR: Refusing to postpone mod to time in the past.' >&2
-        exit 1
-    fi
+    (( $date_as_sec < $now_as_sec )) && __me 'Refusing to postpone mod to time in the past.'
 fi
 
 # Take the mod off hold if it currently is on hold
-$DM_BIN/take_off_hold.sh -f $mod
+"$DM_BIN/take_off_hold.sh" -f "$mod"
 
 # Add a FIXME:Usage comment to hold file if not already done
-__hold_has_usage_comment $mod || __hold_add_usage_comment $mod
+__hold_has_usage_comment "$mod" || __hold_add_usage_comment "$mod"
 
-__hold_crontab "$mod" "$date" >> $DM_MODS/$mod/hold
+__hold_crontab "$mod" "$date" >> "$DM_MODS/$mod/hold"
 
-holds_dir="$DM_USERS/holds"
-mkdir -p $holds_dir
-cd $holds_dir
-ln -f -s ../../../mods/$mod/hold  ./$mod
-$DM_BIN/crontab.sh -r
-echo "Mod $mod on hold until $date."
+holds_dir=$DM_USERS/holds
+mkdir -p "$holds_dir"
+cd "$holds_dir"
+ln -f -s "../../../mods/$mod/hold"  "./$mod"
+"$DM_BIN/crontab.sh" -r         ## reload crontab
+__mi "Mod $mod on hold until $date."

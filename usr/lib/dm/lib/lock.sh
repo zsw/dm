@@ -107,12 +107,7 @@ __lock_create() {
         sleep $t
     done
 
-    if [[ $success ]]; then
-        echo "true"
-    else
-        echo "false"
-        return
-    fi
+    [[ ! $success ]] && return 1
 
     script_file=$0
     [[ ${0:0:1} != '/' ]] && script_file="$PWD/${0#./}"
@@ -121,7 +116,7 @@ __lock_create() {
 
     created_on=$(date "+%F %T")
     echo "created_on: $created_on" >> $file
-    return
+    return 0
 }
 
 

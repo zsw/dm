@@ -135,7 +135,7 @@ if [[ ! $next_in_range ]]; then
     __me "Assign the person a new block of ids in the $DM_IDS file"
 fi
 
-warn_min=$(($end_mod_id - $warn_at))
+warn_min=$(( $end_mod_id - $warn_at ))
 
 warn=$(awk -v min="$warn_min" -v max="$end_mod_id" 'min <= $1 && $1 <= max' <<< "$next_mod_id")
 

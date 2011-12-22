@@ -3,63 +3,43 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0 [mod_id]
+_u() { cat << EOF
+usage: $script [mod_id]
 
 This script sets the current mod, ie. the contents of $DM_USERS/current_mod
-
-OPTIONS:
-
    -h      Print this help message.
 
 EXAMPLE:
-
-    $0                      # Sets the highest priority mod as current.
-    $0 12345                # Sets mod 12345 as current.
+    $script                      # Sets the highest priority mod as current.
+    $script 12345                # Sets mod 12345 as current.
 
 NOTES:
-
     If a mod id is not provided, the one assigned to the person and
     highest in the todo list is used.
 EOF
 }
 
-while getopts "h" options; do
-  case $options in
+_options() {
+    # set defaults
+    args=()
 
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
+    while [[ $1 ]]; do
+        case "$1" in
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-  esac
-done
+    (( ${#args[@]} > 1 ))  && { _u; exit 1; }
+    (( ${#args[@]} == 1 )) && mod=${args[0]}
+}
 
-shift $(($OPTIND - 1))
+_options "$@"
 
-# Get the id of the mod.
-mod_id=
+[[ ! $mod ]] && mod=$("$DM_BIN/todo.sh" -u "$DM_PERSON_USERNAME" -l 1 | awk '{print $3}')
+[[ ! $mod ]] && __me 'Unable to determine top mod id.'
 
-if [ $# -gt 1 ]; then
-    _u
-    exit 1
-fi
-
-if [ $# -eq 1 ]; then
-    mod_id=$1;
-else
-    mod_id=$($DM_BIN/todo.sh -u $DM_PERSON_USERNAME -l 1 | awk '{print $3}' |  tr -d '*' )
-fi
-
-if [[ ! $mod_id ]]; then
-
-    echo 'ERROR: Unable to determine top mod id.' >&2
-    exit 1
-fi
-
-echo $mod_id > $DM_USERS/current_mod
+echo "$mod" > "$DM_USERS/current_mod"

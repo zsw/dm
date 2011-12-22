@@ -105,14 +105,8 @@ __logger_debug "Git server: $server"
 $dryrun && echo "Dry run. Pull not executed"
 $dryrun && exit 0
 
-lock_obtained=$(__lock_create)
-if [[ "$lock_obtained" == 'false' ]]; then
-    echo "Unable to pull. The dm system is locked at the moment."
-    echo "Try again in a few minutes."
-    lock_file=$(__lock_file)
-    echo "Run this command to see which script has the file locked."
-    echo "cat $lock_file"
-    exit 1
+if ! __lock_create; then
+    __me "Unable to run $script. The dm system is locked at the moment.\n===> ERROR: Run this command to see which script has the file locked: cat $(__lock_file)"
 fi
 
 trap '__lock_remove; exit $?' INT TERM EXIT

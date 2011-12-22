@@ -45,7 +45,7 @@ _options "$@"
 tree=$("$DM_BIN/tree.sh" "$tree_name")
 [[ ! $tree ]] && exit 1
 
-__mi "Editing tree: $tree"
+__v && __mi "Editing tree: $tree"
 
 # The tmpfile is use to store new mod specs
 tmpfile=$(__tmp_file)
@@ -62,7 +62,7 @@ cp "$tree" "$file"
 # Back up tree file so the original can be diff'd against.
 file_bak=${file}.bak
 cp -p "$file" "$file_bak"
-__mi "Tree backup: $file_bak"
+__v && __mi "Tree backup: $file_bak"
 
 # Edit the tree file
 vim "$file"
@@ -102,7 +102,7 @@ while read -r line; do
     mod_dir=$(__mod_dir "$mod_id")
     descr_file=$mod_dir/description
     [[ ! -w $descr_file ]] && continue
-    __mi "Updating mod description: $mod_id $description"
+    __v && __mi "Updating mod description: $mod_id $description"
     echo "$description" > "$descr_file"
 done < <(diff "$file_bak" "$file" | \
         awk --re-interval '
@@ -136,7 +136,7 @@ diff "$file_bak" "$file" | \
                                   {sub(/^>[ \t]/, "")};{print}' | \
     csplit -z -s - '/^---$/' {*}
 
-__mi "New entries split out here: $split_dir"
+__v && __mi "New entries split out here: $split_dir"
 
 file_new=${file}.new
 cp -p "$file" "$file_new"
@@ -144,24 +144,24 @@ tmp=$(__tmp_file)
 cd "$split_dir"
 for base_file in *; do
     file=$split_dir/$base_file
-    __mi "Processing section: $file"
+    __v && __mi "Processing section: $file"
     # Remove the '---' delimiter on the first line.
     awk '/^---$/ && NR==1 {next;} {print}' "$file" > "$tmp" && mv "$tmp" "$file"
     [[ ! -s $file ]] && continue
     replace_file=$replace_dir/$base_file
-    __mi "Creating mods."
+    __v && __mi "Creating mods."
     "$DM_BIN/create_mods.sh" "$file" > "$replace_file"
-    __mi "Replacing mod spec with checkbox in tree."
-    __mi "$DM_BIN/block_substitute.py $file_new $file $replace_file"
+    __v && __mi "Replacing mod spec with checkbox in tree."
+    __v && __mi "$DM_BIN/block_substitute.py $file_new $file $replace_file"
     "$DM_BIN/block_substitute.py" "$file_new" "$file" "$replace_file" > "$tmp" && mv "$tmp" "$file_new"
 done
 
-__mi "Copy of updated tree: $file_new"
+__v && __mi "Copy of updated tree: $file_new"
 
 cp "$file_new" "$tree"
 
 # Validate schema in tree
-__mi "Validating schema in tree."
+__v && __mi "Validating schema in tree."
 if ! { cat "$tree" | "$DM_BIN/dependency_schema.pl" "$DM_ROOT"; }; then
     __me "The schema in the tree is not valid: $tree\n===> ERROR: Use this command to repeat schema validation check\n===> ERROR: cat $tree | $DM_BIN/dependency_schema.pl $DM_ROOT"
 fi

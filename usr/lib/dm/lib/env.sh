@@ -8,7 +8,7 @@
 # All dm system scripts need to source this file before running.
 #
 
-__mi() { __v && echo -e "===: $*" ;}
+__mi() { echo -e "===: $*" ;}
 __me() { echo -e "===> ERROR: $*" >&2; exit 1 ;}
 __v()  { ${verbose-false} ;}
 
@@ -16,11 +16,8 @@ __loaded_env() {
     export -f __loaded_env
 }
 
-[[ ! $DM_ROOT ]] && unset DM_ROOT
-: ${DM_ROOT?"environment variable not set or empty."}
-
-[[ ! $USERNAME ]] && unset USERNAME
-: ${USERNAME?"environment variable not set or empty."}
+[[ ! $DM_ROOT ]] && __me "environment variable not set or empty."
+[[ ! $USERNAME ]] && __me "environment variable not set or empty."
 
 export DM_ARCHIVE=$DM_ROOT/archive
 export DM_BIN=$DM_ROOT/bin
@@ -55,4 +52,3 @@ IFS=$(echo)             # Change IFS to newline
 eval $(awk -v username=$USERNAME 'BEGIN { FS = ",[ \t]*" }  $1 ~ /^id$/ && NR==FNR{ split($0,a); next; }  $3 ~ username && NR!=FNR{ for (i in a) print "export DM_PERSON_" toupper(a[i])"=\""$i"\""} ' $DM_PEOPLE $DM_PEOPLE )
 
 IFS="$save_ifs"         # Restore IFS
-

@@ -4,38 +4,23 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 
 __loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 __loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
 __loaded_alert 2>/dev/null || source $DM_ROOT/lib/alert.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0 [OPTIONS] mod_id...
-       or
-       echo mod_id | $0 [OPTIONS] -
+_u() { cat << EOF
+usage: $script [OPTIONS] mod_id...
 
 This script takes a mod off hold.
-
-OPTIONS:
-
     -f  Force taking mod off hold even if the mod is assigned to someone else.
-
-    -d  Dry run. Actions not performed.
-    -v  Verbose.
-
     -h  Print this help message.
 
 EXAMPLES:
-
-    $0              # Take all applicable mods off hold
-    $0 12345        # Take mod 12345 if applicable
-    $0 -f 12345     # Take mod 12345 regardless
+    $script              # Take all applicable mods off hold
+    $script 12345        # Take mod 12345 if applicable
+    $script -f 12345     # Take mod 12345 regardless
 
 NOTES:
-
     Mod ids can be provided through stdin or as arguments.
     To read the mod list from stdin, use the mod_id '-'.
 
@@ -63,109 +48,63 @@ EOF
 #
 #   Process take_off_hold.sh for a mod.
 #
-function process_mod {
+_process_mod() {
+
+    local mod status who hold_file for_another
 
     mod=$1
+    status=$(__hold_status "$mod" | awk '{print $5}')
 
-    __logger_debug "Processing mod id: $mod"
+    [[ $status == off_hold ]] && return
 
-    status=$(__hold_status $mod | awk '{print $5}')
+    who=$(__attribute "$mod" 'who')
 
-    if [[ "$status" == 'off_hold' ]]; then
-        __logger_debug "Mod status: off_hold. Nothing to do"
-        return
-    fi
-
-    who=$(__attribute $mod 'who')
-
-    for_another=
-    if [[ "$who" != $DM_PERSON_INITIALS ]]; then
-        if [[ ! $force ]]; then
-            __logger_debug "Mod is not assigned to $DM_PERSON_INITIALS. No force option. Skipping."
-            return
-        fi
+    if [[ $who != $DM_PERSON_INITIALS ]]; then
+        [[ ! $force ]] && return
         for_another=1
     fi
 
-    __logger_debug "Mod status: $status. Mod $mod will be taken off hold"
+    "$DM_BIN/remind_mod.sh" "$mod"
 
-    __logger_debug "Calling remind_mod.sh $mod"
-
-    $dryrun && __logger_debug "Dry run, remind_mod.sh not called."
-    $dryrun || $DM_BIN/remind_mod.sh $mod
-
-    hold_file=$(__attr_file $mod 'hold')
-
-    __logger_debug "Hold file: $hold_file"
-
+    hold_file=$(__attr_file "$mod" 'hold')
     [[ ! $hold_file ]] && return
 
-    __logger_debug "Commenting out all lines in $hold_file"
-
-    # Comment all uncommented lines
-    $dryrun || { sed -i -e 's/^\([^#]\)/#\1/' $hold_file && rm $DM_USERS/holds/$mod 2>/dev/null ; }
-
-    $dryrun && __logger_debug "Dry run, mod $mod left unchanged."
+    # Comment out all uncommented lines
+    sed -i -e 's/^\([^#]\)/#\1/' "$hold_file" && rm "$DM_USERS/holds/$mod" 2>/dev/null
 
     # Create an alert if taking a mod off hold for someone else
-    if [[ $for_another ]]; then
-        __create_alert $who $mod_id
-    fi
+    [[ $for_another ]] && __create_alert "$who" "$mod_id"
+
     return
 }
 
+_options() {
+    # set defaults
+    args=()
+    unset force
 
-dryrun=false
-force=false
-verbose=
+    while [[ $1 ]]; do
+        case "$1" in
+            -f) force=1         ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
 
-while getopts "dfhv" options; do
-  case $options in
+    (( ${#args[@]} != 1 )) && { _u; exit 1; }
+    mod=${args[0]}
+}
 
-    d ) dryrun=true;;
-    f ) force=true;;
-    v ) verbose=1;;
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
+_options "$@"
 
-  esac
-done
 
-shift $(($OPTIND - 1))
-
-[[ $verbose ]] && LOG_LEVEL=debug
-[[ $verbose ]] && LOG_TO_STDOUT=1
-
-$dryrun && __logger_debug "Dry run. Mods not changed."
-
-lock_obtained=$(__lock_create)
-if [[ "$lock_obtained" == 'false' ]]; then
-    if [[ $verbose ]]; then
-        echo "Unable to run $0. The dm system is locked at the moment."
-        echo "Try again in a few minutes."
-        lock_file=$(__lock_file)
-        echo "Run this command to see which script has the file locked."
-        echo "cat $lock_file"
-    fi
-    exit 1
+if ! __lock_create; then
+    __me "Unable to run $script. The dm system is locked at the moment.\n===> ERROR: Run this command to see which script has the file locked: cat $(__lock_file)"
 fi
 
 trap '__lock_remove; exit $?' INT TERM EXIT
-while [[ ! "$#" -eq "0" ]]; do
-    if [ "$1" == "-" ]; then
-        # eg echo 12345 | take_off_hold.sh -
-        while read arg; do
-            process_mod "$arg"
-        done
-    else
-        process_mod "$1"
-    fi
-    shift
-done
-
+_process_mod "$mod"
 __lock_remove
-trap - INT TERM EXIT

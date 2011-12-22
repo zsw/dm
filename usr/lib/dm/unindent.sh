@@ -4,16 +4,11 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0 FILE [FILE]...
-       echo "lines of text" | $0 -
+_u() { cat << EOF
+usage: $script FILE [FILE]...
+       echo "lines of text" | $script -
 
 Unindent a file. Remove leading spaces from all lines in a file.
-
-OPTIONS:
     -i      Unindent in place.
     -n N    Unindent at most N columns.
     -h      Print this help message.
@@ -23,20 +18,37 @@ EXAMPLES:
         line 1
             line 2
                 line 3
-     $ $0 /path/to/file
+     $ $script /path/to/file
      $ cat /path/to/file
      line 1
         line 2
             line 3
 
     # Unindent input from stdin
-    cat /path/to/file | $0 -
+    cat /path/to/file | $script -
 
 NOTES:
     With the exception of blank lines, the same number of spaces are
     removed from every line.
 EOF
 }
+
+## i=$(sort filename | tail -1); j=${i##* }; k=$(( ${#i} - ${#j} )); sed -i "s/^ \{$k\}//" filename
+##
+## sed 's/[ \t]*$//'   ## delete leading whitespace (spaces, tabs)
+## sed 's/[^\6s|^\t+]//g'
+##
+## --------line 1
+##             line 2
+##                 line 3
+##
+## line 1
+##     line 2
+##         line 3
+##
+## line 1
+## line 2
+## line 3
 
 #
 # unindent

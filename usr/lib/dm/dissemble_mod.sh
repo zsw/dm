@@ -129,7 +129,7 @@ for file in *; do
     name=$(awk '/^--------------------------------------------- .* ---$/ {print $2}' "$file")
 
     # If we can't determine the section name, we're screwed.
-    [[ ! $name ]] && { __mi "No section name found in $split_dir/$file"; continue; }
+    [[ ! $name ]] && { __mi "No section name found in $split_dir/$file" >&2; continue; }
     section=$(_section_name "$name")
     new_file=$(_filename_from_section "$mod_id" "$name")
 

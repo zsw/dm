@@ -74,9 +74,7 @@ NOTES:
 EOF
 }
 
-
-_options() {
-    # set defaults
+_options() { # set defaults
     args=()
     mod_id=$(< "$DM_USERS/current_mod")
     unset empty

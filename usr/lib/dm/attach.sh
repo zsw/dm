@@ -81,7 +81,7 @@ for i in "${args[@]}"; do
     # dm_root path from the file.
     rel_file=${file#${dm_root}/files/}
     if [[ $rel_file == $file ]]; then
-        __mi "ERROR: Attachment file must be in a subdirectory of DM_ROOT/files: $file" >&2
+        __mi "Attachment file must be in a subdirectory of DM_ROOT/files: $file" >&2
         exit_status=1
         continue
     fi
@@ -109,7 +109,7 @@ for i in "${args[@]}"; do
     done
 
     if [[ ! $found ]]; then
-        __mi 'ERROR: Destination does not appear to be a subdirectory of DM_ROOT. Link failed.' >&2
+        __mi 'Destination does not appear to be a subdirectory of DM_ROOT. Link failed.' >&2
         exit_status=1
         continue
     fi
