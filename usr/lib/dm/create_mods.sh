@@ -110,7 +110,7 @@ _create_mods() {
             continue
         fi
 
-        [[ $prev_notes ]] && "$DM_BIN/unindent.sh" -i "$prev_notes"
+        [[ $prev_notes ]] && _unindent "$prev_notes"
 
         # Mod line: [JK] the description
 
@@ -119,7 +119,7 @@ _create_mods() {
 
         mod=$(printf %05d $mod_id)
         mod_dir=$DM_ROOT/mods/$mod
-        prev_notes="$mod_dir/notes"
+        prev_notes=$mod_dir/notes
         who=${BASH_REMATCH[1]}
         description=${BASH_REMATCH[2]}
         scrubbed_who=$(_scrub_who "$who")
@@ -142,7 +142,7 @@ _create_mods() {
 
     done < "$file"
 
-    [[ $prev_notes ]] && "$DM_BIN/unindent.sh" -i "$prev_notes"
+    [[ $prev_notes ]] && _unindent "$prev_notes"
 }
 
 #
@@ -180,6 +180,17 @@ _scrub_who() {
     [[ ! $(__person_attribute username initials "$who") ]] && return
 
     echo "$who"
+}
+
+_unindent() {
+    local filename i j k
+
+    filename=$1
+
+    i=$(sort "$filename" | tail -1)     ## line with least leading white space
+    j=${i##* }                          ## remove leading white space
+    k=$(( ${#i} - ${#j} ))              ## difference is number leading spaces
+    (( $k > 0 )) && sed -i "s/^ \{$k\}//" "$filename"   ## removes leading white space
 }
 
 _options() {

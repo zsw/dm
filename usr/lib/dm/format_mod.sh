@@ -20,7 +20,7 @@ This script formats attributes of a mod suitable for printing.
 EXAMPLES:
     echo 12345 | $script
     echo \$DM_ROOT/mods/12345 | $script
-    find \$DM_ROOT/ | filter_mods.pl | sort | $script
+    find \$DM_ROOT/ | sort | $script
 
     # Example output
 

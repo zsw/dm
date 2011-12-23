@@ -5,25 +5,17 @@ __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
-_u() {
-
-    cat << EOF
-
-usage: $0 [OPTIONS]
+_u() { cat << EOF
+usage: $script [OPTIONS]
 
 Purge alert files.
-
-OPTIONS:
-
     -a AGE  Age. Default 1 month.
-    -v      Verbose.
     -h      Print this help message.
 
 EXAMPLES:
-
-    $0                  # Purge alerts aged one month or older.
-    $0 -a "1 week"      # Purge alerts aged one week or older.
-    $0 -a "25 days"     # Purge alerts aged 25 days or older.
+    $script                  # Purge alerts aged one month or older.
+    $script -a "1 week"      # Purge alerts aged one week or older.
+    $script -a "25 days"     # Purge alerts aged 25 days or older.
 
 NOTES:
     If the -a age option is provided, alerts older than the provided age
@@ -35,46 +27,36 @@ NOTES:
 EOF
 }
 
-age="1 month"
-verbose=
+_options() {
+    # set defaults
+    args=()
+    age="1 month"
 
-while getopts "a:hv" options; do
-  case $options in
+    while [[ $1 ]]; do
+        case "$1" in
+            -a) shift; age=$1    ;;
+            -h) _u; exit 0        ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0        ;;
+             *) args+=( "$1" ) ;;
+        esac
+        shift
+    done
 
-    a ) age=$OPTARG;;
-    v ) verbose=1;;
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
+     (( ${#args[@]} > 0 )) && { _u; exit 1; }
+}
 
-  esac
-done
-
-shift $(($OPTIND - 1))
-
-[[ $verbose ]] && LOG_LEVEL=debug
-[[ $verbose ]] && LOG_TO_STDERR=1
-
-__logger_debug "Age: $age"
+_options "$@"
 
 limit=$(date --date="-${age}" "+%s")
-if [[ ! $limit ]]; then
-    echo "ERROR: unable to determine purge age limit. Aborting." >&2
-    exit 1
-fi
+[[ ! $limit ]] && __me "unable to determine purge age limit. Aborting."
 
-__logger_debug "Purging older than: $limit"
-
-alert_dir="$DM_USERS/alerts"
-
+alert_dir=$DM_USERS/alerts
 tmpfile=$(__tmp_file)
-__logger_debug "Temp file: $tmpfile"
-for f in $(find $alert_dir -maxdepth 1 -mindepth 1 -type f); do
-    __logger_debug "Purging: $f"
 
-    cat $f | sort | awk -v limit=$limit '{if ($1 > limit) {print}}' > $tmpfile
-    cp $tmpfile $f
+for f in "$alert_dir"/*; do
+    if [[ -f $f ]]; then
+        sort "$f" | awk -v limit=$limit '$1 > limit {print}' > "$tmpfile"
+        cp "$tmpfile" "$f"
+    fi
 done

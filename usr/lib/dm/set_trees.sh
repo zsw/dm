@@ -41,6 +41,6 @@ _options() {
 _options "$@"
 
 trees=${args[@]}
-"$DM_BIN/tree.sh" "$trees" 2>&1 || exit 1
+"$DM_BIN/tree.sh" "$trees" >/dev/null || exit 1
 
 echo "$trees" > $DM_USERS/current_trees
