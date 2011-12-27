@@ -8,8 +8,8 @@
 # All dm system scripts need to source this file before running.
 #
 
-__mi() { echo -e "===: $*" ;}
-__me() { echo -e "===> ERROR: $*" >&2; exit 1 ;}
+__mi() { echo -e "$*" | sed 's/^ */===: /' ;}
+__me() { echo -e "$*" | sed 's/^ */===> ERROR: /' >&2; exit 1 ;}
 __v()  { ${verbose-false} ;}
 
 __loaded_env() {

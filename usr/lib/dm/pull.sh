@@ -51,6 +51,15 @@ EOF
 #
 function pull_fail_message {
 
+#    __mi "*************************
+#        WARNING: git pull failed
+#        To troubleshoot, run pull commands below and review messages
+#        \$ git checkout $server
+#        \$ git pull
+#        \$ git checkout master
+#        *************************" >&2
+#    return
+
     echo "*************************" >&2
     echo "WARNING: git pull failed" >&2
     echo "To troubleshoot, run pull commands below and review messages" >&2
@@ -106,7 +115,8 @@ $dryrun && echo "Dry run. Pull not executed"
 $dryrun && exit 0
 
 if ! __lock_create; then
-    __me "Unable to run $script. The dm system is locked at the moment.\n===> ERROR: Run this command to see which script has the file locked: cat $(__lock_file)"
+    __me "Unable to run $script. The dm system is locked at the moment.
+        Run this command to see which script has the file locked: cat $(__lock_file)"
 fi
 
 trap '__lock_remove; exit $?' INT TERM EXIT

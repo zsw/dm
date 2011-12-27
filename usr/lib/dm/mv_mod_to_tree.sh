@@ -46,7 +46,9 @@ to_tree=$2
 # Ensure mod is valid
 mod_dir=$(__mod_dir $mod_id)
 
-[[ ! "$mod_dir" ]] && __me "Unable to mv mod $mod_id.\n===> ERROR: Unable to find mod in either $DM_MODS or $DM_ARCHIVE."
+[[ ! "$mod_dir" ]] &&
+    __me "Unable to mv mod $mod_id.
+        Unable to find mod in either $DM_MODS or $DM_ARCHIVE."
 
 # Find the tree file the mod is currently in.
 # The integrity script will report issues if a mod is in more than one

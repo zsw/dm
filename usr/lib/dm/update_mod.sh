@@ -67,7 +67,7 @@ _options() {
 
 _options "$@"
 
-mod_id=$(< $DM_USERS/current_mod)
+mod_id=$(< "$DM_USERS/current_mod")
 [[ ! $mod_id ]] && __me 'Unable to determine mod id.'
 
 for index in "${!args[@]}"; do

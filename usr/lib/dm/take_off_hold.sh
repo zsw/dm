@@ -102,7 +102,8 @@ _options "$@"
 
 
 if ! __lock_create; then
-    __me "Unable to run $script. The dm system is locked at the moment.\n===> ERROR: Run this command to see which script has the file locked: cat $(__lock_file)"
+    __me "Unable to run $script. The dm system is locked at the moment.
+        Run this command to see which script has the file locked: cat $(__lock_file)"
 fi
 
 trap '__lock_remove; exit $?' INT TERM EXIT

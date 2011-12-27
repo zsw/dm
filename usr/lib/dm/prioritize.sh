@@ -45,10 +45,14 @@ cd "$DM_ROOT"
 # Double check that we are on the correct branch
 current_branch=$(git branch | awk '/^\* / {print $2}')
 if [[ $current_branch != master ]]; then
-    __mi "Current branch is $current_branch, not master."
-    __mi "Switching to master..."
-    git checkout master &>/dev/null || \
-        __me "git checkout master failed.\n===> ERROR: Refusing to prioritize in case data is corrupted.\n===> ERROR: Run 'git checkout master' at prompt and review messages"
+
+    __mi "Current branch is $current_branch, not master.
+        Switching to master..."
+
+    git checkout master &>/dev/null ||
+        __me "git checkout master failed.
+            Refusing to prioritize in case data is corrupted.
+            Run 'git checkout master' at prompt and review messages"
 fi
 
 trees="${args[@]}"

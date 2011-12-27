@@ -192,7 +192,8 @@ fi
 mod=$(_create_mod)
 if [[ $mod ]]; then
     if ! "$DM_BIN/sort_input.sh" <<< "$mod"; then
-        __me "sort_input.sh for mod $mod failed.\n===> ERROR: Retry with: echo $mod | sort_input.sh"
+        __me "sort_input.sh for mod $mod failed.
+            Retry with: \$ echo $mod | sort_input.sh"
     fi
 fi
 

@@ -54,7 +54,7 @@ tmpfile=$(__tmp_file)
 # that used in the dm system. Replace the base $DM_ROOT directory with
 # the tmpdir.
 tmpdir=$(__tmp_dir)
-file=${tree/$DM_ROOT/$tmpdir}
+file=${tree/$DM_ROOT/$tmpdir}       ## Parameter Expansion
 file_dir=${file%/*}
 mkdir -p "$file_dir"
 cp "$tree" "$file"
@@ -62,6 +62,7 @@ cp "$tree" "$file"
 # Back up tree file so the original can be diff'd against.
 file_bak=${file}.bak
 cp -p "$file" "$file_bak"
+
 __v && __mi "Tree backup: $file_bak"
 
 # Edit the tree file
@@ -151,8 +152,10 @@ for base_file in *; do
     replace_file=$replace_dir/$base_file
     __v && __mi "Creating mods."
     "$DM_BIN/create_mods.sh" "$file" > "$replace_file"
-    __v && __mi "Replacing mod spec with checkbox in tree."
-    __v && __mi "$DM_BIN/block_substitute.py $file_new $file $replace_file"
+
+    __v && __mi "Replacing mod spec with checkbox in tree.
+                $DM_BIN/block_substitute.py $file_new $file $replace_file"
+
     "$DM_BIN/block_substitute.py" "$file_new" "$file" "$replace_file" > "$tmp" && mv "$tmp" "$file_new"
 done
 
@@ -163,5 +166,7 @@ cp "$file_new" "$tree"
 # Validate schema in tree
 __v && __mi "Validating schema in tree."
 if ! { cat "$tree" | "$DM_BIN/dependency_schema.pl" "$DM_ROOT"; }; then
-    __me "The schema in the tree is not valid: $tree\n===> ERROR: Use this command to repeat schema validation check\n===> ERROR: cat $tree | $DM_BIN/dependency_schema.pl $DM_ROOT"
+    __me "The schema in the tree is not valid: $tree
+        Use this command to repeat schema validation check
+        \$ cat $tree | $DM_BIN/dependency_schema.pl $DM_ROOT"
 fi

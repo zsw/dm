@@ -82,9 +82,9 @@ while read -r id username server; do
     esac
 
     if [[ $error_msg ]]; then
-        __mi "ERROR: wget failed, url $url" >&2
-        __mi "wget returned exit status $exit_status, $error_msg" >&2
-        __mi "Unable to get remote mod list for username: $username." >&2
+        __mi "ERROR: wget failed, url $url
+            wget returned exit status $exit_status, $error_msg
+            Unable to get remote mod list for username: $username." >&2
         continue
     fi
 

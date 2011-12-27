@@ -94,11 +94,11 @@ if [[ $status != off_hold ]]; then
     if [[ $force ]]; then
         $DM_BIN/take_off_hold.sh -f $mod
     else
-        __mi "undone_mod.sh: Mod $mod has been undone but is on hold."
-        __mi "No force option provided. Mod is left on hold."
-        __mi ""
-        __mi "ID    WHO HOLD                TREE           DESCRIPTION"
-        __mi "$mod | $DM_BIN/format_mod.sh"
+        __mi "undone_mod.sh: Mod $mod has been undone but is on hold.
+            No force option provided. Mod is left on hold.
+
+            ID    WHO HOLD                TREE           DESCRIPTION
+            $mod | $DM_BIN/format_mod.sh"
     fi
 fi
 
