@@ -232,7 +232,7 @@ __hold_status() {
     [[ ! $status ]]    && status='off_hold'
 
     who_file=$(__attr_file "$mod" 'who')
-    who=$(tr -d -c 'A-Z' < "$who_file")
+    [[ $who_file ]] && who=$(tr -d -c 'A-Z' < "$who_file") || who="--"
 
     echo "$mod $who $timestamp $status"
 }

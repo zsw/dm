@@ -1,12 +1,13 @@
 #!/bin/bash
 
+__loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
+__loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
+
 #
 # alert.sh
 #
 # Library of functions related to alerting.
 #
-
-__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 #
 # __create_alert
@@ -20,28 +21,40 @@ __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 #
 __create_alert() {
 
-    local who=$1
-    local mod_id=$2
+    local who mod_id username alert_dir alert_file date status
+    who=$1
+    mod_id=$2
 
-    if [[ ! $who ]]; then
-        __logger_error "Unable to create alert. No initials provided."
-        return
-    fi
+    [[ ! $who ]] && return
+    [[ ! $mod_id ]] && return
 
-    if [[ ! $mod_id ]]; then
-        __logger_error "Unable to create alert. No mod id provided."
-        return
-    fi
+    ## Test if JK == JK return
+    mod_who=$(__attribute "$mod_id" 'who')
+    [[ $who == $mod_who ]] && return
 
-    local username=$(__person_attribute username initials $who)
-    local alert_dir="$DM_USERS/alerts"
+    ## Test if mod is on_hold
+    status=$(__hold_status "$mod_id" | awk '{print $5}')
+    [[ $status =~ on_hold|expired ]] && return
+
+    ## Test if mod is done
+    mod_dir=$(__mod_dir "$mod_id")
+    [[ ! $mod_dir ]] && return
+    [[ $mod_dir == $DM_ARCHIVE/$mod_id ]] && return
+
+    ## Test if mod is reusable
+    username=$(__person_attribute username initials "$mod_who")
+    grep -q "$mod_id" "$DM_ROOT/users/$username/reusable_ids" && return
+
+    username=$(__person_attribute username initials "$who")
+    alert_dir=$DM_USERS/alerts
     mkdir -p "$alert_dir"
-    local alert_file="$alert_dir/$username"
-    local date=$(date "+%s")
-    echo "$date $mod_id" >> $alert_file
+    alert_file=$alert_dir/$username
+    date=$(date "+%s")
+    echo "$date $mod_id" >> "$alert_file"
 
     return
 }
+
 
 # This function indicates this file has been sourced.
 __loaded_alert() {

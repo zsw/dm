@@ -2,7 +2,7 @@
 __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
+__loaded_alert 2>/dev/null || source $DM_ROOT/lib/alert.sh
 __loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
 script=${0##*/}
@@ -56,50 +56,6 @@ NOTES:
 EOF
 }
 
-#
-# _original_owner
-#
-# Sent: mod_id  - id of mod
-# Return: initials
-# Purpose:
-#
-#   Return the initials of the original owner of a mod.
-#
-_original_owner() {
-
-    local initials mod_id person_id
-    mod_id=$1
-    [[ ! $mod_id ]] && return
-
-    # Determine the person_id associated with the mod by looking up in
-    # the range of ids in the ids table.
-
-    # Command explanation
-    # Line 1: Filter lines beginning with digit, ie screen out comments and
-    #         header lines
-    # Line 2: If the mod id is within the range...
-    # Line 3: ... print the third column, ie the person id
-    # Line 4: Exit immediately to restrict to one result of output.
-    # Line 6: Filter ids file.
-    # Line 7: Completed id ranges are indicated with an x prefix on the
-    #         person id. Remove the x.
-    person_id=$(awk -F',' -v mod=$mod_id '/^[0-9]/ {
-            if (mod >= $1 && mod <= $2) {
-                print $3;
-                exit;
-            }
-        }' "$DM_IDS" | \
-        tr -d 'x'
-        )
-
-    [[ ! $person_id ]] && return
-
-    initials=$(__person_attribute initials id "$person_id")
-    [[ ! $initials ]] && return
-
-    echo $initials
-}
-
 _options() {
     # set defaults
     args=()
@@ -131,13 +87,15 @@ _options "$@"
 [[ ! $mod_id ]] && __me 'Unable to determine id of mod to assign.'
 
 mod_dir=$(__mod_dir "$mod_id")
+[[ ! $mod_dir ]] && __me "Mod: $mod_id does not exist."
 unset who_initials
 
 [[ $owner && $user ]] && __me 'Use one of the -o or -u options, not both.'
 [[ ! $owner && ! $user && ! $person ]] && __me 'Please indicate who to assign mod to.'
 
 if [[ $owner ]]; then
-    who_initials=$(_original_owner "$mod_id")
+    person_id=$(__original_who_id "$mod_id")
+    who_initials=$(__person_attribute initials id "$person_id")
 elif [[ $user ]]; then
     who_initials=$DM_PERSON_INITIALS
 else
@@ -145,5 +103,9 @@ else
 fi
 
 [[ ! $who_initials ]] && __me 'Unable to determine who to assign the mod to.'
+
+# Call __create_alert before changing the who file, so __create_alert can tell
+# if the file has been assigned to someone else. (brought to you by taters)
+__create_alert "$who_initials" "$mod_id"
 
 echo "$who_initials" > "$mod_dir/who"

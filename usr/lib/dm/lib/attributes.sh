@@ -1,5 +1,7 @@
 #!/bin/bash
 
+__loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
+
 #
 # attributes.sh
 #
@@ -168,6 +170,47 @@ __mod_dir() {
         echo "$DM_ARCHIVE/$mod"
         return
     fi
+}
+
+#
+# __original_who_id
+#
+# Sent: mod_id  - id of mod
+# Return: person_id
+# Purpose:
+#
+#   Return the person_id of the original owner of a mod.
+#
+__original_who_id() {
+
+    local initials mod_id person_id
+    mod_id=$1
+    [[ ! $mod_id ]] && return
+
+    # Determine the person_id associated with the mod by looking up in
+    # the range of ids in the ids table.
+
+    # Command explanation
+    # Line 1: Filter lines beginning with digit, ie screen out comments and
+    #         header lines
+    # Line 2: If the mod id is within the range...
+    # Line 3: ... print the third column, ie the person id
+    # Line 4: Exit immediately to restrict to one result of output.
+    # Line 6: Filter ids file.
+    # Line 7: Completed id ranges are indicated with an x prefix on the
+    #         person id. Remove the x.
+    person_id=$(awk -F',' -v mod="$mod_id" '/^[0-9]/ {
+            if (mod >= $1 && mod <= $2) {
+                print $3;
+                exit;
+            }
+        }' "$DM_IDS" | \
+        tr -d 'x'
+        )
+
+    [[ ! $person_id ]] && return
+
+    echo "$person_id"
 }
 
 # This function indicates this file has been sourced.

@@ -62,7 +62,11 @@ _options "$@"
 # Find the tree file associated with the tree name.
 # Note: the order has to be preserved.
 for tree in $trees; do
-    readlink -e "$DM_TREES/$tree" ||
-        readlink -e "$DM_TREES/$DM_PERSON_USERNAME/$tree" ||
+    if [[ -e $DM_TREES/$tree ]]; then
+        echo "$DM_TREES/$tree"
+    elif [[ -e $DM_TREES/$DM_PERSON_USERNAME/$tree ]]; then
+        echo "$DM_TREES/$DM_PERSON_USERNAME/$tree"
+    else
         __me "tree file not found for $tree"
+    fi
 done

@@ -10,6 +10,7 @@ _u() { cat << EOF
 usage:   $script [ mod_id ... ]
 
 This script flags mods as reusable.
+    -i  Interactive: user is asked for confirmation on each mod.
     -h  Print this help message.
 
 EXAMPLES:
@@ -39,7 +40,7 @@ EOF
 #   Process a mod for reuse.
 #
 _process_mod() {
-    local mod_id mod_dir mods dir
+    local mod_id mod_dir person_id username ids
 
     mod_id=$1
     mod_dir=$(__mod_dir "$mod_id")
@@ -49,15 +50,17 @@ _process_mod() {
         Add to reusable_ids manually."
 
     # Add to reusable_ids
-
-    # Reassign mod to the original creator so we know who the original creator
-    # is.
-    "$DM_BIN/assign_mod.sh" -m "$mod_id" -o
-    initials=$(< "$mod_dir/who")
-    username=$(__person_attribute username initials "$initials")
+    # The id must be added to reusable_ids file before calling assign_mod.sh or else
+    # assign_mod.sh has no way of knowing if the mod is reusable and may create an
+    # alert for the mod, which we don't want.
+    person_id=$(__original_who_id "$mod_id")
+    username=$(__person_attribute username id "$person_id")
     ids=$DM_ROOT/users/$username/reusable_ids
     echo "$mod_id" >> "$ids"
     sort "$ids" -o "$ids"
+
+    "$DM_BIN/assign_mod.sh" -m "$mod_id" -o
+
 
     # Remove mod from all trees
     while read -r tree; do
