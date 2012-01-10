@@ -14,39 +14,39 @@ __loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_add_usage_comment function
 #
 tst_hold_add_usage_comment() {
+    local mod mod_dir hold_file
 
     # Handles no mod gracefully
     __hold_add_usage_comment ''
     tst "$?" "1" 'no mod provided returns false'
 
-    local mod=11111
-    local mod_dir="$DM_MODS/$mod"
-    mkdir -p $mod_dir
-    local hold_file="$mod_dir/hold"
+    mod=11111
+    mod_dir=$DM_MODS/$mod
+    mkdir -p "$mod_dir"
+    hold_file=$mod_dir/hold
 
-    rm $hold_file 2> /dev/null
+    rm "$hold_file" 2> /dev/null
 
     # No existing hold file
-    __hold_has_usage_comment $mod
+    __hold_has_usage_comment "$mod"
     tst "$?" "1" 'no hold file has no comment'
-    __hold_add_usage_comment $mod
-    __hold_has_usage_comment $mod
+    __hold_add_usage_comment "$mod"
+    __hold_has_usage_comment "$mod"
     tst "$?" "0" 'no hold file, add, now has comment'
 
     # Hold file, no comment
-    echo '#whatever' > $hold_file
-    __hold_has_usage_comment $mod
+    echo '#whatever' > "$hold_file"
+    __hold_has_usage_comment "$mod"
     tst "$?" "1" 'hold file has no comment'
-    __hold_add_usage_comment $mod
-    __hold_has_usage_comment $mod
-    tst "$?" "0" 'hold file, add, now has comment'
 
-    return
+    __hold_add_usage_comment "$mod"
+    __hold_has_usage_comment "$mod"
+    tst "$?" "0" 'hold file, add, now has comment'
 }
 
 
@@ -55,20 +55,20 @@ tst_hold_add_usage_comment() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_as_crontab function
 #
 tst_hold_as_crontab() {
+    local crontab expect
 
-    local crontab=$(__hold_as_crontab '2010-10-31 12:34:56')
-    local expect="34 12 31 10 *"
+    crontab=$(__hold_as_crontab '2010-10-31 12:34:56')
+    expect="34 12 31 10 *"
     tst "$crontab" "$expect" 'returns expected crontab'
 
     crontab=$(__hold_as_crontab '2010-01-02 03:04:05')
     expect="04 03 02 01 *"
     tst "$crontab" "$expect" 'crontab is zero padded'
-    return
 }
 
 
@@ -77,15 +77,16 @@ tst_hold_as_crontab() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_as_yyyy_mm_dd_hh_mm_ss function
 #
 tst_hold_as_yyyy_mm_dd_hh_mm_ss() {
+    local cron_exp timestamp expect year
 
-    local cron_exp="59 23 31 12"
-    local timestamp=$(__hold_as_yyyy_mm_dd_hh_mm_ss "$cron_exp" 2>/dev/null)
-    local expect=""
+    cron_exp="59 23 31 12"
+    timestamp=$(__hold_as_yyyy_mm_dd_hh_mm_ss "$cron_exp" 2>/dev/null)
+    expect=""
     tst "$timestamp" "$expect" 'invalid cron_exp returns nothing'
 
     cron_exp="XX 00 01 01 *  $HOME/dm/bin/take_off_hold.sh 10786 # Move to Guelph. @2010"
@@ -115,7 +116,7 @@ tst_hold_as_yyyy_mm_dd_hh_mm_ss() {
     # be in the future, add 1 to the year.
     cron_exp="01 01 01 01 *"
     timestamp=$(__hold_as_yyyy_mm_dd_hh_mm_ss "$cron_exp")
-    local year=$(date "+%Y" --date="+1 year")
+    year=$(date "+%Y" --date="+1 year")
     expect="$year-01-01 01:01:00"
     tst "$timestamp" "$expect" 'returns expected (next year)'
 
@@ -136,7 +137,6 @@ tst_hold_as_yyyy_mm_dd_hh_mm_ss() {
     year=$(date "+%Y")
     expect="$year-12-31 08:00:00"
     tst "$timestamp" "$expect" 'octal number handled'
-    return
 }
 
 
@@ -145,30 +145,29 @@ tst_hold_as_yyyy_mm_dd_hh_mm_ss() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_crontab function
 #
 tst_hold_crontab() {
+    local mod_id mod_dir description timestamp crontab expect
 
     # FIXME
     # [ ] Test invalid mod_id
     # [ ] Test invalid timestamp
 
     # Create mod for testing
-    local mod_id="11111"
-    local mod_dir="$DM_MODS/$mod_id"
+    mod_id=11111
+    mod_dir=$DM_MODS/$mod_id
 
-    mkdir -p $mod_dir
-    local description="Test mod."
-    echo "$description" > $mod_dir/description
+    mkdir -p "$mod_dir"
+    description="Test mod."
+    echo "$description" > "$mod_dir/description"
 
-    local timestamp="2010-12-31 12:34:56"
-    local crontab=$(__hold_crontab "$mod_id" "$timestamp")
-    local expect='34 12 31 12 *  $HOME/dm/bin/take_off_hold.sh 11111 # Test mod. @2010'
+    timestamp="2010-12-31 12:34:56"
+    crontab=$(__hold_crontab "$mod_id" "$timestamp")
+    expect='34 12 31 12 *  $HOME/dm/bin/take_off_hold.sh 11111 # Test mod. @2010'
     tst "$crontab" "$expect" 'returns expected crontab'
-
-    return
 }
 
 
@@ -177,38 +176,38 @@ tst_hold_crontab() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_has_usage_comment function
 #
 tst_hold_has_usage_comment() {
+    local mod mod_dir hold_file
 
     __hold_has_usage_comment ''
     tst "$?" "1" 'no mod provided returns false'
 
-    local mod=11111
-    local mod_dir="$DM_MODS/$mod"
-    mkdir -p $mod_dir
-    local hold_file="$mod_dir/hold"
+    mod=11111
+    mod_dir=$DM_MODS/$mod
+    mkdir -p "$mod_dir"
+    hold_file=$mod_dir/hold
 
-    rm $hold_file 2>/dev/null
+    rm "$hold_file" 2>/dev/null
 
     # No hold file
-    __hold_has_usage_comment $mod
+    __hold_has_usage_comment "$mod"
     tst "$?" "1" 'no hold file returns false'
 
     # Hold file, no comment
-    local mod_dir="$DM_MODS/$mod"
-    mkdir -p $mod_dir
-    echo '#whatever' > $mod_dir/hold
-    __hold_has_usage_comment $mod
+    mod_dir=$DM_MODS/$mod
+    mkdir -p "$mod_dir"
+    echo '#whatever' > "$mod_dir/hold"
+    __hold_has_usage_comment "$mod"
     tst "$?" "1" 'no comment in hold file returns false'
 
     # Hold file, with comment
-    __hold_usage_comment $mod >> $mod_dir/hold
-    __hold_has_usage_comment $mod
+    __hold_usage_comment "$mod" >> "$mod_dir/hold"
+    __hold_has_usage_comment "$mod"
     tst "$?" "0" 'has comment returns true'
-    return
 }
 
 
@@ -217,47 +216,48 @@ tst_hold_has_usage_comment() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_timestamp function.
 #
 tst_hold_timestamp() {
+    local ht mod mod_dir crontab year expect
 
-    local ht=$(__hold_timestamp '')
+    ht=$(__hold_timestamp '')
     tst "$ht" '' 'no mod provided returns nothing'
 
-    local mod=11111
+    mod=11111
 
-    ht=$(__hold_timestamp $mod)
+    ht=$(__hold_timestamp "$mod")
     tst "$ht" '' 'no mod directory returns nothing'
 
-    local mod_dir="$DM_MODS/$mod"
-    mkdir -p $mod_dir
+    mod_dir=$DM_MODS/$mod
+    mkdir -p "$mod_dir"
 
-    ht=$(__hold_timestamp $mod)
+    ht=$(__hold_timestamp "$mod")
     tst "$ht" '' 'no hold file returns nothing'
 
 
-    echo '#whatever' > $mod_dir/hold
-    ht=$(__hold_timestamp $mod)
+    echo '#whatever' > "$mod_dir/hold"
+    ht=$(__hold_timestamp "$mod")
     tst "$ht" '' 'no crontab in hold file returns nothing'
 
 
-    local crontab='59 23 31 12 *  $HOME/dm/bin/take_off_hold.sh 11111 # Test mod.'
-    echo "$crontab" > $mod_dir/hold
-    local year=$(date "+%Y")
-    local expect="$year-12-31 23:59:00"
+    crontab='59 23 31 12 *  $HOME/dm/bin/take_off_hold.sh 11111 # Test mod.'
+    echo "$crontab" > "$mod_dir/hold"
+    year=$(date "+%Y")
+    expect="$year-12-31 23:59:00"
 
-    ht=$(__hold_timestamp $mod)
+    ht=$(__hold_timestamp "$mod")
     tst "$ht" "$expect" 'crontab in hold file returns timestamp'
 
-    echo '#22 22 22 12 *  $HOME/dm/bin/take_off_hold.sh 22222 # Another test mod.' > $mod_dir/hold
-    echo '#33 23 31 12 *  $HOME/dm/bin/take_off_hold.sh 33333 # Another mod.'     >> $mod_dir/hold
-    ht=$(__hold_timestamp $mod)
+    echo '#22 22 22 12 *  $HOME/dm/bin/take_off_hold.sh 22222 # Another test mod.' > "$mod_dir/hold"
+    echo '#33 23 31 12 *  $HOME/dm/bin/take_off_hold.sh 33333 # Another mod.'     >> "$mod_dir/hold"
+    ht=$(__hold_timestamp "$mod")
     tst "$ht" '' 'Only commented crontabs returns nothing'
 
-    echo "$crontab" >> $mod_dir/hold
-    ht=$(__hold_timestamp $mod)
+    echo "$crontab" >> "$mod_dir/hold"
+    ht=$(__hold_timestamp "$mod")
     tst "$ht" "$expect" 'commented crontabs ignored, returns timestamp'
 }
 
@@ -267,23 +267,21 @@ tst_hold_timestamp() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_timestamp_status function.
 #
 tst_hold_timestamp_status() {
+    local status timestamp
 
     status=$(__hold_timestamp_status)
     tst "$status" "off_hold" 'no timestamp returns off hold'
 
-
     timestamp=$(date "+%Y-%m-%d %H:%M:%S" --date="+1 hour")
-
     status=$(__hold_timestamp_status "$timestamp")
     tst "$status" "on_hold" 'timestamp in future returns on hold'
 
     timestamp=$(date "+%Y-%m-%d %H:%M:%S" --date="-1 hour")
-
     status=$(__hold_timestamp_status "$timestamp")
     tst "$status" "expired" 'timestamp in past returns expired'
 }
@@ -293,33 +291,31 @@ tst_hold_timestamp_status() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __hold_usage_comment function
 #
 tst_hold_usage_comment() {
+    local comment mod expect
 
-    local comment=$(__hold_usage_comment '')
+    comment=$(__hold_usage_comment '')
     tst "$comment" '' 'no mod provided returns nothing'
 
-    local mod=11111
-
-    local comment=$(__hold_usage_comment $mod)
-    local expect="# <minute> <hour> <day> <month> <dow> \$HOME/dm/bin/take_off_hold.sh $mod # <descr> @<year>"
+    mod=11111
+    comment=$(__hold_usage_comment "$mod")
+    expect="# <minute> <hour> <day> <month> <dow> \$HOME/dm/bin/take_off_hold.sh $mod # <descr> @<year>"
     tst "$comment" "$expect" 'mod, returns expected'
-
-    return
 }
 
 
-functions=$(awk '/^tst_/ {print $1}' $0)
+functions=$(awk '/^tst_/ {print $1}' "$0")
 
 [[ $1 ]] && functions="$*"
 
 for function in  $functions; do
     function=${function%%(*}        # strip '()'
-    if [[ ! $(declare -f "$function") ]]; then
-        echo "Function not found: $function"
+    if ! declare -f "$function" &>/dev/null; then
+        __mi "Function not found: $function" >&2
         continue
     fi
 

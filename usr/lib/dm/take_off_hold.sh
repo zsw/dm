@@ -49,16 +49,13 @@ EOF
 #   Process take_off_hold.sh for a mod.
 #
 _process_mod() {
-
     local mod status who hold_file for_another
 
     mod=$1
     status=$(__hold_status "$mod" | awk '{print $5}')
-
     [[ $status == off_hold ]] && return
 
     who=$(__attribute "$mod" 'who')
-
     if [[ $who != $DM_PERSON_INITIALS ]]; then
         [[ ! $force ]] && return
         for_another=1
@@ -74,12 +71,9 @@ _process_mod() {
 
     # Create an alert if taking a mod off hold for someone else
     [[ $for_another ]] && __create_alert "$who" "$mod_id"
-
-    return
 }
 
 _options() {
-    # set defaults
     args=()
     unset force
 
@@ -100,12 +94,6 @@ _options() {
 
 _options "$@"
 
+__lock_create || __me "${script}: Lock file found. cat $(__lock_file)"
 
-if ! __lock_create; then
-    __me "Unable to run $script. The dm system is locked at the moment.
-        Run this command to see which script has the file locked: cat $(__lock_file)"
-fi
-
-trap '__lock_remove; exit $?' INT TERM EXIT
 _process_mod "$mod"
-__lock_remove

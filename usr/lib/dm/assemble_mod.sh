@@ -22,7 +22,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
 
     while [[ $1 ]]; do

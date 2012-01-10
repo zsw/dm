@@ -20,15 +20,15 @@ __loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 #   Create an alert for the indicate person regarding the indicated mod.
 #
 __create_alert() {
-
     local who mod_id username alert_dir alert_file date status
+
     who=$1
     mod_id=$2
 
     [[ ! $who ]] && return
     [[ ! $mod_id ]] && return
 
-    ## Test if JK == JK return
+    ## Don't bother alerting the user if the mod is assigned to himself.
     mod_who=$(__attribute "$mod_id" 'who')
     [[ $who == $mod_who ]] && return
 
@@ -43,7 +43,7 @@ __create_alert() {
 
     ## Test if mod is reusable
     username=$(__person_attribute username initials "$mod_who")
-    grep -q "$mod_id" "$DM_ROOT/users/$username/reusable_ids" && return
+    [[ $username ]] && grep -q "$mod_id" "$DM_ROOT/users/$username/reusable_ids" && return
 
     username=$(__person_attribute username initials "$who")
     alert_dir=$DM_USERS/alerts
@@ -51,8 +51,6 @@ __create_alert() {
     alert_file=$alert_dir/$username
     date=$(date "+%s")
     echo "$date $mod_id" >> "$alert_file"
-
-    return
 }
 
 

@@ -6,7 +6,6 @@ __loaded_hold 2>/dev/null || source $DM_ROOT/lib/hold.sh
 
 script=${0##*/}
 _u() { cat << EOF
-
 usage: echo mod_id | $script  [format]
 or     echo /path/to/mod/directory | $script [format]
 
@@ -14,7 +13,6 @@ This script formats attributes of a mod suitable for printing.
     -t  Tree format. full=complete path,      eg /root/dm/trees/jimk/reminders
                      sub=include subdirectory,eg jimk/reminders
                      name=tree name only,     eg reminders (default)
-
     -h  Print this help message.
 
 EXAMPLES:
@@ -85,7 +83,6 @@ _tree_name() {
 }
 
 _options() {
-    # set defaults
     args=()
     tree_format=name
 

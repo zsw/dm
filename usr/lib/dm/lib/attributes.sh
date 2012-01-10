@@ -21,27 +21,24 @@ __loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 #   Determine the attribute file name from the mod id.
 #
 # Usage:
-#
 #   mod=12345
 #   file_name=$(__attr_file $mod 'hold')
 #
 # Note:
-#
 #   The routine does not attempt to determine if the file exists or not.
 #   Use __attr_file for that.
 #
 __attr_file_name() {
+    local mod attr dir
 
     mod=$1
     attr=$2
 
-    dir=$(__mod_dir $mod)
+    dir=$(__mod_dir "$mod")
 
     [[ ! $dir ]] && return
 
-    echo $dir/$attr
-
-    return
+    echo "$dir/$attr"
 }
 
 
@@ -51,18 +48,18 @@ __attr_file_name() {
 # Sent: mod id ( eg 12345)
 #       attr   ( eg 'description', 'who', 'hold' )
 # Return: nothing (echo's attribute file name including path to stdout)
-# Purpose:
 #
+# Purpose:
 #   Determine the attribute file from the mod id. If the file exists the
 #   name of the file is printed to stdout. If the file does not exist,
 #   nothing is printed.
 #
 # Usage:
-#
 #   mod=12345
 #   file_name=$(__attr_file $mod 'hold')
 #
 __attr_file() {
+    local mod attr file_name
 
     mod=$1
     attr=$2
@@ -70,12 +67,9 @@ __attr_file() {
     file_name=$(__attr_file_name "$mod" "$attr")
 
     [[ ! $file_name ]] && return
-
     [[ ! -e $file_name ]] && return
 
-    echo $file_name
-
-    return
+    echo "$file_name"
 }
 
 
@@ -85,21 +79,20 @@ __attr_file() {
 # Sent: mod id ( eg 12345)
 #       attr   ( attribute name eg 'description', 'who', 'hold' )
 # Return: nothing (echo's attribute value to stdout)
-# Purpose:
 #
+# Purpose:
 #   Determine the attribute from the mod id. The attribute is the
 #   contents of the attribute file.
 #
 # Usage:
-#
 #   mod=12345
 #   who=$(__attribute $mod 'who')
 #
 # Notes:
-#
 #   Nothing is echo'd if the attribute file does not exist.
 #
 __attribute() {
+    local mod attr file
 
     mod=$1
     attr=$2
@@ -108,9 +101,7 @@ __attribute() {
 
     [[ ! $file ]] && return
 
-    cat $file
-
-    return
+    cat "$file"
 }
 
 
@@ -124,18 +115,15 @@ __attribute() {
 #   Determine if the file has conflict markers.
 #
 __has_conflict_markers() {
+    local file marker
 
     file=$1
 
     [[ ! $file ]] && return 1
-
     [[ ! -e $file ]] && return 1
 
-    marker=$(cat $file | grep -E '^(<<<<<<<|=======|>>>>>>>)$')
-
-    [[ $marker ]] && return 0
-
-    return 1
+    # Return the exit status of the grep call
+    grep -qE '^(<<<<<<<|=======|>>>>>>>)$' "$file"
 }
 
 
@@ -144,32 +132,20 @@ __has_conflict_markers() {
 #
 # Sent: mod id ( eg 12345)
 # Return: nothing (echo's directory path to stdout)
-# Purpose:
 #
+# Purpose:
 #   Determine the directory of the mod from the mod id.
 #
 # Usage:
-#
 #   mod=12345
 #   dir=$(__mod_dir $mod)
 #
 __mod_dir() {
-
-    mod=$1
+    local mod=$1
 
     [[ ! $mod ]] && return
-
-    find $DM_MODS/$mod -maxdepth 0 -type d > /dev/null 2>&1
-    if [[ "$?" == "0" ]]; then
-        echo "$DM_MODS/$mod"
-        return
-    fi
-
-    find $DM_ARCHIVE/$mod -maxdepth 0 -type d > /dev/null 2>&1
-    if [[ "$?" == "0" ]]; then
-        echo "$DM_ARCHIVE/$mod"
-        return
-    fi
+    [[ -d $DM_MODS/$mod ]] && { echo "$DM_MODS/$mod"; return; }
+    [[ -d $DM_ARCHIVE/$mod ]] && { echo "$DM_ARCHIVE/$mod"; return; }
 }
 
 #
@@ -177,13 +153,13 @@ __mod_dir() {
 #
 # Sent: mod_id  - id of mod
 # Return: person_id
-# Purpose:
 #
+# Purpose:
 #   Return the person_id of the original owner of a mod.
 #
 __original_who_id() {
-
     local initials mod_id person_id
+
     mod_id=$1
     [[ ! $mod_id ]] && return
 

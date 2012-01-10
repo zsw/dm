@@ -8,8 +8,8 @@
 # All dm system scripts need to source this file before running.
 #
 
-__mi() { echo -e "$*" | sed 's/^ */===: /' ;}
-__me() { echo -e "$*" | sed 's/^ */===> ERROR: /' >&2; exit 1 ;}
+__mi() { echo -e "$LIGHTGREEN$*$COLOUROFF" | sed 's/^ */===: /' ;}
+__me() { echo -e "$RED$*$COLOUROFF" | sed 's/^ */===> ERROR: /' >&2; exit 1 ;}
 __v()  { ${verbose-false} ;}
 
 __loaded_env() {
@@ -32,23 +32,19 @@ export DM_USERS=$DM_ROOT/users/$USERNAME
 
 # The dev system cannot run properly with $USERNAME=root.
 # Die if that is the case.
-
 [[ $USERNAME == root ]] && __me "Dev system cannot run with USERNAME set to root."
 
-#
 # Set the PERSON_* variables based on $USERNAME env variable
-#
-save_ifs="$IFS"         # Save IFS value
-IFS=$(echo)             # Change IFS to newline
+save_ifs=$IFS           # Save IFS value
+IFS=$'\n'               # Change IFS to newline
 
-#
 # The following awk command converts the people header record and a
 # detail record into variable assignments. Example:
 # DM_PERSON_ID="1"
 # DM_PERSON_NAME="Jim Karsten"
 # DM_PERSON_USERNAME="jimk"
 # etc.
-#
-eval $(awk -v username=$USERNAME 'BEGIN { FS = ",[ \t]*" }  $1 ~ /^id$/ && NR==FNR{ split($0,a); next; }  $3 ~ username && NR!=FNR{ for (i in a) print "export DM_PERSON_" toupper(a[i])"=\""$i"\""} ' $DM_PEOPLE $DM_PEOPLE )
 
-IFS="$save_ifs"         # Restore IFS
+eval $(awk -F",[ \t]*" -v username="$USERNAME" '$1 ~ /^id$/ && NR==FNR{ split($0,a); next; }  $3 ~ username && NR!=FNR{ for (i in a) print "export DM_PERSON_" toupper(a[i])"=\""$i"\""} ' "$DM_PEOPLE" "$DM_PEOPLE" )
+
+IFS=$save_ifs           # Restore IFS

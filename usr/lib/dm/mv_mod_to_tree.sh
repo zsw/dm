@@ -44,9 +44,9 @@ to_tree=$2
 [[ ! -w $to_tree ]] && __me "Permission denied. Unable to write tree file: $to_tree"
 
 # Ensure mod is valid
-mod_dir=$(__mod_dir $mod_id)
+mod_dir=$(__mod_dir "$mod_id")
 
-[[ ! "$mod_dir" ]] &&
+[[ ! $mod_dir ]] &&
     __me "Unable to mv mod $mod_id.
         Unable to find mod in either $DM_MODS or $DM_ARCHIVE."
 

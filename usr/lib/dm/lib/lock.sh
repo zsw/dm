@@ -18,8 +18,8 @@ __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 #   Determine if the dm system is locked.
 #
 __is_locked() {
+    local file=$1
 
-    file=$1
     [[ ! $file ]] && file=$(__lock_file)
     [[ -r $file ]] && return 0 || return 1
 }
@@ -36,6 +36,7 @@ __is_locked() {
 #   Send alert message.
 #
 __lock_alert() {
+    local to file script subject body
 
     to=$1
     file=$2
@@ -69,54 +70,44 @@ file for details on the script locking the system.
 #
 # Sent: file - lock file name, absolute path, optional
 # Return: true = lock obtained, false = lock failed
-# Purpose:
 #
+# Purpose:
 #   Create a lock file.
 #
 __lock_create() {
+    local file path success tries range min t script_file created_on i
 
     file=$1
 
-    if [[ ! $file ]]; then
-        file=$(__lock_file)
-    fi
+    [[ ! $file ]] && file=$(__lock_file)
 
     # Make sure the directory exists
     path=${file%/*}
-    if [[ $path ]]; then
-        mkdir -p $path
-    fi
+    [[ $path ]] && mkdir -p "$path"
 
-    success=
-
-    tries=5
-    range=10
-    min=5
-    for ((i=$tries; i>0; i--)); do
+    tries=30
+    while true; do
         # "set -o noclobber" tests for an existing lock and creates a lock file
         # at the exact same time. Any time between those two steps could create
         # race conditions whereby process A could create a lock file after
         # process B tests for it finding none, but before process B creates
         # one.
-        if ( set -o noclobber; echo "PID: $$" > "$file") 2> /dev/null; then
-            success=1
-            break
-        fi
-        # Sleep for x seconds.  min <= x <= min + range
-        t=$(echo "scale=0; $RANDOM % $range + $min" | bc)
-        sleep $t
+        (set -o noclobber; > "$file") 2>/dev/null && break
+
+        (( --tries == 0 )) && return 1
+        sleep 1
     done
 
-    [[ ! $success ]] && return 1
-
     script_file=$0
-    [[ ${0:0:1} != '/' ]] && script_file="$PWD/${0#./}"
+    [[ ${0:0:1} != '/' ]] && script_file=$(readlink -f "$0")
 
-    echo "script: $script_file" >> $file
+    cat > "$file" << EOF
+PID: $$
+script: $script_file
+created_on: $(date "+%F %T")
+EOF
 
-    created_on=$(date "+%F %T")
-    echo "created_on: $created_on" >> $file
-    return 0
+    trap '__lock_remove; exit $?' INT TERM EXIT
 }
 
 
@@ -125,13 +116,13 @@ __lock_create() {
 #
 # Sent: nothing
 # Return: full name of lock file
-# Purpose:
 #
+# Purpose:
 #   Return the full name of the lock file.
 #
 __lock_file() {
+    local tmpdir=$(__tmp_dir)
 
-    tmpdir=$(__tmp_dir)
     echo "$tmpdir/LOCK"
 }
 
@@ -142,17 +133,15 @@ __lock_file() {
 # Sent: key
 #       file - lock file name, absolute path, optional
 # Return: value
+
 # Purpose:
-#
 #   Return the value of the attribute indicated by the key in the lock file.
 #
 # Notes:
-#
 #   If there are more than one line in the lock file matching the indicated
 #   attribute key, the value of the last is returned.
 #
 # Example:
-#
 #   $ cat /tmp/tst_lock_sh.txt
 #   script: /path/to/script.sh
 #   created_on: 2009-01-01 01:01:01
@@ -165,28 +154,18 @@ __lock_file() {
 #   # returns: 2009-01-01 11:11:11
 #
 __lock_file_key_value() {
+    local key file value_line value
 
     key=$1
     file=$2
 
-    if [[ ! $key ]]; then
-        return
-    fi
+    [[ ! $key ]] && return
+    [[ ! $file ]] && file=$(__lock_file)
+    [[ ! -r $file ]] && return
 
-    if [[ ! $file ]]; then
-        file=$(__lock_file)
-    fi
-
-    if [[ ! -r $file ]]; then
-        return
-    fi
-
-    value_line=$(grep "^$key:" $file | tail -1)
-
+    value_line=$(grep "^$key:" "$file" | tail -1)
     value=${value_line#$key: }
-    echo $value
-
-    return
+    echo "$value"
 }
 
 
@@ -213,6 +192,7 @@ __lock_file_key_value() {
 #   true.
 #
 __lock_is_alertable() {
+    local age file created_on now_seconds created_on_limit
 
     age=$1
     file=$2
@@ -221,7 +201,7 @@ __lock_is_alertable() {
     [[ ! $file ]] && file=$(__lock_file)
     [[ ! -r $file ]] && return 1
 
-    created_on=$(__lock_file_key_value created_on $file)
+    created_on=$(__lock_file_key_value created_on "$file")
     [[ ! $created_on ]] && return 1
 
     now_seconds=$(date "+%s")
@@ -232,7 +212,7 @@ __lock_is_alertable() {
 
     created_on_limit=$(date "+%s" --date="$created_on $tz + $age")
 
-    (( $now_seconds > $created_on_limit )) && return 0 || return 1
+    (( "$now_seconds" >= "$created_on_limit" )) && return 0 || return 1
 }
 
 
@@ -246,20 +226,14 @@ __lock_is_alertable() {
 #   Remove the lock file.
 #
 __lock_remove() {
+    local file=$1
 
-    file=$1
-    if [[ ! $file ]]; then
-        file=$(__lock_file)
-    fi
+    [[ ! $file ]] && file=$(__lock_file)
+    [[ ! -e $file ]] && return
 
-    if [[ ! -e $file ]]; then
-        return
-    fi
-
-    rm $file
-
-    return
+    rm "$file"
 }
+
 # This function indicates this file has been sourced.
 __loaded_lock() {
     return 0
@@ -269,4 +243,3 @@ __loaded_lock() {
 while read -r function; do
     export -f "${function%%(*}"         # strip '()'
 done < <(awk '/^__*()/ {print $1}' "$DM_ROOT"/lib/lock.sh)
-

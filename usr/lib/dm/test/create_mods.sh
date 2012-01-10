@@ -1,16 +1,22 @@
 #!/bin/bash
 
-# FIXME
-# The run_tests function was originally in ~/dm/bin/create_mods.sh. This needs
-# formatting/testing.
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
+
+source $DM_ROOT/test/test.sh
+
+tmpdir=$(__tmp_dir)
+test_dir="${tmpdir}/test"
+
 
 #
 # run_tests
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run some tests.
 #
 # Notes:
@@ -18,13 +24,31 @@
 #   The tests ensure the script outputs the expected tree structure.
 #   Testing the created mods is limited.
 #
-_run_tests() {
+tst_run_tests() {
     label=()
     test=()
     expect=()
     local i=0
 
-    mod_id=$("$DM_BIN/next_mod_id.sh" -d)
+
+    rm "$DM_IDS" 2>/dev/null
+
+    mkdir -p "${DM_IDS%/*}"
+
+    cat <<EOT >> "$DM_IDS"
+start_mod_id,end_mod_id,person_id
+00001,00040,x1
+00040,09999,3
+10000,29999,1
+30000,49999,2
+50000,99949,0
+99950,99999,4
+EOT
+
+    mkdir -p "$DM_USERS"
+    echo "30000" > "$DM_USERS/mod_counter"
+
+    mod_id=$("$DM_BIN/next_mod_id.sh")
     mod_id_2=$((mod_id + 1))
     mod_id_3=$((mod_id + 2))
 
@@ -150,8 +174,10 @@ EOT
 
     for i in ${!label[@]}; do
         echo -n "Test $i: ${label[$i]} ... "
-        got=$(echo "${test[$i]}" | $DM_BIN/create_mods.sh -d 2>/dev/null)
-        if [[ "$got" == "${expect[$i]}" ]]; then
+        echo "30000" > "$DM_USERS/mod_counter"
+        echo "${test[$i]}" > "$test_dir/create_mods.txt"
+        got=$("$DM_BIN/create_mods.sh" "$test_dir/create_mods.txt" 2>/dev/null)
+        if [[ $got == "${expect[$i]}" ]]; then
             echo "ok"
         else
             echo "FAIL"
@@ -162,7 +188,18 @@ EOT
             echo ""
         fi
     done
-
-    return
 }
 
+functions=$(awk '/^tst_/ {print $1}' $0)
+
+[[ $1 ]] && functions="$*"
+
+for function in  $functions; do
+    function=${function%%(*}        # strip '()'
+    if ! declare -f "$function" &>/dev/null; then
+        __mi "Function not found: $function" >&2
+        continue
+    fi
+
+    "$function"
+done

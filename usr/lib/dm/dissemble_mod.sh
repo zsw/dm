@@ -1,7 +1,6 @@
 #!/bin/bash
 __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 __loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
@@ -16,7 +15,7 @@ files.
    -h      Print this help message.
 
 EXAMPLE:
-    $0 /tmp/file.txt 12345
+    $script /tmp/file.txt 12345
 
 NOTES:
     Intended to be used on files created by assemble_mod.sh.
@@ -40,8 +39,8 @@ EOF
 #   Return the full file name the section should be associated with.
 #
 _filename_from_section() {
-
     local mod mod_dir section
+
     mod=$1
     section=$2
 
@@ -63,8 +62,8 @@ _filename_from_section() {
 #   Return a properly formatted section name.
 #
 _section_name() {
-
     local attachment attr section
+
     section=$1
 
     [[ ! $section ]] && return
@@ -76,13 +75,12 @@ _section_name() {
     # If the section is not a attribute or attachment then it's foo
     # We're going to assume it's an attachment and configure it as so.
     # Prepend the section with files.
-    [[ ! $attachment && ! $attr ]] && section="files/$section"
+    [[ ! $attachment && ! $attr ]] && section=files/$section
 
     echo "$section"
 }
 
 _options() {
-    # set defaults
     args=()
 
     while [[ $1 ]]; do

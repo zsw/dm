@@ -24,7 +24,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     mod_id=
 

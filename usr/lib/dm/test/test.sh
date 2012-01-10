@@ -7,7 +7,7 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 
 
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
-source $DM_ROOT/lib/log.sh                          # Re-source this every time or log.sh tests won't work
+source "$DM_ROOT/lib/log.sh"                          # Re-source this every time or log.sh tests won't work
 
 LOG_LEVEL=info
 LOG_TO_STDOUT=              # Prevent logger calls in functions from affecting tests
@@ -15,7 +15,7 @@ LOG_TO_STDOUT=              # Prevent logger calls in functions from affecting t
 tmpdir=$(__tmp_dir)
 test_dir=$tmpdir/test
 
-[[ $test_dir =~ ^/tmp ]] && rm -r "$test_dir" 2>/dev/null
+[[ $test_dir == /tmp* ]] && rm -r "$test_dir" 2>/dev/null
 mkdir -p "$test_dir/users"
 
 export DM_ARCHIVE=$test_dir/archive

@@ -13,12 +13,11 @@ __loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 #
 # Sent: username (optional)
 # Return: directory - string, eg '/tmp/dm_username'
-# Purpose:
 #
+# Purpose:
 #   Return the directory where tmp files are stored.
 #
 # Notes:
-#
 #   The directory is the format /tmp/dm_${username}.
 #
 #   The username is determined by the first non-blank string returned by the
@@ -33,12 +32,11 @@ __tmp_dir() {
     if [[ $DM_TMP ]]; then
         echo "$DM_TMP"
     else
-        username=$1
+        local username=$1
         [[ ! $username ]] && username=$USERNAME
         [[ ! $username ]] && username=$(mktemp -d -u XXXXXXXXXXXX)
         echo "/tmp/dm_${username}"
     fi
-    return
 }
 
 
@@ -47,12 +45,11 @@ __tmp_dir() {
 #
 # Sent: tmpdir - directory to store temp file (optional)
 # Return: tmp_file - string, eg /tmp/dm_username/tmp.AFslDe235s
-# Purpose:
 #
+# Purpose:
 #   Return the name of a temp file.
 #
 # Notes:
-#
 #   The tmp_file is the format returned by mktemp.
 #
 #   The directory of the temp file is determined by the first non-blank string
@@ -63,20 +60,20 @@ __tmp_dir() {
 #   3. /tmp
 #
 __tmp_file() {
+    local tmpdir filename template tmp_file
 
     tmpdir=$1
     [[ ! $tmpdir ]] && tmpdir=$(__tmp_dir)
     [[ ! $tmpdir ]] && tmpdir='/tmp'
 
-    mkdir -p $tmpdir
+    mkdir -p "$tmpdir"
 
     filename=${0##*/}
-    template="tmp.XXXXXXXXXX.${filename}"
+    template=tmp.XXXXXXXXXX.${filename}
 
-    tmp_file=$(mktemp --tmpdir="$tmpdir" $template)
+    tmp_file=$(mktemp --tmpdir="$tmpdir" "$template")
 
     echo "$tmp_file"
-    return
 }
 
 

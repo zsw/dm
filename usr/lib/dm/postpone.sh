@@ -31,7 +31,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     mod=$(< "$DM_USERS/current_mod");
     unset force

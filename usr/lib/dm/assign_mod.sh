@@ -57,7 +57,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     mod_id=$(< "$DM_USERS/current_mod")
     unset owner

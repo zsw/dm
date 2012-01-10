@@ -5,13 +5,11 @@ __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
 _u() { cat << EOF
-
 usage: $script [OPTIONS]
 
 This script permits editing and updating the crontab.
     -e  Edit crontab.
     -r  Reload (update) crontab.
-
     -h  Print this help message.
 
     * All other options are passed to /usr/bin/crontab
@@ -47,7 +45,6 @@ HOLD_HEADER='
 '
 
 _options() {
-    # set defaults
     args=()
     unset editing
     unset reloading

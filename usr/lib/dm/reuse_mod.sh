@@ -2,7 +2,6 @@
 __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 __loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
 script=${0##*/}
@@ -72,7 +71,6 @@ _process_mod() {
 }
 
 _options() {
-    # set defaults
     args=()
     unset interactive
 
@@ -100,7 +98,7 @@ for mod_id in "${args[@]}"; do
             read -p "Reuse mod $mod_id ? (Y/n): " reply
 
             [[ ! $reply ]] && reply=y
-            reply=$(tr "[:upper:]" "[:lower:]" <<< "$reply")
+            reply=${reply,,}
 
             [[ $reply == y || $reply == n ]] && break
         done

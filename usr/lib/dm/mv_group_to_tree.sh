@@ -25,7 +25,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     dm_trees=$DM_TREES
 

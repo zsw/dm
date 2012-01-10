@@ -167,14 +167,14 @@ _scrub_who() {
 
     who=$1
     if [[ ! $who ]]; then
-        __v && __mi "scrub_who: no who provided."
+        __v && __mi "scrub_who: no 'who' provided."
         return
     fi
 
     from_alias=$(awk -F'=' -v var="^${who}=" '$0 ~ var {print $2;exit}' "$DM_ROOT/users/initial_aliases")
     [[ $from_alias ]] && who=$from_alias
 
-    who=$(tr "[:lower:]" "[:upper:]" <<< "$who")
+    who=${who^^}
 
     # Check if a user exists with those initials
     [[ ! $(__person_attribute username initials "$who") ]] && return
@@ -194,7 +194,6 @@ _unindent() {
 }
 
 _options() {
-    # set defaults
     args=()
     unset verbose
     unset blank

@@ -1,7 +1,6 @@
 #!/bin/bash
 __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
-__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
@@ -28,7 +27,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     age="1 month"
 

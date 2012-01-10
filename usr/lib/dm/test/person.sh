@@ -10,29 +10,28 @@ source $DM_ROOT/test/test.sh
 __loaded_person 2>/dev/null || source $DM_ROOT/lib/person.sh
 
 tmpdir=$(__tmp_dir)
-test_dir="${tmpdir}/test"
+test_dir=$tmpdir/test
 
 #
 # tst_person_attribute
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __person_attribute function.
 #
 tst_person_attribute() {
 
-    DM_PEOPLE="${test_dir}/people"
+    DM_PEOPLE=$test_dir/people
+    rm "$DM_PEOPLE" 2>/dev/null
 
-    rm $DM_PEOPLE 2>/dev/null
-
-    value=$(__person_attribute)
+    local value=$(__person_attribute)
     tst "$value" '' 'no people file returns nothing'
 
-    mkdir -p `dirname $DM_PEOPLE`
+    mkdir -p "${DM_PEOPLE%/*}"
 
-    cat <<EOT >> $DM_PEOPLE
+    cat <<EOT >> "$DM_PEOPLE"
 id,initials,username, name
 1, ABC, aabbcc, Aaa Cccccc
 2,  DE, ddee,   Dddd Eeeeeeee
@@ -97,22 +96,20 @@ EOT
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __person_translate_who function.
 #
 tst_person_translate_who() {
+    DM_PEOPLE=$test_dir/people
+    rm "$DM_PEOPLE" 2>/dev/null
 
-    DM_PEOPLE="${test_dir}/people"
-
-    rm $DM_PEOPLE 2>/dev/null
-
-    value=$(__person_attribute)
+    local value=$(__person_attribute)
     tst "$value" '' 'no people file returns nothing'
 
-    mkdir -p `dirname $DM_PEOPLE`
+    mkdir -p "${DM_PEOPLE%/*}"
 
-    cat <<EOT >> $DM_PEOPLE
+    cat <<EOT >> "$DM_PEOPLE"
 id,initials,username, name
 1, ABC, aabbcc, Aaa Cccccc
 2,  DE, ddee,   Dddd Eeeeeeee
@@ -137,14 +134,14 @@ EOT
 }
 
 
-functions=$(awk '/^tst_/ {print $1}' $0)
+functions=$(awk '/^tst_/ {print $1}' "$0")
 
 [[ $1 ]] && functions="$*"
 
 for function in  $functions; do
     function=${function%%(*}        # strip '()'
-    if [[ ! $(declare -f "$function") ]]; then
-        echo "Function not found: $function"
+    if ! declare -f "$function" &>/dev/null; then
+        __mi "Function not found: $function" >&2
         continue
     fi
 

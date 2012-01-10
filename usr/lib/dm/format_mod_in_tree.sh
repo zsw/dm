@@ -2,7 +2,7 @@
 __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-__loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
+__loaded_lock 2>/dev/null || source $DM_ROOT/lib/lock.sh
 
 script=${0##*/}
 _u() { cat << EOF
@@ -38,7 +38,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
 
     while [[ $1 ]]; do
@@ -71,32 +70,31 @@ if [[ $tree ]]; then
     trees=$tree
 else
     # Get all trees the mod is in
-    # trees=$(find $DM_TREES/ -type f ! -name 'sed*' -exec grep -l "\[.\] $mod_id"  '{}' \;)
     trees=$(grep -lr "\[.\] $mod_id" "$DM_TREES/")
 fi
 
-# If the mod is in no trees exit quietly.
+# If the mod is in no trees exit.
 [[ ! $trees ]] && __me "Mod $mod_id not found in tree $tree"
 
+__lock_create || __me "${script}: Lock file found. cat $(__lock_file)"
 # The code below attempts to:
-# * Match characters with special meaning within regexp properly.
+# * Properly match characters with special meaning within regexp.
 # * Not match lines where the mod id is within the description of
 #   another mod.
 # * Preserve indentation.
 # Normally sed would be used to search and replace but since it doesn't
-# handle special characters well, awk is used.
-
-tmpfile=$(__tmp_file)
+# handle special characters well so awk is used.
 line=$("$DM_BIN/format_mod.sh" "%b %i %d" <<< "$mod_id")
-pattern="[ ]*\\\[[ x]\\\] $mod_id "
 IFS=$'\n'
 for t in $trees; do
     if grep -q "\[.\] $mod_id" "$t"; then
-        # Replace in tree file
-        awk -v line="$line" -v pat="$pattern" \
-            '$0 ~ pat {sub(/\[.*$/, line)}; \
-            {print}' "$t" > "$tmpfile" && \
-            mv "$tmpfile" "$t"
+
+        ## Find a line possibly starting with spaces,
+        ## then either '[ ] mod_id' or '[x] mod_id' and
+        ## nn that line replace '[*' with $line.
+        ## $line looks like '[ ] This is a mod description'
+        echo -e "/[ ]*\[[ x]\] $mod_id/s/\[.*$/$line/\nw" | ed -s "$t"
+
     else
         # Append to tree file
         echo "$line" >> "$t"

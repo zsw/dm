@@ -27,7 +27,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     unset force
     unset mod

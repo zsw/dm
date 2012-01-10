@@ -14,8 +14,8 @@ __loaded_files 2>/dev/null || source $DM_ROOT/lib/files.sh
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run tests on __is_text function.
 #
 tst_is_text() {
@@ -37,14 +37,14 @@ tst_is_text() {
 }
 
 
-functions=$(awk '/^tst_/ {print $1}' $0)
+functions=$(awk '/^tst_/ {print $1}' "$0")
 
 [[ $1 ]] && functions="$*"
 
 for function in  $functions; do
     function=${function%%(*}        # strip '()'
-    if [[ ! $(declare -f "$function") ]]; then
-        echo "Function not found: $function"
+    if ! declare -f "$function" &>/dev/null; then
+        __mi "Function not found: $function" >&2
         continue
     fi
 

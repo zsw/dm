@@ -30,6 +30,8 @@ EOF
 #   Send message by weechat
 #
 _by_weechat() {
+    local pid fifo msg
+
     pid=$(pidof weechat-curses)
     [[ ! $pid ]] && __me "Reminder for mod $mod_dir aborted. Unable to get pid of weechat"
 
@@ -52,13 +54,14 @@ _by_weechat() {
 #   Send message by email
 #
 _by_email() {
+    local subject notes res
+
     subject=$(sed -e "s/\"/\\\\\"/" "$mod_dir/description")
     notes=$(sed -e "s/\"/\\\\\"/" "$mod_dir/notes")
     res=$(echo -e "To: $account\nSubject: $subject\n\n$notes" | sendmail -v -- "$account")
 }
 
 _options() {
-    # set defaults
     args=()
     unset jabber
 

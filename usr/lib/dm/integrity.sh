@@ -3,7 +3,6 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 
 __loaded_attributes 2>/dev/null  || . $DM_ROOT/lib/attributes.sh
 __loaded_hold 2>/dev/null        || . $DM_ROOT/lib/hold.sh
-__loaded_lock 2>/dev/null        || . $DM_ROOT/lib/lock.sh
 __loaded_log 2>/dev/null         || . $DM_ROOT/lib/log.sh
 __loaded_person 2>/dev/null      || . $DM_ROOT/lib/person.sh
 __loaded_tmp 2>/dev/null         || . $DM_ROOT/lib/tmp.sh
@@ -103,7 +102,7 @@ _print_messages() {
         unset indented
         if grep -q '^    ' <<< "$line" ; then
             indented=1
-            msg="$line"
+            msg=$line
         else
             type=${line%%|*}
             remains=${line#*|}
@@ -330,7 +329,7 @@ _run_checks() {
         if [[ $compare_list ]]; then
             compare_list="$compare_list\n$list"
         else
-            compare_list="$list"
+            compare_list=$list
         fi
     done < <(awk -F",[ \t]*" '/^[0-9]+/ {print $1,$2,$3}' "$DM_IDS")
 
@@ -423,7 +422,6 @@ _run_checks() {
 
 
 _options() {
-    # set defaults
     args=()
     unset verbose
     unset user

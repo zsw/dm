@@ -40,7 +40,6 @@ EOF
 
 
 _options() {
-    # set defaults
     args=()
     unset trees
 

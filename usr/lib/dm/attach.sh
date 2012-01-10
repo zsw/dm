@@ -2,7 +2,6 @@
 __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
 
 __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
-__loaded_log 2>/dev/null || source $DM_ROOT/lib/log.sh
 
 script=${0##*/}
 _u() { cat << EOF
@@ -31,7 +30,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     mod=$(< "$DM_USERS/current_mod")
 
@@ -90,7 +88,7 @@ for i in "${args[@]}"; do
     # Example
     #   file:              $DM_ROOT/files/path/to/attach.txt
     #   in mod: $DM_ROOT/mods/12345/files/path/to/attach.txt
-    to_file="$dir/files/$rel_file"
+    to_file=$dir/files/$rel_file
     to_dir=${to_file%/*}            # Remove the file name
     [[ ! -d $to_dir ]] && mkdir -p "$to_dir"
 
@@ -102,7 +100,7 @@ for i in "${args[@]}"; do
     found=
     r=
     while true; do
-        r="../$r"
+        r=../$r
         rl=$(readlink -f "$r")
         [[ $rl == / ]] && break     # Can't go any further
         [[ $rl == $dm_root ]] && { found=1; break; }
@@ -114,7 +112,7 @@ for i in "${args[@]}"; do
         continue
     fi
 
-    from_file="${r}files/${rel_file}"
+    from_file=${r}files/$rel_file
     # Intentionally not testing the existance of from_file, it doesn't
     # have to exist.
 

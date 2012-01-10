@@ -21,7 +21,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
     unset verbose
 

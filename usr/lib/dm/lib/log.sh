@@ -19,7 +19,7 @@ LOG_LEVEL_ERROR=4
 LOG_LEVEL_FATAL=5
 LOG_LEVEL_OFF=6
 
-[[ ! $LOG_LEVEL ]] && LOG_LEVEL='off'
+[[ ! $LOG_LEVEL ]] && LOG_LEVEL=off
 
 # Log format
 
@@ -38,96 +38,104 @@ LOG_FORMAT_MESSAGE=1
 
 __logger_level() {
 
-    eval "expr \$LOG_LEVEL_`echo $LOG_LEVEL | tr '[:lower:]' '[:upper:]'` 2>/dev/null"
+    case "${LOG_LEVEL^^}" in
+        DEBUG)  echo "$LOG_LEVEL_DEBUG" ;;
+         INFO)  echo "$LOG_LEVEL_INFO"  ;;
+         WARN)  echo "$LOG_LEVEL_WARN"  ;;
+        ERROR)  echo "$LOG_LEVEL_ERROR" ;;
+        FATAL)  echo "$LOG_LEVEL_FATAL" ;;
+          OFF)  echo "$LOG_LEVEL_OFF"   ;;
+    esac
 }
 
 
 __logger_log() {
+    local level log prefix syslog facility facility_level
 
-    local level=$1
+    level=$1
     shift
 
-    local log=
-
-    local prefix=${DM_LOG%:*}
-    local syslog=
-    local facility=
-    if [[ $prefix == 'syslog' ]]; then
+    prefix=${DM_LOG%:*}
+    if [[ $prefix == syslog ]]; then
         syslog=1
         facility=${DM_LOG#*:}
     fi
 
     if [[ $syslog ]]; then
-        [[ $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
-        [[ $LOG_FORMAT_MESSAGE ]] && log="$log $*"
+        [[ $LOG_FORMAT_LEVEL ]] && log+=" [$level]"
+        [[ $LOG_FORMAT_MESSAGE ]] && log+=" $*"
     else
-        [[ $LOG_FORMAT_DATE ]] && log="$log $(date '+%Y-%m-%d %H:%M:%S')"
-        [[ $LOG_FORMAT_LEVEL ]] && log="$log [$level]"
-        [[ $LOG_FORMAT_MESSAGE ]] && log="$log $*"
-        [[ $LOG_FORMAT_FILE ]] && log="$log, $0"
+        [[ $LOG_FORMAT_DATE ]] && log+=" $(date '+%Y-%m-%d %H:%M:%S')"
+        [[ $LOG_FORMAT_LEVEL ]] && log+=" [$level]"
+        [[ $LOG_FORMAT_MESSAGE ]] && log+=" $*"
+        [[ $LOG_FORMAT_FILE ]] && log+=", $0"
     fi
 
-    log=$(echo "$log" | sed 's/^[ \t]*//')
+    read -r log <<< "$log"  ## trim whitespace
 
     if [[ $syslog ]]; then
-        # convert level to lower case
-        local facility_level=$(echo $level | tr [A-Z] [a-z])
+        # ${var,,}" convert variable to lower case
         #logger -i -t dm -p local7.info -- "$log"
-        logger -i -t dm -p $facility.$facility_level -- "$log"
+        logger -i -t dm -p "$facility.${level,,}" -- "$log"
     else
-        [[ $DM_LOG ]] && echo "$log" >> $DM_LOG
+        [[ $DM_LOG ]] && echo "$log" >> "$DM_LOG"
     fi
+
     [[ $LOG_TO_STDERR ]] && echo "$log" >&2
-    #[[ $LOG_TO_STDOUT ]] && [[ -t 1 ]] && echo "$log" >&1    # -t 1 tests stdout
-    [[ $LOG_TO_STDOUT ]] && echo "$log" >&1    # -t 1 tests stdout
+    [[ $LOG_TO_STDOUT ]] && echo "$log" >&1
 }
 
 __logger_debug() {
+    local log_level
 
     log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
-    [[ $log_level -gt $LOG_LEVEL_DEBUG ]] && return
+    (( $log_level > $LOG_LEVEL_DEBUG )) && return
 
     __logger_log 'DEBUG' "$*"
 }
 
 __logger_info() {
+    local log_level
 
     log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
-    [[ $log_level -gt $LOG_LEVEL_INFO ]] && return
+    (( $log_level > $LOG_LEVEL_INFO )) && return
 
     __logger_log 'INFO' "$*"
 }
 
 __logger_warn() {
+    local log_level
 
     log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
-    [[ $log_level -gt $LOG_LEVEL_WARN ]] && return
+    (( $log_level > $LOG_LEVEL_WARN )) && return
 
     __logger_log 'WARN' "$*"
 }
 
 __logger_error() {
+    local log_level
 
     log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
-    [[ $log_level -gt $LOG_LEVEL_ERROR ]] && return
+    (( $log_level > $LOG_LEVEL_ERROR )) && return
 
     __logger_log 'ERROR' "$*"
 }
 
 __logger_fatal() {
+    local log_level
 
     log_level=$(__logger_level)
 
     [[ ! $log_level ]] && return
-    [[ $log_level -gt $LOG_LEVEL_FATAL ]] && return
+    (( $log_level > $LOG_LEVEL_FATAL )) && return
 
     __logger_log 'FATAL' "$*"
     exit 1
@@ -143,4 +151,3 @@ __loaded_log() {
 while read -r function; do
     export -f "${function%%(*}"         # strip '()'
 done < <(awk '/^__*()/ {print $1}' "$DM_ROOT"/lib/log.sh)
-

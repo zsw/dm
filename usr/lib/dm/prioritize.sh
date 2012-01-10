@@ -23,7 +23,6 @@ EOF
 }
 
 _options() {
-    # set defaults
     args=()
 
     while [[ $1 ]]; do
@@ -49,7 +48,7 @@ if [[ $current_branch != master ]]; then
     __mi "Current branch is $current_branch, not master.
         Switching to master..."
 
-    git checkout master &>/dev/null ||
+    git checkout -q master ||
         __me "git checkout master failed.
             Refusing to prioritize in case data is corrupted.
             Run 'git checkout master' at prompt and review messages"
@@ -69,11 +68,9 @@ cat $tree_files | "$DM_BIN/dependency_schema.pl" --available "$DM_ROOT" | "$DM_B
 
 cd "$DM_ROOT"
 git add -A .
-"$DM_BIN/set_alerts.sh"
-git status -s
-git commit --dry-run > /dev/null &&
-    git commit -a -m "Re-prioritize" &&
+git commit --dry-run >/dev/null &&
+    git commit -q -a -m "Re-prioritize" &&
     { git remote | grep -q public; } &&
-    git push public
+    git push -q public &
 
 exit 0

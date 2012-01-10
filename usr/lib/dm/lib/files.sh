@@ -18,6 +18,7 @@ __loaded_attributes 2>/dev/null || source $DM_ROOT/lib/attributes.sh
 #   Ruturn 0 if file is text file.
 #
 __is_text() {
+    local file
 
     file=$1
     [[ ! -r $file ]] && return 1
