@@ -71,6 +71,6 @@ git add -A .
 git commit --dry-run >/dev/null &&
     git commit -q -a -m "Re-prioritize" &&
     { git remote | grep -q public; } &&
-    git push -q public &
+    git push -q public
 
 exit 0

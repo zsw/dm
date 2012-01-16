@@ -91,10 +91,10 @@ for t in $trees; do
 
         ## Find a line possibly starting with spaces,
         ## then either '[ ] mod_id' or '[x] mod_id' and
-        ## nn that line replace '[*' with $line.
+        ## in that line replace '[*' with $line.
         ## $line looks like '[ ] This is a mod description'
+        [[ $line == */* ]] && line=${line//\//\\/}   ## if $line contains any /'s
         echo -e "/[ ]*\[[ x]\] $mod_id/s/\[.*$/$line/\nw" | ed -s "$t"
-
     else
         # Append to tree file
         echo "$line" >> "$t"
