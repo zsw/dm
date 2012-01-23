@@ -8,8 +8,8 @@
 # All dm system scripts need to source this file before running.
 #
 
-__mi() { [[ -t 1 ]] && local g=$LIGHTGREEN coff=$COLOUROFF; printf "$g===: %s$coff\n" "$@"; }
-__me() { [[ -t 1 ]] && local r=$RED coff=$COLOUROFF; printf "$r===> ERROR: %s$coff\n" "$@" >&2; exit 1; }
+__mi() { local e=$!; [[ -t 1 ]] && local g=$LIGHTGREEN coff=$COLOUROFF; printf "$g===: %s$coff\n" "$@"; return "$e"; }
+__me() { local e=$!; [[ -t 1 ]] && local r=$RED coff=$COLOUROFF; printf "$r===> ERROR: %s$coff\n" "$@"; exit "$e"; } >&2
 __v()  { ${verbose-false}; }
 
 __loaded_env() { export -f __loaded_env; }
