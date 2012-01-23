@@ -67,8 +67,8 @@ _options() {
 _options "$@"
 
 if [[ $user && -n $editing ]] || [[ $user && -n $reloading ]]; then
-    __me "crontab.sh does not handle -u option.
-        Login as user to update their cron."
+    __me "crontab.sh does not handle -u option." \
+        "Login as user to update their cron."
 fi
 
 if [[ $editing ]]; then

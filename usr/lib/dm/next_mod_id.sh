@@ -126,20 +126,17 @@ else
 fi
 
 next_in_range=$(awk -v min="$start_mod_id" -v max="$end_mod_id" 'min <= $1 && $1 <= max' <<< "$next_mod_id")
-
 if [[ ! $next_in_range ]]; then
-    __me "No mod ids remaining for person $DM_PERSON_ID.
-        Assign the person a new block of ids in the $DM_IDS file"
+    __me "No mod ids remaining for person $DM_PERSON_ID." \
+        "Assign the person a new block of ids in the $DM_IDS file"
 fi
 
 warn_min=$(( $end_mod_id - $warn_at ))
-
 warn=$(awk -v min="$warn_min" -v max="$end_mod_id" 'min <= $1 && $1 <= max' <<< "$next_mod_id")
-
 if [[ $warn ]]; then
     remaining=$(( $end_mod_id - $next_mod_id ))
-    __mi "Warning: $remaining mod ids remaining for person $DM_PERSON_ID.
-        Consider assigning the person a new block of ids in the $DM_IDS file" >&2
+    __mi "Warning: $remaining mod ids remaining for person $DM_PERSON_ID." \
+        "Consider assigning the person a new block of ids in the $DM_IDS file" >&2
 fi
 
 printf %05d "$next_mod_id" | tee "$DM_USERS/mod_counter"

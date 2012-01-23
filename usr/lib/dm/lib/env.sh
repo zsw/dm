@@ -8,13 +8,11 @@
 # All dm system scripts need to source this file before running.
 #
 
-__mi() { echo -e "$LIGHTGREEN$*$COLOUROFF" | sed 's/^ */===: /' ;}
-__me() { echo -e "$RED$*$COLOUROFF" | sed 's/^ */===> ERROR: /' >&2; exit 1 ;}
-__v()  { ${verbose-false} ;}
+__mi() { [[ -t 1 ]] && local g=$LIGHTGREEN coff=$COLOUROFF; printf "$g===: %s$coff\n" "$@"; }
+__me() { [[ -t 1 ]] && local r=$RED coff=$COLOUROFF; printf "$r===> ERROR: %s$coff\n" "$@" >&2; exit 1; }
+__v()  { ${verbose-false}; }
 
-__loaded_env() {
-    export -f __loaded_env
-}
+__loaded_env() { export -f __loaded_env; }
 
 [[ ! $DM_ROOT ]] && __me "environment variable not set or empty."
 [[ ! $USERNAME ]] && __me "environment variable not set or empty."

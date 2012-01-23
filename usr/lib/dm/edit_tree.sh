@@ -152,8 +152,8 @@ for base_file in *; do
     __v && __mi "Creating mods."
     "$DM_BIN/create_mods.sh" "$file" > "$replace_file"
 
-    __v && __mi "Replacing mod spec with checkbox in tree.
-                $DM_BIN/block_substitute.py $file_new $file $replace_file"
+    __v && __mi "Replacing mod spec with checkbox in tree." \
+                "$DM_BIN/block_substitute.py $file_new $file $replace_file"
 
     "$DM_BIN/block_substitute.py" "$file_new" "$file" "$replace_file" > "$tmp" && mv "$tmp" "$file_new"
 done
@@ -165,7 +165,7 @@ cp "$file_new" "$tree"
 # Validate schema in tree
 __v && __mi "Validating schema in tree."
 if ! { cat "$tree" | "$DM_BIN/dependency_schema.pl" "$DM_ROOT"; }; then
-    __me "The schema in the tree is not valid: $tree
-        Use this command to repeat schema validation check
-        \$ cat $tree | $DM_BIN/dependency_schema.pl $DM_ROOT"
+    __me "The schema in the tree is not valid: $tree" \
+        "Use this command to repeat schema validation check" \
+        "\$ cat $tree | $DM_BIN/dependency_schema.pl $DM_ROOT"
 fi

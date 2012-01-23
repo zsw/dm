@@ -44,9 +44,9 @@ _process_mod() {
     mod_id=$1
     mod_dir=$(__mod_dir "$mod_id")
 
-    [[ ! -d $mod_dir ]] && __me "Unable to determine original creator of mod.
-        Mod not found: $mod_id.
-        Add to reusable_ids manually."
+    [[ ! -d $mod_dir ]] && __me "Unable to determine original creator of mod." \
+        "Mod not found: $mod_id." \
+        "Add to reusable_ids manually."
 
     # Add to reusable_ids
     # The id must be added to reusable_ids file before calling assign_mod.sh or else

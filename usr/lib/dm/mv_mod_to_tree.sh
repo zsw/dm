@@ -26,7 +26,7 @@ while getopts "h" options; do
         exit 1;;
 
   esac
-done
+    done
 
 shift $(($OPTIND - 1))
 
@@ -47,8 +47,8 @@ to_tree=$2
 mod_dir=$(__mod_dir "$mod_id")
 
 [[ ! $mod_dir ]] &&
-    __me "Unable to mv mod $mod_id.
-        Unable to find mod in either $DM_MODS or $DM_ARCHIVE."
+    __me "Unable to mv mod $mod_id." \
+        "Unable to find mod in either $DM_MODS or $DM_ARCHIVE."
 
 # Find the tree file the mod is currently in.
 # The integrity script will report issues if a mod is in more than one
