@@ -15,57 +15,49 @@ EXAMPLE:
 EOF
 }
 
-while getopts "h" options; do
-  case $options in
+_options() {
+    # set defaults
+    args=()
 
-    h ) _u
-        exit 0;;
-    \?) _u
-        exit 1;;
-    * ) _u
-        exit 1;;
-
-  esac
+    while [[ $1 ]]; do
+        case "$1" in
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
     done
 
-shift $(($OPTIND - 1))
+    (( ${#args[@]} != 2 )) && { _u; exit 1; }
+    mod_id=${args[0]}
+    to_tree=${args[1]}
+}
 
-
-# Validate the arguments
-if [ $# -ne 2 ]; then
-    _u
-    exit 1
-fi
-
-mod_id=$1
-to_tree=$2
+_options "$@"
 
 [[ ! -e $to_tree ]] && __me "Unable to find tree file: $to_tree"
 [[ ! -w $to_tree ]] && __me "Permission denied. Unable to write tree file: $to_tree"
 
 # Ensure mod is valid
-mod_dir=$(__mod_dir "$mod_id")
-
-[[ ! $mod_dir ]] &&
-    __me "Unable to mv mod $mod_id." \
+__mod_dir "$mod_id" >&/dev/null || __me "Unable to mv mod $mod_id." \
         "Unable to find mod in either $DM_MODS or $DM_ARCHIVE."
 
 # Find the tree file the mod is currently in.
 # The integrity script will report issues if a mod is in more than one
 # tree. This script will only look at the first tree the mod is found
 # in.
-from_tree=$(grep -rlE  "^\s*\[.\]\s*$mod_id" $DM_TREES | head -1)
+from_tree=$(grep -rlE  "^\s*\[.\]\s*$mod_id" "$DM_TREES" | head -1)
 
 [[ $from_tree == $to_tree ]] && exit 0
 
 # If the mod is in a group (project) then we need to move the whole
 # group to prevent the group from being disorganized.
-group_id=
+unset group_id
 [[ $from_tree ]] && group_id=$("$DM_BIN/tree_parse.py" --mods "$from_tree" | awk -v v="^$mod_id" '$0 ~ v {print $2}')
 
 if [[ $group_id ]]; then
     "$DM_BIN/mv_group_to_tree.sh" "$group_id" "$to_tree"
-
 else
     # Remove from original tree
     [[ $from_tree ]] && sed -i "/\[.\] $mod_id /d" "$from_tree"

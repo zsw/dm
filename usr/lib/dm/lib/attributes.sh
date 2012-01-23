@@ -115,14 +115,11 @@ __attribute() {
 #   Determine if the file has conflict markers.
 #
 __has_conflict_markers() {
-    local file marker
+    local file
 
     file=$1
 
-    [[ ! $file ]] && return 1
     [[ ! -e $file ]] && return 1
-
-    # Return the exit status of the grep call
     grep -qE '^(<<<<<<<|=======|>>>>>>>)$' "$file"
 }
 
@@ -143,9 +140,15 @@ __has_conflict_markers() {
 __mod_dir() {
     local mod=$1
 
-    [[ ! $mod ]] && return
-    [[ -d $DM_MODS/$mod ]] && { echo "$DM_MODS/$mod"; return; }
-    [[ -d $DM_ARCHIVE/$mod ]] && { echo "$DM_ARCHIVE/$mod"; return; }
+    [[ ! $mod ]] && return 1
+
+    if [[ -d $DM_MODS/$mod ]]; then
+        echo "$DM_MODS/$mod"
+    elif [[ -d $DM_ARCHIVE/$mod ]]; then
+        echo "$DM_ARCHIVE/$mod"
+    else
+        return 1
+    fi
 }
 
 #
@@ -161,7 +164,7 @@ __original_who_id() {
     local initials mod_id person_id
 
     mod_id=$1
-    [[ ! $mod_id ]] && return
+    [[ ! $mod_id ]] && return 1
 
     # Determine the person_id associated with the mod by looking up in
     # the range of ids in the ids table.
@@ -184,7 +187,7 @@ __original_who_id() {
         tr -d 'x'
         )
 
-    [[ ! $person_id ]] && return
+    [[ ! $person_id ]] && return 1
 
     echo "$person_id"
 }
