@@ -1,0 +1,223 @@
+## GROUP DEPENDENCY: nested groups with mods
+
+### one mod unindented      NOT VALID
+#group 001
+#[ ] 30001 foo
+#    group 002
+#    [ ] 30002 bar
+#[ ] 30003 baz
+#    end
+#end
+#
+#group 003
+#[x] 30004 bar
+#    group 004
+#    [ ] 30005 baz
+#[ ] 30006 foo
+#    end
+#end
+
+## embedded group with mod dependency -- unindented
+group 005
+[ ] 30007 foo
+    group 006
+    [ ] 30008 bar
+    end
+[ ] 30009 baz
+end
+
+group 007
+[x] 30010 foo
+    group 008
+    [ ] 30011 bar
+    end
+[ ] 30012 baz
+end
+
+group 009
+[x] 30013 foo
+    group 010
+    [x] 30014 bar
+    end
+[ ] 30015 baz
+end
+
+## embedded group with mod dependency -- level
+group 011
+[ ] 30016 foo
+    group 012
+    [ ] 30017 bar
+    end
+    [ ] 30018 baz
+end
+
+group 013
+[x] 30019 foo
+    group 014
+    [ ] 30020 bar
+    end
+    [ ] 30021 baz
+end
+
+group 015
+[x] 30022 foo
+    group 016
+    [x] 30023 bar
+    end
+    [ ] 30024 baz
+end
+
+## embedded group with mod dependency -- indented
+group 017
+[ ] 30025 foo
+    group 018
+    [ ] 30026 bar
+    end
+        [ ] 30027 baz
+end
+
+group 019
+[x] 30028 foo
+    group 020
+    [ ] 30029 bar
+    end
+        [ ] 30030 baz
+end
+
+group 021
+[x] 30031 foo
+    group 022
+    [x] 30032 bar
+    end
+        [ ] 30033 baz
+end
+
+#######################################
+#######################################
+## gggeee - no indent
+#group 001
+#group 002
+#group 003
+#end
+#end
+#end
+#
+#
+### ggegee - no indent
+#group 004
+#group 005
+#end
+#group 006
+#end
+#end
+#
+#
+### ggeege - no indent
+#group 007
+#group 008
+#end
+#end
+#group 009
+#end
+#
+#
+### gegege - no indent
+#group 010
+#end
+#group 011
+#end
+#group 012
+#end
+#
+#
+### gggeee - one indent
+#group 013
+#    group 014
+#group 015
+#end
+#    end
+#end
+#
+#group 016
+#group 017
+#    group 018
+#    end
+#end
+#end
+#
+#group 019
+#    group 020
+#    group 021
+#    end
+#    end
+#end
+#
+#
+### ggegee - one indent
+#group 022
+#    group 023
+#    end
+#group 024
+#end
+#end
+#
+#group 025
+#group 026
+#end
+#    group 027
+#    end
+#end
+#
+#group 028
+#    group 029
+#    end
+#    group 030
+#    end
+#end
+#
+#
+### ggeege - one indent
+#group 031
+#    group 032
+#    end
+#end
+#group 033
+#end
+#
+#group 034
+#group 035
+#end
+#end
+#    group 036
+#    end
+#
+#group 037
+#    group 038
+#    end
+#end
+#    group 039
+#    end
+#
+#
+### gegege - one indent
+#group 040
+#end
+#    group 041
+#    end
+#group 042
+#end
+#
+#group 043
+#end
+#group 044
+#end
+#    group 045
+#    end
+#
+#group 046
+#end
+#    group 047
+#    end
+#    group 048
+#    end
+#

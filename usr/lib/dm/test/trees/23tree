@@ -1,0 +1,5 @@
+## MOD DEPENDENCY SPACING: done mod
+[x] 30001 foo
+    [x] 30002 bar
+[x] 30003 baz
+        [x] 30004 foo

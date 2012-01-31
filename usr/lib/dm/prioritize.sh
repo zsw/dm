@@ -9,7 +9,7 @@ This script creates a todo list from dependency trees.
     -h  Print this help message.
 
 EXAMPLES:
-    $script jimk/reminders main
+    $script reminders main
 
 NOTES:
     Use tree names relative to the $DM_ROOT/trees directory.
@@ -20,6 +20,41 @@ NOTES:
     If no trees are provided, a list of trees from the local file,
     $DM_USERS/current_trees, is used.
 EOF
+}
+
+_end() {
+    [[ ! $g ]] && p=$s   ## an undone mod will unset $g, so treat 'end' like a parent
+
+    (( ${#group[@]} == 0 )) && __me "Group missing 'group' header."
+
+    ## Indentation of 'end' must equal indentation of previous group.  Values
+    ## are stored in the 'group' array).
+    ##
+    ## if true remove previous group element from 'group array'
+    ## if false then send error message
+    (( $s == group[${#group[@]}-1] )) && unset group[${#group[@]}-1] ||
+        __me "Indentation is incorrect: group ${group[${#group[@]}-1]} spaces" \
+            "Indentation is incorrect: end $s spaces"
+}
+
+_plt() {
+    ## Previous line tests
+    (( $s - $ps >= 8 )) &&
+        __me "Indendation of a dependent mod is greater than eight spaces." \
+            "$pline" \
+            "$line"
+
+    [[ ! $pline ]] && (( $s != 0 )) &&
+        __me "The first line of a tree file must not be indented." \
+            "$line"
+
+    [[ $pline =~ $r1 ]] && [[ ! $line =~ $r1 ]] && (( $s != $ps )) &&
+        __me "Mod must be aligned with group header." \
+            "$pline" \
+            "$line"
+
+    pline=$line
+    ps=$s
 }
 
 _options() {
@@ -54,23 +89,74 @@ if [[ $current_branch != master ]]; then
             'Run 'git checkout master' at prompt and review messages'
 fi
 
-trees="${args[@]}"
+trees=${args[@]}
 
 [[ ! $trees ]] && trees=$(< "$DM_USERS/current_trees")
 
 # The call to tree.sh will convert tree names to tree files preserving the
 # order of the trees.
 tree_files=$("$DM_BIN/tree.sh" "$trees" | tr "\n" " ")
+#echo "FIXME tree_files: $tree_files"
 
 [[ ! $tree_files ]] && __me 'No tree files to prioritize.'
 
-cat $tree_files | "$DM_BIN/dependency_schema.pl" --available "$DM_ROOT" | "$DM_BIN/format_mod.sh" "%i %w %t %d" > "$DM_USERS/todo"
+p=          ## set to $s if undone mod or end header is a parent
+g=          ## boolean var -- for group header
+s=0         ## number of indentation spaces for current line
+ps=0        ## number of indentation spaces for previous line
+group=()    ## number of indentation spaces for group header
+parent=()   ## undone, parent mods
 
-cd "$DM_ROOT"
+r1="^[[:blank:]]*group [[:digit:]]+"
+r2="^[[:blank:]]*end$"
+r3="^[[:blank:]]*\[x\] [[:digit:]]+"
+r4="^[[:blank:]]*\[ \] [[:digit:]]+"
+
+for tree in $tree_files; do
+    unset pline     ## unset previous line so dependent mod at BOF fails check
+
+    while IFS= read -r line; do
+        s=${line%%[^ ]*} s=${#s}
+        (( $s % 4 != 0 )) && __me "Indentation is incorrect." "$line"
+        [[ $g ]] && (( $s < $g )) &&
+            __me "Indentation must not be less than group header." "$line"
+
+        _plt    ## Previous line tests
+
+        [[ $p ]] && (( $p >= $s )) && p=
+#        echo "$ps $s $p $g $line"       ## debug
+        [[ $line =~ $r3 ]] && continue
+        [[ $line =~ $r4 && ! $p ]] && g= p=$s && parent+=( "$line" ) && continue
+        [[ $line =~ $r4 ]] && continue
+        [[ $line =~ $r1 ]] &&         g=$s    && group+=( "$s" )     && continue
+        [[ $line =~ $r2 ]] && _end && g=                             && continue
+        [[ $line == * ]]   && __mw "No match for line: $line"        && continue
+
+    done < <(grep -hrvE '^[ ]*#|^$' "$tree")  ## exclude comments and blank lines
+done
+
+## group array should be empty
+(( ${#group[@]} != 0 )) && __me "Group missing 'end' header."
+
+## determind on-hold mods and clean up parent array
+parent=( "${parent[@]#*] }" )  parent=( "${parent[@]%% *}" )
+hold=( $(grep -lv '^#' "$DM_MODS"/*/hold) ) hold=( "${hold[@]%/*}" ) hold=( "${hold[@]##*/}" )
+
+for i in "${hold[@]}"; do
+    for j in "${parent[@]}"; do
+        [[ ${parent[$j]} == ${hold[$i]} ]] && unset parent[$j]
+    done
+done
+
+## print parent mod ids but remove hold-on mods from list
+[[ "${parent[@]}" ]] && printf "%s\n" "${parent[@]}" | "$DM_BIN/format_mod.sh" "%i %w %t %d" > "$DM_USERS/todo"
+
+
+( cd "$DM_ROOT"
 git add -A .
 git commit --dry-run >/dev/null &&
     git commit -q -a -m "Re-prioritize" &&
     { git remote | grep -q public; } &&
-    git push -q public
+    git push -q public ) &
 
 exit 0

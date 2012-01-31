@@ -1,0 +1,45 @@
+## GROUP DEPENDENCY: group dependent on a group
+group 001
+[ ] 30001 foo
+[ ] 30002 bar
+end
+    group 002
+    [ ] 30003 foo
+    [ ] 30004 bar
+    end
+
+group 003
+[x] 30005 foo
+    [ ] 30006 bar
+end
+    group 004
+    [ ] 30007 foo
+    [ ] 30008 bar
+    end
+
+group 005
+[ ] 30009 foo
+    [x] 30010 bar
+end
+    group 006
+    [ ] 30011 foo
+    [ ] 30012 bar
+    end
+
+group 007
+[x] 30013 foo
+[x] 30014 bar
+end
+    group 008
+    [ ] 30015 foo
+    [ ] 30016 bar
+    end
+
+group 009
+[x] 30017 foo
+[x] 30018 bar
+end
+    group 010
+    [ ] 30019 foo
+        [ ] 30020 bar
+    end

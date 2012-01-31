@@ -1,0 +1,137 @@
+## GROUP DEPENDENCY: embedded groups
+
+## gggeee - no indent
+group 001
+group 002
+group 003
+end
+end
+end
+
+
+## ggegee - no indent
+group 004
+group 005
+end
+group 006
+end
+end
+
+
+## ggeege - no indent
+group 007
+group 008
+end
+end
+group 009
+end
+
+
+## gegege - no indent
+group 010
+end
+group 011
+end
+group 012
+end
+
+
+### gggeee - one indent     NOT VALID
+#group 013
+#    group 014
+#group 015
+#end
+#    end
+#end
+
+group 016
+group 017
+    group 018
+    end
+end
+end
+
+group 019
+    group 020
+    group 021
+    end
+    end
+end
+
+
+## ggegee - one indent
+group 022
+    group 023
+    end
+group 024
+end
+end
+
+group 025
+group 026
+end
+    group 027
+    end
+end
+
+group 028
+    group 029
+    end
+    group 030
+    end
+end
+
+
+## ggeege - one indent
+group 031
+    group 032
+    end
+end
+group 033
+end
+
+group 034
+group 035
+end
+end
+    group 036
+    end
+
+group 037
+    group 038
+    end
+end
+    group 039
+    end
+
+
+## gegege - one indent
+group 040
+end
+    group 041
+    end
+group 042
+end
+
+group 043
+end
+group 044
+end
+    group 045
+    end
+
+group 046
+end
+    group 047
+    end
+    group 048
+    end
+
+
+## gggeee - two indent
+group 049
+    group 050
+        group 051
+        end
+    end
+end

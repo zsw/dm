@@ -1,0 +1,4 @@
+## GROUP: first parent indented
+group 001
+    [ ] 30002 foo
+end

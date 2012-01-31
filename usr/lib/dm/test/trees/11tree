@@ -1,0 +1,36 @@
+## GROUP DEPENDENCY: group dependent on a mod
+[ ] 30001 baz
+    group 001
+    [ ] 30002 foo
+    [ ] 30003 bar
+    end
+
+[ ] 30004 baz
+    group 002
+    [x] 30005 foo
+    [x] 30006 bar
+    end
+
+[x] 30007 baz
+    group 003
+    [ ] 30008 foo
+    [ ] 30009 bar
+    end
+
+[x] 30010 baz
+    group 004
+    [x] 30011 foo
+    [x] 30012 bar
+    end
+
+[x] 30013 baz
+    group 005
+    [x] 30014 foo
+        [ ] 30015 bar
+    end
+
+[x] 30016 baz
+    group 006
+    [ ] 30017 foo
+        [x] 30018 bar
+    end

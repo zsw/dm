@@ -1,0 +1,4 @@
+## BOF DEPENDENCY SPACING: group
+    group
+    [ ] 30001 foo
+    end

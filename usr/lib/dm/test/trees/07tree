@@ -1,0 +1,37 @@
+## MOD DEPENDENCY: three mods -- first marked done
+[x] 30001 foo
+    [ ] 30002 bar
+    [ ] 30003 baz
+
+[x] 30004 foo
+[ ] 30005 bar
+    [ ] 30006 baz
+
+[x] 30007 foo
+    [ ] 30008 bar
+[ ] 30009 baz
+
+[x] 30100 qux
+    [x] 30010 foo
+[ ] 30011 bar
+[ ] 30012 baz
+
+[x] 30101 qux
+    [x] 30013 foo
+    [ ] 30014 bar
+[ ] 30015 baz
+
+[x] 30102 qux
+    [x] 30016 foo
+[ ] 30017 bar
+    [ ] 30018 baz
+
+[x] 30019 foo
+    [ ] 30020 bar
+        [ ] 30021 baz
+
+[x] 30103 qux
+    [x] 30104 qux
+        [x] 30022 foo
+    [ ] 30023 bar
+[ ] 30024 baz

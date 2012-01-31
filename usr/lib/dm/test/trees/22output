@@ -1,0 +1,3 @@
+===> ERROR: Indendation of a dependent mod is greater than eight spaces.
+===> ERROR: [ ] 30003 baz
+===> ERROR:         [ ] 30004 foo

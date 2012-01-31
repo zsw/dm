@@ -165,7 +165,6 @@ _print_messages() {
 #               Subsequent lines are indented
 #
 #       Examples:
-#
 #           mod|11111|ERROR: blah blah
 #           mod|22222|ERROR: blah blah
 #           mod|33333|ERROR: blah blah
@@ -205,7 +204,7 @@ _run_checks() {
             echo "mod|$invalid|WARNING: Mod does not appear to be flagged undone properly." >> "$message_file"
             echo "    Update tree with this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " >> "$message_file"
         else
-            echo "mod|$invalid|ERROR: Mod is not done but not found in any dependency tree." >> "$message_file"
+            echo "mod|$invalid|ERROR: Mod exists but not found in any dependency tree." >> "$message_file"
         fi
     done
 
@@ -218,7 +217,7 @@ _run_checks() {
     __logger_debug "Syntax checking dependency tree."
     while read -r -d ' ' tree ; do
         tree_file=$("$DM_BIN/tree.sh" "$tree")
-        msg=$(cat "$tree_file" | "$DM_BIN/dependency_schema.pl" "$DM_ROOT" 2>&1)
+        msg=$(prioritize.sh)
         [[ $msg ]] && echo "tree|$tree|$msg" >> "$message_file"
     done < "$DM_USERS/current_trees"
 
@@ -320,12 +319,12 @@ _run_checks() {
         person_id=${person_id/x/}
         username=$(__person_attribute username id $person_id)
         [[ ! -e $DM_ROOT/users/$username/mod_counter ]] && continue
-        touch $DM_ROOT/users/$username/reusable_ids
+        touch "$DM_ROOT/users/$username/reusable_ids"
         mod_counter=$(< "$DM_ROOT/users/$username/mod_counter")
         start=10#$start_id
         end=$mod_counter
         (( $mod_counter > 10#$end_id )) && end=10#$end_id   ## 10# removes leading zeros
-        list=$(for ((i=$start; i<=$end; i++)); do printf "%05d\n" $i; done)
+        list=$(for ((i=$start; i<=$end; i++)); do printf "%05d\n" "$i"; done)
         if [[ $compare_list ]]; then
             compare_list="$compare_list\n$list"
         else

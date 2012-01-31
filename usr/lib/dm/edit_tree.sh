@@ -143,29 +143,28 @@ cp -p "$file" "$file_new"
 tmp=$(__tmp_file)
 cd "$split_dir"
 for base_file in *; do
+
     file=$split_dir/$base_file
     __v && __mi "Processing section: $file"
     # Remove the '---' delimiter on the first line.
     awk '/^---$/ && NR==1 {next;} {print}' "$file" > "$tmp" && mv "$tmp" "$file"
     [[ ! -s $file ]] && continue
+
     replace_file=$replace_dir/$base_file
     __v && __mi "Creating mods."
     "$DM_BIN/create_mods.sh" "$file" > "$replace_file"
 
     __v && __mi "Replacing mod spec with checkbox in tree." \
                 "$DM_BIN/block_substitute.py $file_new $file $replace_file"
-
     "$DM_BIN/block_substitute.py" "$file_new" "$file" "$replace_file" > "$tmp" && mv "$tmp" "$file_new"
 done
 
 __v && __mi "Copy of updated tree: $file_new"
-
 cp "$file_new" "$tree"
 
 # Validate schema in tree
 __v && __mi "Validating schema in tree."
-if ! { cat "$tree" | "$DM_BIN/dependency_schema.pl" "$DM_ROOT"; }; then
+if ! prioritize.sh; then
     __me "The schema in the tree is not valid: $tree" \
-        "Use this command to repeat schema validation check" \
-        "\$ cat $tree | $DM_BIN/dependency_schema.pl $DM_ROOT"
+        "Run 'prioritize.sh' to  repeat schema validation check"
 fi

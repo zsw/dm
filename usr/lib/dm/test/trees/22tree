@@ -1,0 +1,5 @@
+## MOD DEPENDENCY SPACING: undone mod
+[ ] 30001 foo
+    [ ] 30002 bar
+[ ] 30003 baz
+        [ ] 30004 foo

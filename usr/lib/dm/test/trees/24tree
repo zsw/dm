@@ -1,0 +1,12 @@
+## MOD DEPENDENCY SPACING: group
+group 001
+[ ] 30001 foo
+    [ ] 30002 bar
+end
+    [ ] 30003 baz
+
+group 002
+[ ] 30004 foo
+    [ ] 30005 bar
+end
+        [ ] 30006 baz

@@ -1,0 +1,74 @@
+## GROUP DEPENDENCY: embedded groups
+group 001
+[x] 30001 foo
+[x] 30002 bar
+    group 002
+    [ ] 30003 foo
+    [ ] 30004 bar
+    end
+end
+    [ ] 30100 baz
+
+group 003
+[x] 30005 foo
+    [ ] 30006 bar
+        group 004
+        [x] 30007 foo
+        [x] 30008 bar
+        end
+    [ ] 30101 baz
+end
+
+[x] 30102 baz
+    group 005
+    [x] 30009 foo
+    [ ] 30010 bar
+    group 006
+    [ ] 30011 foo
+    [ ] 30012 bar
+    end
+    end
+
+group 007
+[x] 30013 foo
+[x] 30014 bar
+group 008
+[ ] 30015 foo
+[ ] 30016 bar
+end
+    [ ] 30103
+end
+    [ ] 30104
+[ ] 30105
+
+group 009
+[ ] 30017 foo
+[x] 30018 bar
+group 010
+[x] 30019 foo
+    [x] 30020 bar
+    group 011
+    [x] 30021 foo
+        [ ] 30022 bar
+    end
+        [ ] 30106 baz
+end
+    group 012
+    [ ] 30023 foo
+        [ ] 30024 bar
+    end
+end
+    [ ] 30107 baz
+
+#group 013
+#[x] 30025 foo
+#    [x] 30026 bar
+#end
+#    group 014
+#    [x] 30026 foo
+#        [x] 30028 bar
+#    end
+#        group 015
+#        [ ] 30029 foo
+#        [ ] 30030 bar
+#        end

@@ -1,0 +1,109 @@
+## GROUP DEPENDENCY: groups dependent on groups
+group 004
+[x] 30007 foo
+[x] 30008 bar
+end
+    group 005
+    [x] 30009 foo
+    [ ] 30010 bar
+    end
+    group 006
+    [ ] 30011 foo
+    [ ] 30012 bar
+    end
+
+group 007
+[x] 30013 foo
+[x] 30014 bar
+end
+    group 008
+    [ ] 30015 foo
+    [ ] 30016 bar
+    end
+group 009
+[ ] 30017 foo
+[x] 30018 bar
+end
+
+group 010
+[x] 30019 foo
+    [x] 30020 bar
+end
+    group 011
+    [x] 30021 foo
+        [x] 30022 bar
+    end
+        group 012
+        [ ] 30023 foo
+            [ ] 30024 bar
+        end
+
+group 013
+[x] 30025 foo
+end
+    group 014
+    [x] 30026 foo
+    end
+        group 015
+        [x] 30027 foo
+        end
+
+group 016
+[ ] 30028 foo
+end
+    group 017
+    [ ] 30029 bar
+    end
+        group 018
+        [ ] 30030 baz
+        end
+
+group 019
+[x] 30031 foo
+end
+    group 020
+    [ ] 30032 bar
+    end
+        group 021
+        [ ] 30033 baz
+        end
+
+group 022
+[ ] 30034 foo
+end
+    group 023
+    [x] 30035 bar
+    end
+        group 024
+        [ ] 30036 baz
+        end
+
+group 025
+[ ] 30037 foo
+end
+    group 026
+    [ ] 30038 bar
+    end
+        group 027
+        [x] 30039 baz
+        end
+
+group 028
+[x] 30040 foo
+end
+    group 029
+    [x] 30041 bar
+    end
+        group 030
+        [ ] 30042 baz
+        end
+
+group 031
+[ ] 30043 foo
+end
+    group 032
+    [x] 30044 bar
+    end
+        group 033
+        [x] 30045 baz
+        end

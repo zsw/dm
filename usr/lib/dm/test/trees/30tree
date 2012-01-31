@@ -1,0 +1,184 @@
+## jimk's test tree
+# Mod at top level
+[ ] 30001
+# Sibling mod at top level
+[ ] 30002
+[x] 30003
+
+# Group at level top level
+group 001
+[ ] 30004
+[ ] 30005
+end
+# Sibling group at level top level
+group 002
+[ ] 30006
+[ ] 30007
+end
+group 003
+[x] 30008
+[x] 30009
+end
+
+# Mod dependent on mod
+[ ] 30010
+    [ ] 30011
+[x] 30012
+    [ ] 30013
+[x] 30014
+    [x] 30015
+
+# Mod dependent on group
+group 004
+[ ] 30016
+end
+    [ ] 30017
+
+group 005
+[x] 30018
+end
+    [ ] 30019
+
+group 006
+[x] 30020
+end
+    [x] 30021
+
+# Group dependent on mod
+[ ] 30022
+    group 007
+    [ ] 30023
+    [ ] 30024
+    end
+
+[x] 30025
+    group 008
+    [ ] 30026
+    [ ] 30027
+    end
+
+[x] 30028
+    group 009
+    [x] 30029
+    [ ] 30030
+    end
+
+[x] 30031
+    group 010
+    [x] 30032
+    [x] 30033
+    end
+
+# Group dependent on group
+group 011
+[ ] 30034
+end
+    group 012
+    [ ] 30035
+    end
+
+group 013
+[x] 30036
+end
+    group 014
+    [ ] 30037
+    end
+
+group 015
+[x] 30038
+end
+    group 016
+    [x] 30039
+    end
+
+# Mod dependency inside group
+group 017
+[ ] 30040
+    [ ] 30041
+end
+
+group 018
+[x] 30042
+    [ ] 30043
+end
+
+group 019
+[x] 30044
+    [x] 30045
+end
+
+# Group dependency inside group
+
+group 020
+    group 021
+    [ ] 30046
+    end
+        group 022
+        [ ] 30047
+        end
+end
+
+group 023
+    group 024
+    [x] 30048
+    end
+        group 025
+        [ ] 30049
+        end
+end
+
+group 026
+    group 027
+    [x] 30050
+    end
+        group 028
+        [x] 30051
+        end
+end
+
+# Sibling group inside group
+
+group 029
+    group 030
+    [ ] 30052
+    end
+    group 031
+    [ ] 30053
+    end
+end
+
+group 032
+    group 033
+    [x] 30054
+    end
+    group 034
+    [ ] 30055
+    end
+end
+
+group 035
+    group 036
+    [x] 30056
+    end
+    group 037
+    [x] 30057
+    end
+end
+
+# Mods completed out of order
+
+[ ] 30058
+    [x] 30059
+        [ ] 30060
+
+# Groups completed out of order
+
+group 038
+[ ] 30061
+end
+    group 039
+    [x] 30062
+    end
+        group 040
+        [ ] 30063
+        end

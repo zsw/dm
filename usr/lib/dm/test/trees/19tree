@@ -1,0 +1,4 @@
+## GROUP/END: indentation error
+group 001
+[x] 30001 foo
+    end

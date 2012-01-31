@@ -1,0 +1,5 @@
+## Indentation less than group header
+[x] 90001 foo
+    group 001
+[ ] 90002 bar
+    end
