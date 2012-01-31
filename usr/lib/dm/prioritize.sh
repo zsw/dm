@@ -142,12 +142,13 @@ done
 parent=( "${parent[@]#*] }" )  parent=( "${parent[@]%% *}" )
 hold=( $(grep -lv '^#' "$DM_MODS"/*/hold) ) hold=( "${hold[@]%/*}" ) hold=( "${hold[@]##*/}" )
 
-for i in "${hold[@]}"; do
-    for j in "${parent[@]}"; do
-        [[ ${parent[$j]} == ${hold[$i]} ]] && unset parent[$j]
+for i in "${!hold[@]}"; do
+    for j in "${!parent[@]}"; do
+        [[ "${hold[$i]}" == "${parent[$j]}" ]] && unset parent[j] && break
     done
 done
 
+#printf "%s\n" "${parent[@]}"
 ## print parent mod ids but remove hold-on mods from list
 [[ "${parent[@]}" ]] && printf "%s\n" "${parent[@]}" | "$DM_BIN/format_mod.sh" "%i %w %t %d" > "$DM_USERS/todo"
 
@@ -156,7 +157,7 @@ done
 git add -A .
 git commit --dry-run >/dev/null &&
     git commit -q -a -m "Re-prioritize" &&
-    { git remote | grep -q public; } &&
+    git remote | grep -q public &&
     git push -q public ) &
 
 exit 0

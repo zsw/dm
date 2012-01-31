@@ -217,7 +217,7 @@ _run_checks() {
     __logger_debug "Syntax checking dependency tree."
     while read -r -d ' ' tree ; do
         tree_file=$("$DM_BIN/tree.sh" "$tree")
-        msg=$(prioritize.sh)
+        msg=$("$DM_BIN/prioritize.sh")
         [[ $msg ]] && echo "tree|$tree|$msg" >> "$message_file"
     done < "$DM_USERS/current_trees"
 
