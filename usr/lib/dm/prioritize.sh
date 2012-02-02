@@ -151,13 +151,13 @@ done
 #printf "%s\n" "${parent[@]}"
 ## print parent mod ids but remove hold-on mods from list
 [[ "${parent[@]}" ]] && printf "%s\n" "${parent[@]}" | "$DM_BIN/format_mod.sh" "%i %w %t %d" > "$DM_USERS/todo"
-
+e=$?
 
 ( cd "$DM_ROOT"
 git add -A .
 git commit --dry-run >/dev/null &&
     git commit -q -a -m "Re-prioritize" &&
     git remote | grep -q public &&
-    git push -q public ) &
+    git push -q public ) 2>&1 |grep -v 'Unpacking objects' &
 
-exit 0
+exit "$e"

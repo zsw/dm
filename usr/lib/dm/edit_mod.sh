@@ -25,10 +25,12 @@ EOF
 
 _options() {
     args=()
-    mod_id=
+    unset mod_id
+    unset verbose
 
     while [[ $1 ]]; do
         case "$1" in
+            -v) verbose=true    ;;
             -h) _u; exit 0      ;;
             --) shift; [[ $* ]] && args+=( "$@" ); break;;
             -*) _u; exit 0      ;;
@@ -67,6 +69,6 @@ vim '+' "$file"         # Edit the file
 # Test if file was changed, if so save is required.
 diff -q "$file" "${file}.bak" >/dev/null && __me "Quit without saving."
 
-echo "Saving file $file to mod $mod_id."
+__v && __mi "Saving file $file to mod $mod_id."
 "$DM_BIN/dissemble_mod.sh" "$file" "$mod_id"
 "$DM_BIN/format_mod_in_tree.sh" "$mod_id"

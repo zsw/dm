@@ -150,7 +150,10 @@ while IFS="" read -r mod; do
 
     if [[ $format == *%t* ]]; then
         tree=$(grep -lsr "\[.\] $id" "$DM_TREES"/*)
-        [[ $tree =~ $'\n' ]] && __me "Mod $id found in multiple trees: $tree"
+
+        ## Don't quote the '$tree' var so __me will print each tree on
+        ## a separate line.
+        [[ $tree =~ $'\n' ]] && __me "Mod $id found in multiple trees:" $tree
 
         case "$tree_format" in
             full) size=30 ;;
@@ -158,8 +161,8 @@ while IFS="" read -r mod; do
              sub) tree=${tree#$DM_TREES/} size=20   ;;
                *) __me "Invalid tree format: $tree_format" ;;
         esac
-        # The printf "%10.10s" format means print exactly 10 characters regardless
-        # if the string is more or less than 10 characters.
+        # The printf "%10.10s" format means print exactly 10 characters
+        # regardless if the string is more or less than 10 characters.
         line=${line//\%t/$(printf "%${size}.${size}s" "$tree")}
     fi
 
