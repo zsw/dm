@@ -15,11 +15,8 @@ EXAMPLE:
     $script 12345
 
 NOTES:
-    If a mod id is not provided the current one is used, ie. the one
+    If a mod id is not provided, the current one is used, ie. the one
     indicated in $DM_USERS/current_mod
-
-    If a mod is slated for sorting, ie it is found in the 'now' or
-    'unsorted' tree, it is opened read-only.
 EOF
 }
 
@@ -50,16 +47,11 @@ _options "$@"
 
 tmpdir=$(__tmp_dir)
 mkdir -p "$tmpdir"
-description=$(__attribute $mod_id 'description')      # Get raw mod description
+description=$(__attribute $mod_id 'description')    # Get raw mod description
 description=${description//[^a-zA-Z0-9 ]/}          # Sanitize mod description
 description=${description// /_}                     # Change spaces to _'s in mod description
-file=$tmpdir/${mod_id}-${description}.txt
+file=$tmpdir/$mod_id-$description.txt
 echo -n '' > "$file"                                # Empty if it exists
-
-# Check if we are sorting
-unsorted=$DM_PERSON_USERNAME/unsorted
-now=$DM_PERSON_USERNAME/now
-tree=$(grep -lsr "\[.\] $mod_id" $DM_TREES/*)
 
 "$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file" || exit 1
 
@@ -67,7 +59,7 @@ cp -p "$file"{,.bak}    # Back up file
 vim '+' "$file"         # Edit the file
 
 # Test if file was changed, if so save is required.
-diff -q "$file" "${file}.bak" >/dev/null && __me "Quit without saving."
+diff -q "$file" "$file.bak" >/dev/null && __me "Quit without saving."
 
 __v && __mi "Saving file $file to mod $mod_id."
 "$DM_BIN/dissemble_mod.sh" "$file" "$mod_id"

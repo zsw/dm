@@ -21,7 +21,7 @@ NOTES:
         [ ] 12345 This is the mod description
 
     If the mod is already in the tree, the existing description is
-    replaced. Indentation is preserved.
+    replaced; indentation is preserved.
 
     If the mod is not in the tree, the mod description is appended to
     the end of the tree.
@@ -70,7 +70,7 @@ if [[ $tree ]]; then
     trees=$tree
 else
     # Get all trees the mod is in
-    trees=$(grep -lr "\[.\] $mod_id" "$DM_TREES/")
+    trees=$(grep -lrP "^ *\[.\] $mod_id " "$DM_TREES/")
 fi
 
 # If the mod is in no trees exit.
@@ -87,7 +87,7 @@ __lock_create || __me "${script}: Lock file found. cat $(__lock_file)"
 line=$("$DM_BIN/format_mod.sh" "%b %i %d" <<< "$mod_id")
 IFS=$'\n'
 for t in $trees; do
-    if grep -q "\[.\] $mod_id" "$t"; then
+    if grep -qP "^ *\[.\] $mod_id " "$t"; then
 
         ## Find a line possibly starting with spaces,
         ## then either '[ ] mod_id' or '[x] mod_id' and

@@ -149,7 +149,7 @@ while IFS="" read -r mod; do
     fi
 
     if [[ $format == *%t* ]]; then
-        tree=$(grep -lsr "\[.\] $id" "$DM_TREES"/*)
+        tree=$(grep -lsrP "^ *\[.\] $id " "$DM_TREES"/*)
 
         ## Don't quote the '$tree' var so __me will print each tree on
         ## a separate line.
@@ -168,7 +168,8 @@ while IFS="" read -r mod; do
 
     if [[ $format == *%w* ]]; then
         who=$(< "$mod_dir/who")
-        line=${line//\%w/$(printf "%3s" "$who")}
+        printf -v who "%3s" "$who"
+        line=${line//\%w/"$who"}
     fi
 
     line=${line//$'\x1b'/%}       # Restore literal %

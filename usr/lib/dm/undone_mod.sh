@@ -64,7 +64,7 @@ mod_dir=$(__mod_dir "$mod")
 # unusual data. It's not the place of this script to fix unusual data but it
 # can report it.
 
-mod_list=$(grep --exclude=sed* -r "\[.\] $mod" "$DM_TREES"/*)
+mod_list=$(grep --exclude=sed* -rP "^ *\[.\] $mod " "$DM_TREES"/*)
 mod_count=$(wc -l <<< "$mod_list")
 if (( $mod_count > 1 )); then
     echo "$mod_list"
@@ -76,7 +76,7 @@ fi
 from_tree=${mod_list%%:*}
 
 # Is the tree an archive tree? if so move it out.
-if grep -q "^$DM_TREES_ARCHIVE/" <<< "$from_tree"; then
+if grep -qP "^$DM_TREES_ARCHIVE/" <<< "$from_tree"; then
     to_tree=${from_tree/$DM_TREES_ARCHIVE/$DM_TREES}
     __mi "mod $mod will be moved from an archive tree $from_tree to a live tree $to_tree" >&2
     # Capture result so it doesn't print to stdout

@@ -64,7 +64,7 @@ _process_mod() {
     # Remove mod from all trees
     while read -r tree; do
         sed -i "/\[.\] $mod_id /d" "$tree"
-    done < <(grep -rl "\[.\] $mod_id" "$DM_TREES")
+    done < <(grep -lrP "^ *\[.\] $mod_id " "$DM_TREES")
 
     # Delete mod from mods/archive directory
     [[ $mod_dir =~ /(mods|archive)/ ]] && rm -r "$mod_dir" &>/dev/null

@@ -132,7 +132,7 @@ for tree in $tree_files; do
         [[ $line =~ $r2 ]] && _end && g=                             && continue
         [[ $line == * ]]   && __mw "No match for line: $line"        && continue
 
-    done < <(grep -hrvE '^[ ]*#|^$' "$tree")  ## exclude comments and blank lines
+    done < <(grep -hrvP '^[ ]*#|^$' "$tree")  ## exclude comments and blank lines
 done
 
 ## group array should be empty
@@ -140,7 +140,7 @@ done
 
 ## determind on-hold mods and clean up parent array
 parent=( "${parent[@]#*] }" )  parent=( "${parent[@]%% *}" )
-hold=( $(grep -lv '^#' "$DM_MODS"/*/hold) ) hold=( "${hold[@]%/*}" ) hold=( "${hold[@]##*/}" )
+hold=( $(grep -lvP '^#' "$DM_MODS"/*/hold) ) hold=( "${hold[@]%/*}" ) hold=( "${hold[@]##*/}" )
 
 for i in "${!hold[@]}"; do
     for j in "${!parent[@]}"; do

@@ -7,7 +7,7 @@ script=${0##*/}
 _u() { cat << EOF
 usage: $script group_id /path/to/tree/file
 
-This script moves a group (project) from one tree to another.
+This script moves a group from one tree to another.
    -t DIR  Directory where tree data is stored. Default \$HOME/dm/trees
 
    -h      Print this help message.
@@ -61,7 +61,7 @@ group_id=$(printf "%03d" "$((10#$group))")
 # The integrity script will report issues if a group is in more than one
 # tree. This script will only look at the first tree the group is found
 # in.
-from_tree=$(grep -rlE "^\s*group $group_id" $dm_trees | head -1)
+from_tree=$(grep -rlP "^\s*group $group_id" $dm_trees | head -1)
 
 [[ ! $from_tree ]] && __me "Unable to find group $group_id in any tree."
 [[ $from_tree == $to_tree ]] && exit 0
@@ -97,7 +97,7 @@ to_tagged=$(__tmp_file)
 to_new=$(__tmp_file)
 pattern_file=$(__tmp_file)
 replace_file=$(__tmp_file)
-final_end=$(grep '^[ ]*end' "$to_tagged" | tail -1)
+final_end=$(grep -P '^[ ]*end' "$to_tagged" | tail -1)
 
 if [[ $final_end ]]; then
     echo "$final_end" > "$pattern_file"

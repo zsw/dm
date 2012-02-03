@@ -94,7 +94,7 @@ _create_mods() {
             #   group 222
             #   end
             # end
-            if grep -Eq '^\s*(group [0-9]+|end$)' <<< "$line"; then
+            if grep -qP '^\s*(group [0-9]+|end$)' <<< "$line"; then
                 echo "$line"
                 # A group tag signals the mod notes are done as well.
                 unset mod_dir
@@ -127,6 +127,7 @@ _create_mods() {
         [[ -d $mod_dir ]] && rm -r "$mod_dir"
         mkdir -p "$mod_dir"
         cp /dev/null "$mod_dir/notes"       # Initialize notes file
+        cp /dev/null "$mod_dir/specs"       # Initialize specs file
 
         if [[ ! $scrubbed_who ]]; then
             scrubbed_who=$DM_PERSON_INITIALS
