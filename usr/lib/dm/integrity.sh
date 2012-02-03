@@ -203,7 +203,7 @@ _run_checks() {
             message_arr+=( "mod|$invalid|WARNING: Mod does not appear to be flagged undone properly." )
             message_arr+=( "    Update tree with this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
         else
-            message_arr+=( "mod|$invalid|ERROR: Mod exists but not found in any dependency tree." )
+            message_arr+=( "mod|$invalid|ERROR: Mod exists but not found in any dependency tree or mod found in a dependency tree but does not exist." )
         fi
     done
 

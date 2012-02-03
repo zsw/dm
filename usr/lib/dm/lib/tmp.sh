@@ -85,4 +85,4 @@ __loaded_tmp() {
 # Export all functions to any script sourcing this library file.
 while read -r function; do
     export -f "${function%%(*}"         # strip '()'
-done < <(awk '/^__*()/ {print $1}' "$DM_ROOT"/lib/tmp.sh)
+done < <(awk '/^__*()/ {print $1}' "$DM_ROOT/lib/tmp.sh")
