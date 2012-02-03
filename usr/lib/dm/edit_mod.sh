@@ -64,3 +64,4 @@ diff -q "$file" "$file.bak" >/dev/null && __me "Quit without saving."
 __v && __mi "Saving file $file to mod $mod_id."
 "$DM_BIN/dissemble_mod.sh" "$file" "$mod_id"
 "$DM_BIN/format_mod_in_tree.sh" "$mod_id"
+"$DM_BIN/assign_mod.sh" -u

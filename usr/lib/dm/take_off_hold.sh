@@ -70,7 +70,7 @@ _process_mod() {
     sed -i -e 's/^\([^#]\)/#\1/' "$hold_file" && rm "$DM_USERS/holds/$mod" 2>/dev/null
 
     # Create an alert if taking a mod off hold for someone else
-    [[ $for_another ]] && __create_alert "$who" "$mod_id"
+    [[ $for_another ]] && "$DM_BIN/assign_mod.sh" -m "$mod_id" "$who"
 }
 
 _options() {

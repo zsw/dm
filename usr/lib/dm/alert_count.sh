@@ -12,13 +12,13 @@ Print the alert count to stdout.
     -h      Print this help message.
 
 NOTES:
-    By default the script gets people information from the usual
+    By default the script gets user information from the
     $HOME/dm/people file. Use the -p option to use a different file.
     This can be convenient for testing with custom people data.
 
     Strategy
 
-    For each remote user, from their remote server, get the alerts they
+    For each remote user, from their server, get the alerts they
     have for the local user. For each alert that was logged after the last
     pull from that server, increment the alert count.
 EOF
@@ -92,7 +92,8 @@ while read -r id username server; do
     # should be included in the count. Set to 0.
     [[ ! $last_pull_secs ]] && last_pull_secs=0
 
-    # Count the number of lines where the timestamp is greater than the last pull time
+    # Count the number of lines where the timestamp is greater than the
+    # last pull time
     count=$(awk -v limit="$last_pull_secs" '$1 > limit {n++}; END {print n+0}' "$remote_file")
 
     total=$(( $total + $count ))
