@@ -30,7 +30,7 @@ __create_alert() {
 
     ## Don't bother alerting the user if the mod is assigned to himself.
     mod_who=$(__attribute "$mod_id" 'who')
-    [[ $who == $mod_who ]] && return
+    [[ $DM_PERSON_INITIALS == $who ]] && return
 
     ## Test if mod is on_hold
     status=$(__hold_status "$mod_id" | awk '{print $5}')

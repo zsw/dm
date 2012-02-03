@@ -93,8 +93,8 @@ while read -r id username server; do
     [[ ! $last_pull_secs ]] && last_pull_secs=0
 
     # Count the number of lines where the timestamp is greater than the
-    # last pull time
-    count=$(awk -v limit="$last_pull_secs" '$1 > limit {n++}; END {print n+0}' "$remote_file")
+    # last pull time and uniq for each mod_id
+    count=$(sort -r "$remote_file" | uniq -f1 | awk -v limit="$last_pull_secs" '$1 > limit {n++}; END {print n+0}')
 
     total=$(( $total + $count ))
 done < <(awk -F',[ \t]*' 'NR>1 {print $1,$3,$9}' "$DM_PEOPLE")
