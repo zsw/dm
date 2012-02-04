@@ -21,10 +21,10 @@ EXAMPLES:
 
     # Use the local trees file if no argument is provided
     $ cat $DM_USERS/trees
-    unsorted
+    main
 
     $ tree.sh
-    $DM_ROOT/trees/jimk/unsorted
+    $DM_ROOT/trees/jimk/main
 
 NOTES:
     Without an argument the list of tree names is read from $DM_USERS/current_trees

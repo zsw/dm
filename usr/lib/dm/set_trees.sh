@@ -10,9 +10,8 @@ This script sets the active dependency trees.
     -h  Print this help message.
 
 EXAMPLES:
-    $script now unsorted reminders               # Set the dependency trees for sorting.
-    $script now reminders main                   # Set the dependency trees for main project development.
-    $script personal                             # Set the dependency trees for personal stuff.
+    $script reminders main      # Set the dependency trees for main project development.
+    $script reminders personal  # Set the dependency trees for personal stuff.
 
 NOTES:
     Personal trees can be identified by their tree name.
@@ -42,4 +41,4 @@ _options "$@"
 trees=${args[@]}
 "$DM_BIN/tree.sh" "$trees" >/dev/null || exit 1
 
-echo "$trees" > $DM_USERS/current_trees
+echo "$trees" > "$DM_USERS/current_trees"

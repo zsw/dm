@@ -14,10 +14,6 @@ STDOUT.
 
 EXAMPLE:
     $script 12345 > /tmp/file.txt
-
-NOTES:
-    If the mods is in the unsorted tree, a notice is added to the top with sort
-    instructions.
 EOF
 }
 
