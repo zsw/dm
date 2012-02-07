@@ -5,7 +5,6 @@ __loaded_attributes 2>/dev/null  || source $DM_ROOT/lib/attributes.sh
 __loaded_hold 2>/dev/null        || source $DM_ROOT/lib/hold.sh
 __loaded_log 2>/dev/null         || source $DM_ROOT/lib/log.sh
 __loaded_person 2>/dev/null      || source $DM_ROOT/lib/person.sh
-__loaded_tmp 2>/dev/null         || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
 _u() { cat << EOF
@@ -39,21 +38,19 @@ EOF
 #
 # Sent: name of hold file
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Clean the hold file of a mod.
 #
 _clean_hold() {
     local crontab hold_file timestamp
 
     hold_file=$1
-
     [[ ! $hold_file ]] && return
 
     # Ignore files with git conflict markers. Processing them may cause
     # foo. Eg, the user may be editing the file fixing the conflict or
     # the hold time may get commented out.
-
     __has_conflict_markers "$hold_file" && return
 
     # Remove leading and trailing whitespace from each line
@@ -70,7 +67,6 @@ _clean_hold() {
     [[ ! $crontab ]] && return
 
     timestamp=$(__hold_as_yyyy_mm_dd_hh_mm_ss "$crontab")
-
     if ! date -d "$timestamp" &>/dev/null; then
         __me "Invalid hold time $timestamp in hold file $hold_file"
     fi
@@ -80,8 +76,8 @@ _clean_hold() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Print messages stored in the messages file to stdout.
 #
 _print_messages() {
@@ -149,12 +145,11 @@ _print_messages() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Run checks.
 #
 # Notes:
-#
 #   Messages are collected in a temporary file and then reviewed one by one to
 #   see if they should be printed.
 #
@@ -179,27 +174,19 @@ _run_checks() {
     # Mods
     # ----
 
-    __logger_debug "Looking for mods not in dependency tree or flagged improperly."
-    readarray -t undone_id < <(grep -hrP '^ *\[ \] [[:digit:]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9)
+    __logger_debug "Looking for mods not in dependency tree or with missing mods directory."
     while read -r invalid; do
-        if grep -qrP "^ *\[x\] $invalid " "$DM_TREES"/*; then
+        if grep -qrP "^ *\[( |x)\] $invalid " "$DM_TREES"/*; then
             message_arr+=( "mod|$invalid|WARNING: Mod does not appear to be flagged undone properly." )
             message_arr+=( "    Update tree with this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
+        elif [[ -d $DM_MODS/$invalid ]]; then
+            message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_MODS but not found in any dependency tree." )
+        elif [[ -d $DM_ARCHIVE/$invalid ]]; then
+            message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_ARCHIVE but not found in any dependency tree." )
         else
             message_arr+=( "mod|$invalid|ERROR: Mod is not done but not found in any dependency tree." )
         fi
-    done < <(comm -3 <(printf "%s\n" "${dm_mods_id[@]}" | sort) <(printf "%s\n" "${undone_id[@]}" | sort))
-
-    __logger_debug "Looking for archived mods not in dependency tree or flagged improperly."
-    readarray -t done_id < <(grep -hrP '^ *\[x\] [[:digit:]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9)
-    while read -r invalid; do
-        if grep -qrP "^ *\[ \] $invalid " "$DM_TREES"/*; then
-            message_arr+=( "mod|$invalid|WARNING: Mod does not appear to be flagged undone properly." )
-            message_arr+=( "    Update tree with this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
-        else
-            message_arr+=( "mod|$invalid|ERROR: Mod exists but not found in any dependency tree or mod found in a dependency tree but does not exist." )
-        fi
-    done < <(comm -3 <(printf "%s\n" "${dm_archive_id[@]}" | sort) <(printf "%s\n" "${done_id[@]}" | sort))
+    done < <(comm -3 <(printf "%s\n" "${dm_mods_id[@]}" "${dm_archive_id[@]}" | sort) <(printf '%s\n' "${tree_id[@]}"))
 
     __logger_debug "Looking for mods found in both the mods and archive directory."
     while read -r dupe; do
@@ -214,15 +201,11 @@ _run_checks() {
     done < "$DM_USERS/current_trees"
 
     __logger_debug "Looking for mods found in more than one tree."
-    work_arr=()
-    # Get a list of all mod ids found in all trees
-    readarray -O "${#work_arr[@]}" -t work_arr < <(grep -hrP '^ *\[( |x)\] [[:digit]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9)
-
     # Report duplicates
     while read -r d; do
         message_arr+=( "mod|$d|WARNING: Mod found more than once in trees." )
         readarray -O "${#arr[@]}" -t arr < <(grep -rP  "^ *\[.\] $d " "$DM_TREES"/* | sed "s/^/   /")
-    done < <(printf "%s\n" "${work_arr[@]}" | sort | uniq -d)
+    done < <(printf '%s\n' "${tree_id[@]}" | uniq -d)
 
     __logger_debug "Searching for phantom sed files"
     shopt -s globstar
@@ -289,16 +272,13 @@ _run_checks() {
         readarray -O "${#compare_list[@]}" -t compare_list < <(for ((i=$start; i<=$end; i++)); do printf "%05d\n" "$i"; done)
     done < <(awk -F",[ \t]*" '/^[0-9]+/ {print $1,$2,$3}' "$DM_IDS")
 
-    readarray -t mod_id_list < <(cat "$DM_ROOT"/users/*/reusable_ids <(printf "%s\n" "${dm_mods_id[@]}" "${dm_archive_id[@]}"))
-
     while read -r invalid; do
-        message_arr+=( "mod|$invalid|ERROR: Mod exists but is not associated with a person." )
-    done < <(comm -1 -3 <(printf '%s\n' "${compare_list[@]}" | sort) <(printf '%s\n' "${mod_id_list[@]}" | sort))
-
-    while read -r invalid; do
-        message_arr+=( "mod|$invalid|ERROR: Mod does not exist in $DM_MODS, $DM_ARCHIVE or $DM_ROOT/users/USERNAME/reusable_ids." )
-    done < <(comm -2 -3 <(printf '%s\n' "${compare_list[@]}" | sort) <(printf '%s\n' "${mod_id_list[@]}" | sort))
-
+        if grep -qrP "^ *\[( |x)\] $invalid " "$DM_TREES"/*; then
+            message_arr+=( "mod|$invalid|ERROR: Mod exists but is not associated with a person." )
+        else
+            message_arr+=( "mod|$invalid|ERROR: Mod does not exist in $DM_MODS, $DM_ARCHIVE or $DM_ROOT/users/USERNAME/reusable_ids." )
+        fi
+    done < <(comm -2 -3 <(printf '%s\n' "${compare_list[@]}" | sort) <(cat "$DM_ROOT"/users/*/reusable_ids <(printf "%s\n" "${dm_mods_id[@]}" "${dm_archive_id[@]}") | sort))
 
     __logger_debug "Looking for ids of reusable mods found in mods/archive or in trees."
     # Create space delimited string of ids
@@ -309,7 +289,6 @@ _run_checks() {
         [[ $mod_ids =~ $reusable_id ]] &&
             message_arr+=( "mod|$reusable_id|ERROR: Mod id found in $DM_ROOT/users/USERNAME/reusable_ids and is in $DM_MODS or $DM_ARCHIVE." )
     done < <(cat "$DM_ROOT"/users/*/reusable_ids)
-
 
     __logger_debug "Looking for duplicate reusable ids."
     while read -r reusable_id; do
@@ -325,7 +304,7 @@ _run_checks() {
     while read -r d; do
         message_arr+=( "group|$d|Group found more than once in trees." )
         readarray -O "${#message_arr[@]}" -t message_arr < <(grep -srP  "group $d" "$DM_TREES"/* | sed "s/^/    /")
-    done < <(grep -hrP '^ *group [[:digit:]]{3}' "$DM_TREES"/* | sed 's/^.*group //' | sort | uniq -d)
+    done < <(printf '%s\n' "${tree_id[@]}" | uniq -d)
 
 
     # Hold files
@@ -393,6 +372,7 @@ dm_mods=( "$DM_MODS"/* )
 dm_mods_id=( ${dm_mods[@]##*/} )
 dm_archive=( "$DM_ARCHIVE"/* )
 dm_archive_id=( ${dm_archive[@]##*/} )
+readarray -t tree_id < <(grep -hrP '^ *\[( |x)\] [[:digit:]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9 | sort)
 
 unset who_initials
 if [[ $user ]]; then
