@@ -140,7 +140,8 @@ done
 
 ## determind on-hold mods and clean up parent array
 parent=( "${parent[@]#*] }" )  parent=( "${parent[@]%% *}" )
-hold=( $(grep -lvP '^#' "$DM_MODS"/*/hold) ) hold=( "${hold[@]%/*}" ) hold=( "${hold[@]##*/}" )
+readarray -t hold < <(grep -lvP '^#' "$DM_MODS"/*/hold)
+hold=( "${hold[@]%/*}" ) hold=( "${hold[@]##*/}" )
 
 for i in "${!hold[@]}"; do
     for j in "${!parent[@]}"; do
@@ -150,13 +151,13 @@ done
 
 #printf "%s\n" "${parent[@]}"
 ## print parent mod ids but remove hold-on mods from list
-[[ "${parent[@]}" ]] && printf "%s\n" "${parent[@]}" | "$DM_BIN/format_mod.sh" "%i %w %t %d" > "$DM_USERS/todo"
+[[ ${parent[@]} ]] && printf "%s\n" "${parent[@]}" | "$DM_BIN/format_mod.sh" "%i %w %t %d" > "$DM_USERS/todo"
 e=$?
 
 ( cd "$DM_ROOT"
 git add -A .
 git commit --dry-run >/dev/null &&
-    git commit -q -a -m "Re-prioritize" &&
+    git commit -a -m "Re-prioritize" >/dev/null &&
     git remote | grep -q public &&
     git push -q public ) 2>&1 |grep -v 'Unpacking objects' &
 

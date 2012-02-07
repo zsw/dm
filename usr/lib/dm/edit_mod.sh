@@ -56,7 +56,7 @@ echo -n '' > "$file"                                # Empty if it exists
 "$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file" || exit 1
 
 cp -p "$file"{,.bak}    # Back up file
-vim '+' "$file"         # Edit the file
+[[ $EDITOR == vim ]] && vim '+' "$file" || "$EDITOR" "$file"    # Edit the file
 
 # Test if file was changed, if so save is required.
 diff -q "$file" "$file.bak" >/dev/null && __me "Quit without saving."

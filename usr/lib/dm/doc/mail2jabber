@@ -57,4 +57,4 @@ $ mail2jabber.sh ~/.mail/pl/cur/1220476681.000265.mbox:2,S.
 ## Then check weechat for a message
 
 
-# vim: ft=our_doc
+# vim: ft=dm

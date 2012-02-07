@@ -148,7 +148,7 @@ $ cp our_doc.vim $HOME/.vim/syntax/
 In order to automatically set the textwidth and filetype for the
 document, include the following modeline at the end of the document.
 
-    # vim: ft=our_doc
+    # vim: ft=dm
 
 As well, add this option to $HOME/.vimrc.
 
@@ -201,4 +201,4 @@ For now I'd rather not implement anything until we've used it a bit to
 see if it is even required.  2008-12-16 JK
 
 
-# vim: ft=our_doc
+# vim: ft=dm

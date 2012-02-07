@@ -47,7 +47,7 @@ __mod_dir "$mod_id" >&/dev/null || __me "Unable to mv mod $mod_id." \
 # The integrity script will report issues if a mod is in more than one
 # tree. This script will only look at the first tree the mod is found
 # in.
-from_tree=$(grep -lrP  "^ *\[.\] $mod_id " "$DM_TREES" | head -1)
+from_tree=$(grep -lrP  "^ *\[( |x)\] $mod_id " "$DM_TREES" | head -1)
 
 [[ $from_tree == $to_tree ]] && exit 0
 

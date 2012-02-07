@@ -233,4 +233,4 @@ $ mv_mod_to_tree.sh 12345 $HOME/dm/trees/archive/main
 
 
 
-# vim: ft=our_doc
+# vim: ft=dm

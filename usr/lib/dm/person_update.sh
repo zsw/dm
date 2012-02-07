@@ -42,10 +42,10 @@ source $HOME/.dm/dmrc || exit 1
 
 # Access detail line
 # Eg 1,JK,jimk,Jim Karsten,jimkarsten@gmail.com,jimkarsten+jabber@gmail.com,5195042188@pcs.rogers.com,jimkarsten+input@gmail.com,dtjimk
-detail_line=$(grep "[0-9]\+,[A-Z]\+,$USERNAME," "$DM_PEOPLE")
+detail_line=$(grep -P "[[:digit:]]+,[[:alpha:]]+,$USERNAME," "$DM_PEOPLE")
 [[ ! $detail_line ]] && __me "Unable to find line in people file $DM_PEOPLE for username $USERNAME."
 
-id=$(grep -o '^[0-9]\+' <<< "$detail_line")
+id=$(grep -oP '^[[:digit:]]+' <<< "$detail_line")
 
 # Double check that the id's match. We don't want to clobber the wrong record.
 [[ $id != $DM_PERSON_ID ]] && __me "Id from people file does not match DM_PERSON_ID. Aborting."

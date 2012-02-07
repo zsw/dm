@@ -71,15 +71,13 @@ if [[ $user && -n $editing ]] || [[ $user && -n $reloading ]]; then
         "Login as user to update their cron."
 fi
 
-if [[ $editing ]]; then
-    /usr/bin/vim -c 'set ft=crontab' "$HOME/.crontab"
-fi
+[[ $editing ]] && /usr/bin/vim -c 'set ft=crontab' "$HOME/.crontab"
 
 if [[ $reloading ]]; then
     tmpfile=$(__tmp_file)
     cp "$HOME/.crontab" "$tmpfile"
     echo "$HOLD_HEADER" >> "$tmpfile"
-    grep -h -v '^#' "$DM_USERS"/holds/* | sort -n -k 4 -k 3 -k 2 -k 1  >> "$tmpfile"
+    grep -hv '^#' "$DM_USERS"/holds/* | sort -n -k 4 -k 3 -k 2 -k 1  >> "$tmpfile"
     /usr/bin/crontab "$tmpfile"
 fi
 

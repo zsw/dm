@@ -111,4 +111,4 @@ $ echo "2008-12-09 17:30:00" > $HOME/dm/mods/12345/hold
 This command will put mod 12345 on hold until the prescribed time.
 
 
-# vim: ft=our_doc
+# vim: ft=dm

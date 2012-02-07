@@ -373,4 +373,4 @@ such, problems will occur if the /root/dm directory doesn't exist and is
 not somehow linked to the local $HOME/dm directory.
 
 
-# vim: ft=our_doc
+# vim: ft=dm

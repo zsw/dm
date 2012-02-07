@@ -123,4 +123,4 @@ For a list of signals and more information about the OSD daemon, run
 $ osd_daemon.sh -h
 
 
-# vim: ft=our_doc
+# vim: ft=dm

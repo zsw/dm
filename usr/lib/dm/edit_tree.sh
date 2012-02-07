@@ -65,7 +65,7 @@ cp -p "$file" "$file_bak"
 __v && __mi "Tree backup: $file_bak"
 
 # Edit the tree file
-vim "$file"
+"$EDITOR" "$file"
 
 # Test if file was changed, if so save is required.
 diff -q "$file" "${file}.bak" >/dev/null && __me "Quit without saving."

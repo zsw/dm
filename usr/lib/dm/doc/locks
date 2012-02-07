@@ -139,4 +139,4 @@ removed manually.
 $ rm /tmp/dev/LOCK
 
 
-# vim: ft=our_doc
+# vim: ft=dm

@@ -11,7 +11,7 @@ This script sends a message to the email address for a mod.
     -h  Print this help message.
 
 EXAMPLES:
-    $script username@gmail.com $HOME/dm/12345
+    $script username@domain.com $HOME/dm/12345
 
 NOTES:
     If the -j option is provided then the script attempts to use a weechat pipe
@@ -25,8 +25,8 @@ EOF
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Send message by weechat
 #
 _by_weechat() {
@@ -39,7 +39,6 @@ _by_weechat() {
     [[ ! -p $fifo ]] && __me "Reminder for mod $mod_dir aborted. Not a named pipe: $fifo"
 
     msg=$(< $mod_dir/description)
-
     echo "python.jabber.server.$account */jabber_echo_message $account dm $msg" > "$fifo"
 }
 
@@ -49,8 +48,8 @@ _by_weechat() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Send message by email
 #
 _by_email() {
@@ -58,7 +57,7 @@ _by_email() {
 
     subject=$(sed -e "s/\"/\\\\\"/" "$mod_dir/description")
     notes=$(sed -e "s/\"/\\\\\"/" "$mod_dir/notes")
-    res=$(echo -e "To: $account\nSubject: $subject\n\n$notes" | sendmail -v -- "$account")
+    res=$(echo "$notes" | mail -s "$subject" "$account")
 }
 
 _options() {

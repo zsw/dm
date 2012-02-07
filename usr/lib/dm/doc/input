@@ -155,4 +155,4 @@ dependency tree.
 8. Mods will be added to the todo list the next time the now and/or
 unsorted tree is prioritized.
 
-# vim: ft=our_doc
+# vim: ft=dm

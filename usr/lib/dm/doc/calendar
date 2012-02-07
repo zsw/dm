@@ -272,4 +272,4 @@ $ cat ~/.bash_aliases
     alias ce='$HOME/dm/bin/calendar_edit.sh'
 
 
-# vim: ft=our_doc
+# vim: ft=dm

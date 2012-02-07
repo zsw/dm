@@ -72,8 +72,8 @@ EOF
 #
 # Sent: file - name of file with specs
 # Return: nothing, tree structure printed to stdout.
-# Purpose:
 #
+# Purpose:
 #   Create mods from spec file.
 #
 _create_mods() {
@@ -94,7 +94,7 @@ _create_mods() {
             #   group 222
             #   end
             # end
-            if grep -qP '^\s*(group [0-9]+|end$)' <<< "$line"; then
+            if grep -qP '^ *(group [[:digit:]]+|end$)' <<< "$line"; then
                 echo "$line"
                 # A group tag signals the mod notes are done as well.
                 unset mod_dir
@@ -151,14 +151,12 @@ _create_mods() {
 #
 # Sent: nothing
 # Return: nothing
-# Purpose:
 #
+# Purpose:
 #   Return a scrubbed "who".
 #
 # Notes:
-#
 # Scrubbing includes:
-#
 #   * Replacing alias with initials
 #   * Changing to uppercase.
 #   * Validating initials in people file

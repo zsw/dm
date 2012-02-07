@@ -261,4 +261,4 @@ The alert_count.sh script will handle contructing the urls and running
 the wget so there should be no need to run those wget commands except
 possibly when troubleshooting.
 
-# vim: ft=our_doc
+# vim: ft=dm

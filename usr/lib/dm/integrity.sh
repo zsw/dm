@@ -386,7 +386,6 @@ __logger_debug "Updating people file from dmrc."
 
 _run_checks
 readarray -t out_arr < <(_print_messages)
-#out_arr=( "$(_print_messages)" )
 
 [[ ! ${out_arr[@]} ]] && exit
 if __v; then
