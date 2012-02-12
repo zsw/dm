@@ -53,7 +53,7 @@ for file in "$mod_dir"/** ; do
         [[ $file == description ]] && sections[0]=$file && continue
         [[ $file == who ]]         && sections[1]=$file && continue
         [[ $file == hold ]]        && sections[2]=$file && continue
-        [[ $file == remind ]]      && sections[3]=$file && continue
+        [[ $file == remind_by ]]   && sections[3]=$file && continue
         [[ $file == specs ]]       && sections[4]=$file && continue
         [[ $file == spec ]]        && sections[5]=$file && continue
         [[ $file == notes ]]       && notes='notes'     && continue

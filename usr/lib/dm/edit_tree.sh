@@ -164,7 +164,7 @@ cp "$file_new" "$tree"
 
 # Validate schema in tree
 __v && __mi "Validating schema in tree."
-if ! prioritize.sh; then
+if ! "$DM_BIN/prioritize.sh" >/dev/null; then
     __me "The schema in the tree is not valid: $tree" \
         "Run 'prioritize.sh' to  repeat schema validation check"
 fi

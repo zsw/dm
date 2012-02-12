@@ -33,12 +33,12 @@ _options() {
     done
 
     (( ${#args[@]} > 1 ))  && { _u; exit 1; }
-    (( ${#args[@]} == 1 )) && mod=${args[0]}
+    (( ${#args[@]} == 1 )) && mod_id=${args[0]}
 }
 
 _options "$@"
 
-[[ ! $mod ]] && mod=$("$DM_BIN/todo.sh" -u "$DM_PERSON_USERNAME" -l 1 | awk '{print $3}')
-[[ ! $mod ]] && __me 'Unable to determine top mod id.'
+[[ ! $mod_id ]] && mod_id=$("$DM_BIN/prioritize.sh" | "$DM_BIN/format_mod.sh" "%w %i" | awk -v v="$DM_PERSON_INITIALS" '$1==v {print $2; exit}')
+[[ ! $mod_id ]] && __me 'Unable to determine top mod id.'
 
-echo "$mod" > "$DM_USERS/current_mod"
+echo "$mod_id" > "$DM_USERS/current_mod"

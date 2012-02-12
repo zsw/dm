@@ -28,8 +28,8 @@ EOF
 
 _options() {
     args=()
-    limit=99999999              # ie no limit
     unset colour
+    unset limit
     unset user
 
     while [[ $1 ]]; do
@@ -50,22 +50,18 @@ _options() {
 
 _options "$@"
 
-(( $limit )) || __me "Invalid limit"
+[[ $user ]] && dm_initials=$(awk -F',[ \t]*' -v user="$user" '$2 == user || $3 == user { print $2 }' "$DM_PEOPLE")
+[[ $user ]] && [[ ! $dm_initials ]] && __me "No initials found for username: $user"
 
-initials=$(awk -F',[ \t]*' -v user="$user" '$2 == user || $3 == user { print $2 }' "$DM_PEOPLE")
+cm=$(< "$DM_USERS/current_mod")
+(( $cm )) || __me "Current mod not set"
 
-sm=$(< "$DM_USERS/current_mod")
-
-i=0
-while read -r id init tree descr; do
-    [[ $user && $init != $initials ]] && continue
-    unset col rev
+while read -r tree initials mod_id description; do
     if [[ $colour ]]; then
+        [[ $cm == $mod_id ]] && rev=$REVERSE || unset rev
         eval "col=\${${tree^^}_COLOUR}"
-        [[ $sm == $id ]] && rev=$REVERSE || unset rev
     fi
-    printf "${col}%9s$COLOUROFF ${rev}%3s %s %s $COLOUROFF\n" "$tree" "$init" "$id" "$descr";
-    (( ++i >= $limit )) && break
-done < $DM_USERS/todo
+    printf "$col%9.9s$COLOUROFF $rev%3s %s %s $COLOUROFF\n" "$tree" "$initials" "$mod_id" "$description"
+done < <("$DM_BIN/prioritize.sh" | "$DM_BIN/format_mod.sh" "%t %w %i %d" | awk -v l="$limit" -v i="$dm_initials" '!i || $2==i {if (x++ == l) exit; print}')
 
 exit 0

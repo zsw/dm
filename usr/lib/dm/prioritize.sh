@@ -3,13 +3,13 @@ __loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.s
 
 script=${0##*/}
 _u() { cat << EOF
-usage: $script [ <tree> <tree> ]
+usage: $script [ /path/to/tree /path/to/tree ]
 
 This script creates a todo list from dependency trees.
     -h  Print this help message.
 
 EXAMPLES:
-    $script reminders main
+    $script $DM_TREES/reminders $DM_TREES/main
 
 NOTES:
     Use tree names relative to the $DM_ROOT/trees directory.
@@ -91,14 +91,10 @@ fi
 
 trees=${args[@]}
 
-[[ ! $trees ]] && trees=$(< "$DM_USERS/current_trees")
-
 # The call to tree.sh will convert tree names to tree files preserving the
 # order of the trees.
-tree_files=$("$DM_BIN/tree.sh" "$trees" | tr "\n" " ")
-#echo "FIXME tree_files: $tree_files"
-
-[[ ! $tree_files ]] && __me 'No tree files to prioritize.'
+[[ ! $trees ]] && trees=$(< "$DM_USERS/current_trees") && trees=$("$DM_BIN/tree.sh" "$trees" | tr "\n" " ")
+[[ ! $trees ]] && __me 'No tree files to prioritize.'
 
 p=          ## set to $s if undone mod or end header is a parent
 g=          ## boolean var -- for group header
@@ -112,7 +108,7 @@ r2="^[[:blank:]]*end$"
 r3="^[[:blank:]]*\[x\] [[:digit:]]+"
 r4="^[[:blank:]]*\[ \] [[:digit:]]+"
 
-for tree in $tree_files; do
+for tree in $trees; do
     unset pline     ## unset previous line so dependent mod at BOF fails check
 
     while IFS= read -r line; do
@@ -149,9 +145,10 @@ for i in "${!hold[@]}"; do
     done
 done
 
-#printf "%s\n" "${parent[@]}"
 ## print parent mod ids but remove hold-on mods from list
-[[ ${parent[@]} ]] && printf "%s\n" "${parent[@]}" | "$DM_BIN/format_mod.sh" "%i %w %t %d" > "$DM_USERS/todo"
+[[ ! ${parent[@]} ]] && __me "No mods to prioritize"
+
+printf "%s\n" "${parent[@]}"
 e=$?
 
 ( cd "$DM_ROOT"

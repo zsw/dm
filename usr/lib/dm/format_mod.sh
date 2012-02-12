@@ -174,5 +174,7 @@ while IFS="" read -r mod; do
 
     line=${line//$'\x1b'/%}       # Restore literal %
 
-    echo "$line"
+    arr+=( "$line" )
 done
+
+printf "%s\n" "${arr[@]}"

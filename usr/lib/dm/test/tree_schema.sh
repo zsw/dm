@@ -46,7 +46,7 @@ _options "$@"
 for i in ${args[@]}; do
     n=${i%tree} n=${n##*/}
     __mi "$n $(head -1 $i)"
-    d=$(diff -u <(pri.sh $i 2>&1) $DM_ROOT/test/trees/${n}output)
+    d=$(diff -u <(prioritize.sh $i 2>&1) $DM_ROOT/test/trees/${n}output)
     [[ $d ]] && while read -r line; do __mw "$line"; done <<< "$d" && echo
 done
 
