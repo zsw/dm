@@ -194,11 +194,10 @@ _run_checks() {
     done < <(printf "%s\n" "${dm_mods_id[@]}" "${dm_archive_id[@]}" | sort | uniq -d)
 
     __logger_debug "Syntax checking of trees."
-    __logger_debug "Looking for undone mods found in more than one tree."
-    while read -r -d ' ' tree ; do
-        readarray -t arr < <("$DM_BIN/prioritize.sh" "$tree" 2>&1)
-        [[ ${arr[@]} ]] &&  message_arr+=( "tree|$tree|Mod found in multiple trees" ); message_arr+=( "${arr[@]}" )
-    done < "$DM_USERS/current_trees"
+    while read -r tree ; do
+        readarray -t arr < <("$DM_BIN/prioritize.sh" "$tree" >/dev/null)
+        [[ ${arr[@]} ]] &&  message_arr+=( "tree|$tree|Syntax of tree file incorrect" ); message_arr+=( "${arr[@]}" )
+    done < <(find "$DM_TREES/" -type f)
 
     __logger_debug "Looking for mods found in more than one tree."
     # Report duplicates

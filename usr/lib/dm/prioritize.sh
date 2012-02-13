@@ -146,9 +146,7 @@ for i in "${!hold[@]}"; do
 done
 
 ## print parent mod ids but remove hold-on mods from list
-[[ ! ${parent[@]} ]] && __me "No mods to prioritize"
-
-printf "%s\n" "${parent[@]}"
+[[ ${parent[@]} ]] && printf "%s\n" "${parent[@]}"
 e=$?
 
 ( cd "$DM_ROOT"
