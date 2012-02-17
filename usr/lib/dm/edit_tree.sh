@@ -67,6 +67,13 @@ __v && __mi "Tree backup: $file_bak"
 # Edit the tree file
 "$EDITOR" "$file"
 
+f=$file
+[[ $EDITOR == vim ]] && f=${file//\//%}
+while true; do
+    lsof | grep -q "$f" || break
+    sleep 0.2
+done
+
 # Test if file was changed, if so save is required.
 diff -q "$file" "${file}.bak" >/dev/null && __me "Quit without saving."
 

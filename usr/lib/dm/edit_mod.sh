@@ -50,13 +50,22 @@ mkdir -p "$tmpdir"
 description=$(__attribute $mod_id 'description')    # Get raw mod description
 description=${description//[^a-zA-Z0-9 ]/}          # Sanitize mod description
 description=${description// /_}                     # Change spaces to _'s in mod description
-file=$tmpdir/$mod_id-$description.txt
+file=$tmpdir/$mod_id-$description
 echo -n '' > "$file"                                # Empty if it exists
 
 "$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file" || exit 1
 
 cp -p "$file"{,.bak}    # Back up file
-[[ $EDITOR == vim ]] && vim '+' "$file" || "$EDITOR" "$file"    # Edit the file
+
+# Edit the mod
+"$EDITOR" "$file"
+
+f=$file
+[[ $EDITOR == vim ]] && f=${file//\//%}
+while true; do
+    lsof | grep -q "$f" || break
+    sleep 0.2
+done
 
 # Test if file was changed, if so save is required.
 diff -q "$file" "$file.bak" >/dev/null && __me "Quit without saving."

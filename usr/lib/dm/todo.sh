@@ -54,7 +54,7 @@ _options "$@"
 [[ $user ]] && [[ ! $dm_initials ]] && __me "No initials found for username: $user"
 
 cm=$(< "$DM_USERS/current_mod")
-(( $cm )) || __me "Current mod not set"
+(( 10#$cm )) || __me "Current mod not set"
 
 while read -r tree initials mod_id description; do
     if [[ $colour ]]; then
