@@ -55,15 +55,12 @@ echo -n '' > "$file"                                # Empty if it exists
 
 "$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file" || exit 1
 
-cp -p "$file"{,.bak}    # Back up file
-
-# Edit the mod
-"$EDITOR" "$file"
-
-f=$file
-[[ $EDITOR == vim ]] && f=${file//\//%}
+__v && __mi "Mod backup: $file.bak"
+cp -p "$file"{,.bak}    # Back up mod file so the original can be diff'd against it.
+"$EDITOR" "$file"       # Edit the mod
+f=${file//\//%}         # vim copies file to BACKUP dir and replaces '/' with '%'
 while true; do
-    lsof | grep -q "$f" || break
+    lsof | grep -qE "$file|$f" || break
     sleep 0.2
 done
 

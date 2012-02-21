@@ -58,30 +58,22 @@ file_dir=${file%/*}
 mkdir -p "$file_dir"
 cp "$tree" "$file"
 
-# Back up tree file so the original can be diff'd against.
-file_bak=${file}.bak
-cp -p "$file" "$file_bak"
-
-__v && __mi "Tree backup: $file_bak"
-
-# Edit the tree file
-"$EDITOR" "$file"
-
-f=$file
-[[ $EDITOR == vim ]] && f=${file//\//%}
+__v && __mi "Tree backup: $file.bak"
+cp -p "$file"{,.bak}    # Back up tree file so the original can be diff'd against it'
+"$EDITOR" "$file"       # Edit the tree file
+f=${file//\//%}         # vim copies file to BACKUP dir and replaces '/' with '%'
 while true; do
-    lsof | grep -q "$f" || break
+    lsof | grep -qE "$file|$f" || break
     sleep 0.2
 done
 
 # Test if file was changed, if so save is required.
-diff -q "$file" "${file}.bak" >/dev/null && __me "Quit without saving."
+diff -q "$file" "$file.bak" >/dev/null && __me "Quit without saving."
 
 # The string '---' is used as a delimiter later in the script. If the
 # user happened to add that string to the tree file, it will cause foo,
 # interpreting it as an delimiter where it wasn't intended. Append
 # another hypen on the string so the foo doesn't happen.
-
 sed -i -e 's/^---$/----/' "$file"
 
 replace_dir=$file_dir/replace
@@ -111,10 +103,9 @@ while read -r line; do
     [[ ! -w $descr_file ]] && continue
     __v && __mi "Updating mod description: $mod_id $description"
     echo "$description" > "$descr_file"
-done < <(diff "$file_bak" "$file" | \
+done < <(diff "$file.bak" "$file" | \
         awk --re-interval '
-            /^> / &&
-            /[ ]*\[( |x)\] [0-9]{5}/ {
+            /^> / && /[ ]*\[( |x)\] [0-9]{5}/ {
                 sub(/>[ \t]+\[[x ]\][ \t]+/, ""); print
             }')
 
@@ -135,7 +126,7 @@ done < <(diff "$file_bak" "$file" | \
 #                  original file.
 #   /[ ]...{5}/  : Any diff output related to existing mods can be ignored.
 #   {sub...}     : Remove the leading '> '
-diff "$file_bak" "$file" | \
+diff "$file.bak" "$file" | \
     awk --re-interval '
          /> ---/                  {print "----";next}
         !/> /                     {print "---";next}
@@ -145,7 +136,7 @@ diff "$file_bak" "$file" | \
 
 __v && __mi "New entries split out here: $split_dir"
 
-file_new=${file}.new
+file_new=$file.new
 cp -p "$file" "$file_new"
 tmp=$(__tmp_file)
 cd "$split_dir"
