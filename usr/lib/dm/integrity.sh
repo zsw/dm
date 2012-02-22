@@ -174,19 +174,27 @@ _run_checks() {
     # Mods
     # ----
 
-    __logger_debug "Looking for mods not in dependency tree or with missing mods directory."
+    __logger_debug "Looking for undone mods not in the mods directory."
     while read -r invalid; do
-        if grep -qrP "^ *\[( |x)\] $invalid " "$DM_TREES"/*; then
-            message_arr+=( "mod|$invalid|WARNING: Mod does not appear to be flagged undone properly." )
-            message_arr+=( "    Update tree with this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
-        elif [[ -d $DM_MODS/$invalid ]]; then
+        if [[ -d $DM_MODS/$invalid ]]; then
             message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_MODS but not found in any dependency tree." )
-        elif [[ -d $DM_ARCHIVE/$invalid ]]; then
+        else
+            message_arr+=( "mod|$invalid|WARNING: Mod does appears to be marked as 'undone'." )
+            message_arr+=( "    To mark as 'done' run this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
+        fi
+    done < <(comm -3 <(printf '%s\n' "${dm_mods_id[@]}" | sort) \
+                     <(printf '%s\n' "${tree_id_undone[@]}" | sort))
+
+    __logger_debug "Looking for done mods not in the archive directory."
+    while read -r invalid; do
+        if [[ -d $DM_ARCHIVE/$invalid ]]; then
             message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_ARCHIVE but not found in any dependency tree." )
         else
-            message_arr+=( "mod|$invalid|ERROR: Mod is not done but not found in any dependency tree." )
+            message_arr+=( "mod|$invalid|WARNING: Mod appears to be marked as 'done'." )
+            message_arr+=( "    To mark as 'undone' run this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
         fi
-    done < <(comm -3 <(printf "%s\n" "${dm_mods_id[@]}" "${dm_archive_id[@]}" | sort) <(printf '%s\n' "${tree_id[@]}"))
+    done < <(comm -3 <(printf '%s\n' "${dm_archive_id[@]}" | sort) \
+                     <(printf '%s\n' "${tree_id_done[@]}" | sort))
 
     __logger_debug "Looking for mods found in both the mods and archive directory."
     while read -r dupe; do
@@ -204,7 +212,7 @@ _run_checks() {
     while read -r d; do
         message_arr+=( "mod|$d|WARNING: Mod found more than once in trees." )
         readarray -O "${#arr[@]}" -t arr < <(grep -rP  "^ *\[.\] $d " "$DM_TREES"/* | sed "s/^/   /")
-    done < <(printf '%s\n' "${tree_id[@]}" | uniq -d)
+    done < <(printf '%s\n' "${tree_id_done[@]}" "${tree_id_undone[@]}" | sort | uniq -d)
 
     __logger_debug "Searching for phantom sed files"
     shopt -s globstar
@@ -277,7 +285,8 @@ _run_checks() {
         else
             message_arr+=( "mod|$invalid|ERROR: Mod does not exist in $DM_MODS, $DM_ARCHIVE or $DM_ROOT/users/USERNAME/reusable_ids." )
         fi
-    done < <(comm -2 -3 <(printf '%s\n' "${compare_list[@]}" | sort) <(cat "$DM_ROOT"/users/*/reusable_ids <(printf "%s\n" "${dm_mods_id[@]}" "${dm_archive_id[@]}") | sort))
+    done < <(comm -2 -3 <(printf '%s\n' "${compare_list[@]}" | sort) \
+                        <(cat "$DM_ROOT"/users/*/reusable_ids <(printf '%s\n' "${dm_mods_id[@]}" "${dm_archive_id[@]}") | sort))
 
     __logger_debug "Looking for ids of reusable mods found in mods/archive or in trees."
     # Create space delimited string of ids
@@ -303,7 +312,7 @@ _run_checks() {
     while read -r d; do
         message_arr+=( "group|$d|Group found more than once in trees." )
         readarray -O "${#message_arr[@]}" -t message_arr < <(grep -srP  "group $d" "$DM_TREES"/* | sed "s/^/    /")
-    done < <(printf '%s\n' "${tree_id[@]}" | uniq -d)
+    done < <(printf '%s\n' "${tree_id_done[@]}" "${tree_id_undone[@]}" | sort | uniq -d)
 
 
     # Hold files
@@ -371,7 +380,9 @@ dm_mods=( "$DM_MODS"/* )
 dm_mods_id=( ${dm_mods[@]##*/} )
 dm_archive=( "$DM_ARCHIVE"/* )
 dm_archive_id=( ${dm_archive[@]##*/} )
-readarray -t tree_id < <(grep -hrP '^ *\[( |x)\] [[:digit:]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9 | sort)
+#readarray -t tree_id < <(grep -hrP '^ *\[( |x)\] [[:digit:]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9 | sort)
+readarray -t tree_id_undone < <(grep -hrP '^ *\[ \] [[:digit:]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9)
+readarray -t tree_id_done < <(grep -hrP '^ *\[x\] [[:digit:]]{5} ' "$DM_TREES"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9)
 
 unset who_initials
 if [[ $user ]]; then
