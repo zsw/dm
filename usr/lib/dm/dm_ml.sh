@@ -10,6 +10,7 @@ Creates mailing list thread for each ID in a tree
     -h  Print this help message
 
 EXAMPLE:
+    $script -d $HOME/.mail/dm -t $DM_ROOT/trees/main
     $script -d $HOME/.mail/dm -s $HOME/.mail/search -t $DM_ROOT/trees/main
 
 long_description
@@ -17,28 +18,17 @@ EOF
 }
 
 
-## These should be set as cli parameters
-#maildir_dm=$HOME/.mail/ml-rss/dm
-#maildir_search=$HOME/.mail/search/cur
-#tree=$DM_TREES/main
-
-readarray -t tree_list < <(prioritize.sh "$tree" | format_mod.sh "%i %d")
-tree_ids=( "${tree_list[@]%% *}" )
-
-readarray -t ml_list < <(grep -hP '^Subject: \[[[:digit:]]{5}\] ' "$maildir_dm"/{cur,new}/* | sed -r 's/^Subject: .*([[:digit:]]{5})](.*)/\1\2/' | sed 's/(was: .*//')
-ml_ids=( "${ml_list[@]%% *}" )
-
-
 ## Using comm, compare all ids in a tree file with ids in subject header of a maildir
 _ids() {
     readarray -t missing_email < <(comm -2 -3 <(printf "%s\n" "${tree_ids[@]}" | sort -u) <(printf "%s\n" "${ml_ids[@]}" | sort -u))
 
     ##  Create an email for each missing ml_id
-    [[ ${missing_email[@]} ]] && return
+    [[ ! ${missing_email[@]} ]] && return
     for i in "${missing_email[@]}"; do
         description=$(< "$DM_MODS/$i/description")
         divider='--------------------------------------------- specs ---'
         { echo "$divider"; cat "$DM_MODS/$i/"spec* 2>/dev/null; } | mail -r "$from_email" -s "[$i] $description" "$to_email"
+    sleep 5
     done
     exit 0
 }
@@ -76,13 +66,15 @@ _options() {
         shift
     done
 
-     (( ${#args[@]} > 3 )) && { _u; exit 1; }
+     (( ${#args[@]} == 2 )) && { _u; exit 1; }
+     (( ${#args[@]} == 3 )) && { _u; exit 1; }
      mod=${args[0]}
 }
 
 _options "$@"
 
-to_email=dm@zsw.ca
+#to_email=dm@zsw.ca
+to_email=devmod@googlegroups.com
 from_email=dm_bot@zsw.ca
 
 ml_list=()
@@ -91,6 +83,12 @@ tree_list=()
 tree_ids=()
 missing_email=()
 missing_description=()
+
+readarray -t tree_list < <(prioritize.sh "$tree" | format_mod.sh "%i %d")
+tree_ids=( "${tree_list[@]%% *}" )
+
+readarray -t ml_list < <(grep -hP '^Subject: \[[[:digit:]]{5}\] ' "$maildir_dm"/{cur,new}/ | sed -r 's/^Subject: .*([[:digit:]]{5})](.*)/\1\2/' | sed 's/(was: .*//')
+ml_ids=( "${ml_list[@]%% *}" )
 
 ## Run functions
 _ids
