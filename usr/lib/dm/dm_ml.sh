@@ -1,4 +1,6 @@
 #!/bin/bash
+__loaded_env 2>/dev/null || { source $HOME/.dm/dmrc && source $DM_ROOT/lib/env.sh; } || exit 1
+
 script="${0##*/}"
 _u() { cat << EOF
 usage: $script -d /path/to/dm_maildir -s /path/to/search_maildir -t /path/to/tree_file
@@ -12,13 +14,12 @@ Creates mailing list thread for each ID in a tree
 EXAMPLE:
     $script -d $HOME/.mail/dm -t $DM_ROOT/trees/main
     $script -d $HOME/.mail/dm -s $HOME/.mail/search -t $DM_ROOT/trees/main
-
-long_description
 EOF
 }
 
 
-## Using comm, compare all ids in a tree file with ids in subject header of a maildir
+## Using comm, compare all ids in a tree file with ids in subject header
+## of a maildir
 _ids() {
     readarray -t missing_email < <(comm -2 -3 <(printf "%s\n" "${tree_ids[@]}" | sort -u) <(printf "%s\n" "${ml_ids[@]}" | sort -u))
 
@@ -65,13 +66,11 @@ _options() {
         esac
         shift
     done
-
-     (( ${#args[@]} == 2 )) && { _u; exit 1; }
-     (( ${#args[@]} == 3 )) && { _u; exit 1; }
-     mod=${args[0]}
 }
 
 _options "$@"
+[[ ! $maildir_dm ]] && { _u; __me "maildir_dm not set"; }
+[[ ! $tree ]]   && { _u; __me "tree not set"; }
 
 #to_email=dm@zsw.ca
 to_email=devmod@googlegroups.com
@@ -87,7 +86,7 @@ missing_description=()
 readarray -t tree_list < <(prioritize.sh "$tree" | format_mod.sh "%i %d")
 tree_ids=( "${tree_list[@]%% *}" )
 
-readarray -t ml_list < <(grep -hP '^Subject: \[[[:digit:]]{5}\] ' "$maildir_dm"/{cur,new}/ | sed -r 's/^Subject: .*([[:digit:]]{5})](.*)/\1\2/' | sed 's/(was: .*//')
+readarray -t ml_list < <(grep -hrP '^Subject: \[[[:digit:]]{5}\] ' "$maildir_dm"/{cur,new}/ | sed -r 's/^Subject: .*([[:digit:]]{5})](.*)/\1\2/' | sed 's/(was: .*//')
 ml_ids=( "${ml_list[@]%% *}" )
 
 ## Run functions

@@ -96,9 +96,8 @@ if [[ $status != off_hold ]]; then
         __mi "undone_mod.sh: Mod $mod has been undone but is on hold." \
             "No force option provided. Mod is left on hold." \
             "" \
-            "ID    WHO HOLD                 TREE          DESCRIPTION"
-        echo -n "===: "
-        echo "$mod" | "$DM_BIN/format_mod.sh"
+            "ID    WHO HOLD                 TREE          DESCRIPTION" \
+            "$(echo "$mod" | "$DM_BIN/format_mod.sh")"
     fi
 fi
 

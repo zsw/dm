@@ -224,7 +224,7 @@ _run_checks() {
     __logger_debug "Looking for mods in personal trees assigned to another."
     # Ensure every mod in a personal tree is assigned to that person.
     for tree in "$DM_TREES"/*; do
-        [[ $tree == *archive || $tree == *main ]] && continue
+        [[ $tree == *archive || $tree == *main || $tree == *magento ]] && continue
         initials=$(__person_attribute initials username "${tree##*/}")
 
         while read -r mod_id; do
@@ -292,7 +292,7 @@ _run_checks() {
     # Create space delimited string of ids
     mod_ids=$(printf "%s " "${dm_mods_id[@]}" "${dm_archive_id[@]}")
     while read -r reusable_id; do
-        grep -qP "^ *\[.\] $reusable_id " "$DM_TREES"/* &&
+        grep -qrP "^ *\[.\] $reusable_id " "$DM_TREES"/* &&
             message_arr+=( "mod|$reusable_id|ERROR: Reusable mod found in a tree." )
         [[ $mod_ids =~ $reusable_id ]] &&
             message_arr+=( "mod|$reusable_id|ERROR: Mod id found in $DM_ROOT/users/USERNAME/reusable_ids and is in $DM_MODS or $DM_ARCHIVE." )
