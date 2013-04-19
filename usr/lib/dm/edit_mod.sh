@@ -6,9 +6,13 @@ __loaded_tmp 2>/dev/null || source $DM_ROOT/lib/tmp.sh
 
 script=${0##*/}
 _u() { cat << EOF
-usage: $script [mod_id]
+usage: $script [-n|-c] [mod_id]
 
 This script assembles a mod, opens it in an editor, then dissembles it.
+    -e      Assemble and edit mod
+    -p      Disseble mod and cleanup
+    -v      Verbose
+
     -h      Print this help message.
 
 EXAMPLE:
@@ -20,6 +24,22 @@ NOTES:
 EOF
 }
 
+_edit() {
+    echo -n '' > "$file"                                # Empty if it exists
+    "$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file" || exit 1
+    __v && __mi "Mod backup: $file.bak"
+    cp -p "$file"{,.bak}    # Back up mod file so the original can be diff'd against it.
+    "$EDITOR" "$file"       # Edit the mod
+}
+
+_post_edit() {
+    "$DM_BIN/dissemble_mod.sh" "$file" "$mod_id"
+    "$DM_BIN/format_mod_in_tree.sh" "$mod_id"
+    who=$(__attribute "$mod_id" 'who')
+    echo "$DM_BIN/assign_mod.sh -m $mod_id $who" >> ~/foo
+    "$DM_BIN/assign_mod.sh" -m "$mod_id" "$who"
+}
+
 _options() {
     args=()
     unset mod_id
@@ -27,6 +47,8 @@ _options() {
 
     while [[ $1 ]]; do
         case "$1" in
+            -e) e=1             ;;
+            -p) p=1             ;;
             -v) verbose=true    ;;
             -h) _u; exit 0      ;;
             --) shift; [[ $* ]] && args+=( "$@" ); break;;
@@ -51,24 +73,30 @@ description=$(__attribute $mod_id 'description')    # Get raw mod description
 description=${description//[^a-zA-Z0-9 ]/}          # Sanitize mod description
 description=${description// /_}                     # Change spaces to _'s in mod description
 file=$tmpdir/$mod_id-$description
-echo -n '' > "$file"                                # Empty if it exists
 
-"$DM_BIN/assemble_mod.sh" "$mod_id" >> "$file" || exit 1
+[[ $e ]] && { _edit; exit; }
+[[ $p ]] && { _post_edit; exit; }
+_edit
+_post_edit
 
-__v && __mi "Mod backup: $file.bak"
-cp -p "$file"{,.bak}    # Back up mod file so the original can be diff'd against it.
-"$EDITOR" "$file"       # Edit the mod
-f=${file//\//%}         # vim copies file to BACKUP dir and replaces '/' with '%'
-while true; do
-    lsof | grep -qE "$file|$f" || break
-    sleep 0.2
-done
 
-# Test if file was changed, if so save is required.
-diff -q "$file" "$file.bak" >/dev/null && __me "Quit without saving."
 
-__v && __mi "Saving file $file to mod $mod_id."
-"$DM_BIN/dissemble_mod.sh" "$file" "$mod_id"
-"$DM_BIN/format_mod_in_tree.sh" "$mod_id"
-who=$(__attribute "$mod_id" 'who')
-"$DM_BIN/assign_mod.sh" -m "$mod_id" "$who"
+
+
+
+
+
+
+
+
+
+
+
+
+
+#{ inotifywait -qq -e close "$file" && _cleanup; } &
+#f=${file//\//%}         # vim copies file to BACKUP dir and replaces '/' with '%'
+#while inotifywait -qq -e close "$file"; do
+#    sleep 1
+#    lsof 2>/dev/null | grep -qE "$file|$f" || { _cleanup; break; }
+#done & disown

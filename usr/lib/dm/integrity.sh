@@ -177,9 +177,9 @@ _run_checks() {
     __logger_debug "Looking for undone mods not in the mods directory."
     while read -r invalid; do
         if [[ -d $DM_MODS/$invalid ]]; then
-            message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_MODS but not found in any dependency tree." )
+            message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_MODS but not found in any tree file or is marked as 'undone' in tree file." )
         else
-            message_arr+=( "mod|$invalid|WARNING: Mod does appears to be marked as 'undone'." )
+            message_arr+=( "mod|$invalid|WARNING: Mod appears to be marked as 'undone' in tree file." )
             message_arr+=( "    To mark as 'done' run this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
         fi
     done < <(comm -3 <(printf '%s\n' "${dm_mods_id[@]}" | sort) \
@@ -188,9 +188,9 @@ _run_checks() {
     __logger_debug "Looking for done mods not in the archive directory."
     while read -r invalid; do
         if [[ -d $DM_ARCHIVE/$invalid ]]; then
-            message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_ARCHIVE but not found in any dependency tree." )
+            message_arr+=( "mod|$invalid|ERROR: Mod exists in $DM_ARCHIVE but not found in any tree file or is markked as 'done' in tree file." )
         else
-            message_arr+=( "mod|$invalid|WARNING: Mod appears to be marked as 'done'." )
+            message_arr+=( "mod|$invalid|WARNING: Mod appears to be marked as 'done' in tree file." )
             message_arr+=( "    To mark as 'undone' run this command: $DM_BIN/format_mod_in_tree.sh \"$invalid\" " )
         fi
     done < <(comm -3 <(printf '%s\n' "${dm_archive_id[@]}" | sort) \

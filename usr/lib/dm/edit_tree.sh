@@ -10,9 +10,11 @@ usage: $script tree_name
 
 This script allows a user to edit a tree and create mods directly within
 the tree.
-    -v      Verbose.
+    -e      Edit tree file
+    -p      Create mods and cleanup
+    -v      Verbose
 
-    -h      Print this help message.
+    -h      Print this help message
 
 EXAMPLE:
     $script main                 # Edit the main tree.
@@ -20,52 +22,21 @@ EXAMPLE:
 EOF
 }
 
-_options() {
-    args=()
-    unset verbose
-
-    while [[ $1 ]]; do
-        case "$1" in
-            -v) verbose=true    ;;
-            -h) _u; exit 0      ;;
-            --) shift; [[ $* ]] && args+=( "$@" ); break;;
-            -*) _u; exit 0      ;;
-             *) args+=( "$1" )  ;;
-        esac
-        shift
-    done
-
-    (( ${#args[@]} != 1 )) && { _u; exit 1; }
-    tree_name=${args[0]}
-}
-
-_options "$@"
-
-tree=$("$DM_BIN/tree.sh" "$tree_name")
-[[ ! $tree ]] && exit 1
-
-__v && __mi "Editing tree: $tree"
-
-# The tmpfile is use to store new mod specs
-tmpfile=$(__tmp_file)
-
-# Create temporary tree files within a directory structure similar to
-# that used in the dm system. Replace the base $DM_ROOT directory with
-# the tmpdir.
-tmpdir=$(__tmp_dir)
-file=${tree/$DM_ROOT/$tmpdir}       ## Parameter Expansion
-file_dir=${file%/*}
+_edit() {
 mkdir -p "$file_dir"
 cp "$tree" "$file"
 
 __v && __mi "Tree backup: $file.bak"
 cp -p "$file"{,.bak}    # Back up tree file so the original can be diff'd against it'
 "$EDITOR" "$file"       # Edit the tree file
-f=${file//\//%}         # vim copies file to BACKUP dir and replaces '/' with '%'
-while true; do
-    lsof | grep -qE "$file|$f" || break
-    sleep 0.2
-done
+}
+
+_post_edit() {
+#f=${file//\//%}         # vim copies file to BACKUP dir and replaces '/' with '%'
+#while true; do
+#    lsof | grep -qE "$file|$f" || break
+#    sleep 0.2
+#done
 
 # Test if file was changed, if so save is required.
 diff -q "$file" "$file.bak" >/dev/null && __me "Quit without saving."
@@ -166,3 +137,47 @@ if ! "$DM_BIN/prioritize.sh" >/dev/null; then
     __me "The schema in the tree is not valid: $tree" \
         "Run 'prioritize.sh' to  repeat schema validation check"
 fi
+}
+
+_options() {
+    args=()
+    unset verbose
+
+    while [[ $1 ]]; do
+        case "$1" in
+            -e) e=1             ;;
+            -p) p=1             ;;
+            -v) verbose=true    ;;
+            -h) _u; exit 0      ;;
+            --) shift; [[ $* ]] && args+=( "$@" ); break;;
+            -*) _u; exit 0      ;;
+             *) args+=( "$1" )  ;;
+        esac
+        shift
+    done
+
+    (( ${#args[@]} != 1 )) && { _u; exit 1; }
+    tree_name=${args[0]}
+}
+
+_options "$@"
+
+tree=$("$DM_BIN/tree.sh" "$tree_name")
+[[ ! $tree ]] && exit 1
+
+__v && __mi "Editing tree: $tree"
+
+# The tmpfile is use to store new mod specs
+tmpfile=$(__tmp_file)
+
+# Create temporary tree files within a directory structure similar to
+# that used in the dm system. Replace the base $DM_ROOT directory with
+# the tmpdir.
+tmpdir=$(__tmp_dir)
+file=${tree/$DM_ROOT/$tmpdir}       ## Parameter Expansion
+file_dir=${file%/*}
+
+[[ $e ]] && { _edit; exit; }
+[[ $p ]] && { _post_edit; exit; }
+_edit
+_post_edit
