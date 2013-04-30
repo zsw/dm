@@ -223,18 +223,21 @@ _run_checks() {
 
     __logger_debug "Looking for mods in personal trees assigned to another."
     # Ensure every mod in a personal tree is assigned to that person.
-    for tree in "$DM_TREES"/*; do
-        [[ $tree == *archive || $tree == *main || $tree == *magento ]] && continue
-        initials=$(__person_attribute initials username "${tree##*/}")
+    while read -r initials user; do
+        ## if dir is empty, continue
+        shopt -s nullglob dotglob
+        files=( "$DM_TREES/$user"/* )
+        (( ${#files[*]} )) || continue
+        shopt -u nullglob dotglob
 
         while read -r mod_id; do
             who=$(< "$DM_ROOT"/*/"$mod_id"/who)
             if [[ $who != $initials ]]; then
-                message_arr+=( "mod|$mod_id|ERROR: 'who' file for mod $mod_id is set to $who but is in a tree belonging to ${tree##*/}" )
+                message_arr+=( "mod|$mod_id|ERROR: 'who' file for mod $mod_id is set to $who but is in a tree belonging to user: $user" )
                 message_arr+=( "    Move mod to a shared tree, eg main?" )
             fi
-        done < <(grep -hrP '^ *\[( |x)\] [[:digit:]]{5} ' "$tree"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9)
-    done
+        done < <(grep -hrP '^ *\[( |x)\] [[:digit:]]{5} ' "$DM_TREES/$user"/* | sed -e 's/^[ \t]\+//' | cut -c 5-9)
+    done < <(awk -F, 'NR>1 {print $2,$3}' "$DM_PEOPLE")
 
     __logger_debug "Looking for mods with missing component files."
     # Look for mods missing component files, eg description or who files.
