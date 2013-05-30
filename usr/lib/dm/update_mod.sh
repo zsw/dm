@@ -21,10 +21,10 @@ OPTIONS:
     -h  Print this help message
 
 EXAMPLES:
-    $script at tomorrow             # Postpone mod until tomorrow
-    $script by jabber pager         # Remind by jabber and pager
-    $script in \$HOME/dm/trees/main # Move mod to the main tree
-    $script to jimk                 # Assign mod to person with username jimk
+    $script at tomorrow         # Postpone mod until tomorrow
+    $script by jabber pager     # Remind by jabber and pager
+    $script in main             # Move mod to the main tree
+    $script to jimk             # Assign mod to person with username jimk
 
     # Postpone mod until Oct 19 at 11am, remind by pager, move mod
     # to main tree, and assign to SB

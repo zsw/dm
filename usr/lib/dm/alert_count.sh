@@ -7,9 +7,9 @@ script=${0##*/}
 _u() { cat << EOF
 usage: $script [options]
 
-Print the alert count to stdout.
-    -p file People file.
-    -h      Print this help message.
+Print the alert count to stdout
+    -p file     People file
+    -h          Print this help message
 
 NOTES:
     By default the script gets user information from the
@@ -17,7 +17,6 @@ NOTES:
     This can be convenient for testing with custom people data.
 
     Strategy
-
     For each remote user, from their server, get the alerts they
     have for the local user. For each alert that was logged after the last
     pull from that server, increment the alert count.
@@ -61,6 +60,7 @@ while read -r id username server; do
     [[ ! $username ]] && __mi "Unable to get username for person id=$id" >&2 && continue
     [[ $username == $USERNAME ]] && continue    # No need to alert yourself
     [[ ! $server ]] && continue
+    ping -c 1 -W 1 "$server" &>/dev/null || continue    # skip if host is down
 
     remote_file=$tmp_alert_dir/$username
     url=http://$server/alerts/$username/$USERNAME
