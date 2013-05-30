@@ -47,17 +47,21 @@ __mod_dir "$mod_id" >&/dev/null || __me "Unable to mv mod $mod_id." \
 # The integrity script will report issues if a mod is in more than one
 # tree. This script will only look at the first tree the mod is found
 # in.
-from_tree=$(grep -lrP  "^ *\[( |x)\] $mod_id " "$DM_TREES" | head -1)
+from_tree=$(grep -lrP "^ *\[( |x)\] $mod_id " "$DM_TREES" | head -1)
 
 [[ $from_tree == $to_tree ]] && exit 0
 
-# If the mod is in a group (project) then we need to move the whole
-# group to prevent the group from being disorganized.
+# If a mod is in a group, is a dependency or has a dependencies then
+# move it manually; otherwise mod.
 unset group_id
 [[ $from_tree ]] && group_id=$("$DM_BIN/tree_parse.py" --mods "$from_tree" | awk -v v="^$mod_id" '$0 ~ v {print $2}')
 
 if [[ $group_id ]]; then
-    "$DM_BIN/mv_group_to_tree.sh" "$group_id" "$to_tree"
+    __me "Mod $mod_id is in group $group_id and must be moved manually" \
+         "eg  vim +/$mod_id -O $from_tree $to_tree"
+elif grep -hr -A1 "$mod_id" "$DM_TREES"/* | grep -Eq '^    '; then
+    __me "Mod $mod_id is a dependency or has dependencies and must be moved manually" \
+         "eg  vim +/$mod_id -O $from_tree $to_tree"
 else
     # Remove from original tree
     [[ $from_tree ]] && sed -i "/\[.\] $mod_id /d" "$from_tree"

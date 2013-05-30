@@ -85,7 +85,7 @@ for index in "${!args[@]}"; do
         at) "$DM_BIN/postpone.sh" -m "$mod_id" "${args['at']}"  ;;
         by) "$DM_BIN/remind_by.sh" -m "$mod_id" "${args['by']}" ;;
         in) tree=$("$DM_BIN/tree.sh" "${args['in']}")
-            "$DM_BIN/mv_mod_to_tree.sh" "$mod_id" "$tree" &>/dev/null ;;
+            "$DM_BIN/mv_mod_to_tree.sh" "$mod_id" "$tree" >/dev/null ;;
         to) "$DM_BIN/assign_mod.sh" -m "$mod_id" "${args['to']}"     ;;
     esac
 
