@@ -79,6 +79,9 @@ _options() {
     unset email
     unset email_add
     unset email_minus
+    unset file
+    unset file_add
+    unset file_minus
     unset jabber
     unset jabber_add
     unset jabber_minus
@@ -86,6 +89,7 @@ _options() {
     unset pager_add
     unset pager_minus
     email_opts=0
+    file_opts=0
     jabber_opts=0
     pager_opts=0
 
@@ -95,6 +99,9 @@ _options() {
              e*) email=1;        ((email_opts++));  empty=1 ;;
             +e*) email_plus=1;   ((email_opts++)) ;;
             -e*) email_minus=1;  ((email_opts++)) ;;
+             f*) file=1;         ((file_opts++)) ;;
+            +f*) file_plus=1;    ((file_opts++)) ;;
+            -f*) file_minus=1;   ((file_opts++)) ;;
              j*) jabber=1;       ((jabber_opts++)); empty=1 ;;
             +j*) jabber_plus=1;  ((jabber_opts++)) ;;
             -j*) jabber_minus=1; ((jabber_opts++)) ;;
@@ -111,9 +118,10 @@ _options() {
 
     (( ${#args[@]} != 0 )) && { _u; exit 1; }
     (( $email_opts  > 1 )) && { _u; exit 1; }
+    (( $file_opts   > 1 )) && { _u; exit 1; }
     (( $jabber_opts > 1 )) && { _u; exit 1; }
     (( $pager_opts  > 1 )) && { _u; exit 1; }
-    (( $email_opts + $jabber_opts + $pager_opts == 0 )) && { _u; exit 1; }
+    (( $email_opts + $file_opts + $jabber_opts + $pager_opts == 0 )) && { _u; exit 1; }
 }
 
 
@@ -127,9 +135,11 @@ remind_by=$mod_dir/remind_by
 
 [[ $empty ]]                    && echo -n '' > $remind_by
 [[ $email  || $email_plus ]]    && echo 'email'  >> $remind_by
+[[ $file   || $file_plus ]]     && echo 'file'  >> $remind_by
 [[ $jabber || $jabber_plus ]]   && echo 'jabber' >> $remind_by
 [[ $pager  || $pager_plus ]]    && echo 'pager'  >> $remind_by
 [[ $email_minus ]]              && sed -i "/email/d"  $remind_by
+[[ $file_minus ]]               && sed -i "/file/d"  $remind_by
 [[ $jabber_minus ]]             && sed -i "/jabber/d" $remind_by
 [[ $pager_minus ]]              && sed -i "/pager/d"  $remind_by
 

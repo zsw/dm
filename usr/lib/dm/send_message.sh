@@ -7,6 +7,7 @@ usage: $script [options] email_address /path/to/mod
 
 This script sends a message to the email address for a mod.
     -j  Send a jabber message instead of an email.
+    -f  Wrote mod id to a file
 
     -h  Print this help message.
 
@@ -19,6 +20,41 @@ NOTES:
 EOF
 }
 
+
+#
+# by_email
+#
+# Sent: nothing
+# Return: nothing
+#
+# Purpose:
+#   Send message by email
+#
+_by_email() {
+    local subject
+
+    subject=$(< "$mod_dir/description")
+    subject=${subject//\"/\\\"}
+
+    cat "$mod_dir"/spec{,s} 2>/dev/null | mail -s "$subject" "$account" >/dev/null
+}
+
+#
+# by_file
+#
+# Sent: nothing
+# Return: nothing
+#
+# Purpose:
+#   Write mod id to a file
+#
+_by_file() {
+    local mod_id
+
+    mod_id=${mod_dir##*/}
+    [[ ! $mod_id ]] && __me "No mod_id found for directory: $mod_dir"
+    echo "$mod_id" >> "$DM_NOTIFY_FILE"
+}
 
 #
 # by_weechat
@@ -43,29 +79,13 @@ _by_weechat() {
 }
 
 
-#
-# by_email
-#
-# Sent: nothing
-# Return: nothing
-#
-# Purpose:
-#   Send message by email
-#
-_by_email() {
-    local subject notes res
-
-    subject=$(sed -e "s/\"/\\\\\"/" "$mod_dir/description")
-    notes=$(sed -e "s/\"/\\\\\"/" "$mod_dir/notes")
-    res=$(echo "$notes" | mail -s "$subject" "$account")
-}
-
 _options() {
     args=()
     unset jabber
 
     while [[ $1 ]]; do
         case "$1" in
+            -f) file=1          ;;
             -j) jabber=1        ;;
             -h) _u; exit 0      ;;
             --) shift; [[ $* ]] && args+=( "$@" ); break;;
@@ -84,4 +104,10 @@ _options "$@"
 
 [[ ! -d $mod_dir ]] && __me "No such file or directory: $mod_dir"
 
-[[ $jabber ]] && _by_weechat || _by_email
+if [[ $jabber ]]; then
+    _by_weechat
+elif [[ $file ]]; then
+    _by_file
+else
+    _by_email
+fi
