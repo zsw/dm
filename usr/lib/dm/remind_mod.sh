@@ -52,5 +52,5 @@ while read -r method; do
     script=${command%% *}
     unset options
     [[ $script != $command ]] && options=${command#* }
-    type "$script" >&/dev/null && "$script" $options "$account" "$mod_dir"
+    type "$script" >&/dev/null && "$DM_ROOT/$script" $options "$account" "$mod_dir"
 done < "$remind"
